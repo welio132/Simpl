@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const Groq = require('groq-sdk');
@@ -7,7 +8,7 @@ const crypto = require('crypto');
 const multer = require('multer');
 
 const app = express();
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || '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' });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -116,7 +117,7 @@ DÉTECTION DU TYPE D'ENTREPRISE Dès les premiers échanges, identifie le secteu
 
 STRUCTURE DES PRODUITS Formats, tailles, volumes, poids ou dimensions différents = produits distincts, chacun avec son propre prix, sa propre fiche, son propre inventaire et ses propres images. Les variations esthétiques (couleurs, parfums, matériaux, saveurs, essences, modèles, finitions) = options sur le produit. Les demandes complexes (nom personnalisé, texte gravé, couleurs multiples, instructions spéciales, description de projet) = champ texte libre, créé automatiquement.
 
-PRIX Si les prix sont inconnus, estime automatiquement selon le marché québécois, la concurrence moyenne et un positionnement réaliste. Présente-les comme recommandations de départ, jamais comme décisions finales.
+PRIX Si les prix des PRODUITS PRINCIPAUX sont inconnus, estime selon le marché québécois et demande confirmation. Si les prix des OPTIONS (couleurs, parfums, etc.) sont inconnus, demande-les en UNE question groupée: 'Est-ce que les options ont un prix supplémentaire, ou elles sont incluses dans le prix de base?' Ne génère JAMAIS sans avoir au moins le prix de base du produit principal.
 
 ENTREPRISES DE SERVICES Créer automatiquement selon le secteur : soumission rapide, demande d'estimation, demande de rappel, prise de rendez-vous, téléversement de photos si pertinent. Pour construction, rénovation, paysagement, excavation, fabrication ou services techniques : formulaire adapté au secteur généré automatiquement.
 
