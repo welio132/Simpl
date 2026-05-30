@@ -350,6 +350,112 @@ app.put('/api/dashboard/:slug/order/:orderId', (req, res) => {
   res.json({ success: true });
 });
 
+// ─── IA DU DASHBOARD ───
+app.post('/api/dashboard/:slug/ai', async (req, res) => {
+  const auth = authVendor(req, res); if (!auth) return;
+  const { v } = auth;
+  const { message, conversation = [] } = req.body;
+
+  const produits = (v.store.produits || []).map(p => ({
+    id: p.id, nom: p.nom, prix: p.prix_base,
+    variantes: (p.variantes || []).map(x => x.nom),
+    options: (p.options || []).map(o => o.nom + ': ' + (o.choix || []).map(c => c.nom).join(', '))
+  }));
+
+  const topProduits = (() => {
+    const counts = {};
+    (v.orders || []).forEach(o => (o.items || []).forEach(i => { counts[i.prodNom] = (counts[i.prodNom] || 0) + i.qty; }));
+    return Object.entries(counts).sort((a,b) => b[1]-a[1]).slice(0,3).map(([n,c]) => `${n} (${c}x)`).join(', ') || 'Aucune commande encore';
+  })();
+
+  const history = conversation.map(m => `${m.role === 'user' ? 'Propriétaire' : 'Assistant'}: ${m.content}`).join('\n');
+
+  const prompt = `Tu es l'assistant business intelligent de la boutique "${v.businessName}" sur Simpl.
+Tu n'es pas un chatbot générique — tu es LE spécialiste de CETTE boutique spécifiquement.
+
+## QUI TU ES
+Un consultant e-commerce senior qui combine la précision d'un développeur et le flair d'un directeur marketing. Tu parles vrai, tu agis vite, tu ne perds pas de temps.
+
+## CE QUE TU PEUX FAIRE
+- Modifier un produit existant (prix, nom, description, variantes, options)
+- Ajouter un nouveau produit complet
+- Supprimer un produit (avec confirmation)
+- Changer le slogan ou la description de la boutique
+- Donner des conseils basés sur les vraies données
+- Suggérer des améliorations concrètes
+
+## DONNÉES RÉELLES DE LA BOUTIQUE
+Nom: ${v.businessName}
+Service: ${v.service || 'Non spécifié'}
+Mode: ${v.store.mode || 'soumission'}
+Thème: ${v.store.apparence?.theme || 'light'}
+Produits (${produits.length}): ${JSON.stringify(produits, null, 2)}
+Commandes reçues: ${(v.orders || []).length}
+Produits les plus commandés: ${topProduits}
+Slogan actuel: ${v.store.slogan || 'Aucun'}
+
+## TA FAÇON DE TRAVAILLER
+1. Pour un petit changement → tu l'appliques directement sans demander
+2. Pour un changement majeur (refonte, suppression) → 1 phrase de confirmation
+3. Tu annonces ce que tu as fait après chaque action
+4. Tu proposes la prochaine étape logique si pertinent
+
+## RÈGLES ABSOLUES
+- Tu modifies SEULEMENT ce qui est demandé
+- Tu gardes TOUS les IDs existants intacts
+- Tu ne supprimes JAMAIS sans confirmation explicite
+- prix_base et prix_extra = toujours des NOMBRES
+- Jamais de liste de questions — une seule si nécessaire
+
+## TON TON
+Direct. Chaleureux. Efficace. Pas de "Bien sûr !" ou "Absolument !".
+Tu parles comme quelqu'un qui connaît son affaire.
+
+## CONVERSATION
+${history}
+Propriétaire: ${message}
+
+## FORMAT DE SORTIE — RÈGLE ABSOLUE
+Réponds UNIQUEMENT en JSON valide. Aucun texte avant ou après. Aucun backtick.
+
+Réponse texte: {"type":"message","content":"ton message naturel"}
+
+Modification boutique: {"type":"update","store":${JSON.stringify(v.store)},"message":"ce que t'as changé"}
+
+Ajout produit: {"type":"add_product","produit":{"id":"prod${genId()}","nom":"...","prix_base":0,"prix_affiche":"0$","description":"...","image_emoji":"📦","image_url":"","variantes":[],"options":[]},"message":"confirmation"}
+
+Suppression produit: {"type":"delete_product","produit_id":"id_existant","message":"confirmation"}`;
+
+  try {
+    const msg = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 3000,
+      temperature: 0.3
+    });
+    const data = extractJSON(msg.choices[0].message.content);
+
+    // Appliquer les changements automatiquement
+    const db = loadDB();
+    const vendor = db[req.params.slug];
+    if (data.type === 'update' && data.store) {
+      vendor.store = { ...vendor.store, ...data.store };
+      saveDB(db);
+    } else if (data.type === 'add_product' && data.produit) {
+      vendor.store.produits = vendor.store.produits || [];
+      vendor.store.produits.push(data.produit);
+      saveDB(db);
+    } else if (data.type === 'delete_product' && data.produit_id) {
+      vendor.store.produits = (vendor.store.produits || []).filter(p => p.id !== data.produit_id);
+      saveDB(db);
+    }
+
+    res.json(data);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ─── PAGE ROUTES ───
 app.get('/s/:slug', (req, res) => res.sendFile(path.join(__dirname, 'store.html')));
 app.get('/dashboard/:slug/:token', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
