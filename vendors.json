@@ -1,0 +1,453 @@
+{
+  "boisdeconstruction": {
+    "slug": "boisdeconstruction",
+    "businessName": "planche talbot",
+    "email": "wtalbot442@gmail.com",
+    "phone": "8193428999",
+    "city": "Sherbrooke",
+    "service": "je vend du bois de construction",
+    "accent": "#f59e0b",
+    "config": {
+      "slogan": "Bois de construction de qualité à des prix compétitifs",
+      "description": "Nous offrons du bois de pin de haute qualité pour vos projets de construction. Nos options incluent des planches de 1x6 et des poutres de 2x4, disponibles en différentes longueurs.",
+      "paiement": {
+        "structure": "Paiement en personne",
+        "depot_pct": 0,
+        "depot_label": "Paiement total à la commande",
+        "solde_label": "Paiement total à la commande",
+        "note_paiement": "Le paiement est accepté en argent ou par carte de crédit.",
+        "afficher_detail": true
+      },
+      "prix": [
+        {
+          "id": "p1",
+          "label": "Bois de pin 1x6",
+          "valeur": "89 cent le pied linéaire",
+          "valeur_num": 0.89,
+          "detail": "Disponible en longueurs de 8, 10, 12 et 16 pieds",
+          "sous_options": [
+            {
+              "id": "so1",
+              "label": "Longueur de 8 pieds",
+              "valeur": "8 pieds",
+              "valeur_num": 8
+            },
+            {
+              "id": "so2",
+              "label": "Longueur de 10 pieds",
+              "valeur": "10 pieds",
+              "valeur_num": 10
+            },
+            {
+              "id": "so3",
+              "label": "Longueur de 12 pieds",
+              "valeur": "12 pieds",
+              "valeur_num": 12
+            },
+            {
+              "id": "so4",
+              "label": "Longueur de 16 pieds",
+              "valeur": "16 pieds",
+              "valeur_num": 16
+            }
+          ]
+        },
+        {
+          "id": "p2",
+          "label": "Bois de pin 2x4",
+          "valeur": "99 cent le pied linéaire",
+          "valeur_num": 0.99,
+          "detail": "Disponible en longueurs de 8, 10, 12 et 16 pieds",
+          "sous_options": [
+            {
+              "id": "so5",
+              "label": "Longueur de 8 pieds",
+              "valeur": "8 pieds",
+              "valeur_num": 8
+            },
+            {
+              "id": "so6",
+              "label": "Longueur de 10 pieds",
+              "valeur": "10 pieds",
+              "valeur_num": 10
+            },
+            {
+              "id": "so7",
+              "label": "Longueur de 12 pieds",
+              "valeur": "12 pieds",
+              "valeur_num": 12
+            },
+            {
+              "id": "so8",
+              "label": "Longueur de 16 pieds",
+              "valeur": "16 pieds",
+              "valeur_num": 16
+            }
+          ]
+        }
+      ],
+      "options": [
+        {
+          "id": "o1",
+          "nom": "Frais de livraison",
+          "description": "Frais de livraison de 70 cent le kilomètre",
+          "type": "checkbox",
+          "prix": "70 cent le kilomètre",
+          "prix_num": 0.7,
+          "sous_options": []
+        }
+      ],
+      "questions_client": [
+        {
+          "id": "q1",
+          "question": "Quantité de bois de pin 1x6 désirée",
+          "type": "number",
+          "placeholder": "Entrez la quantité en pieds linéaires",
+          "requis": true
+        },
+        {
+          "id": "q2",
+          "question": "Quantité de bois de pin 2x4 désirée",
+          "type": "number",
+          "placeholder": "Entrez la quantité en pieds linéaires",
+          "requis": true
+        },
+        {
+          "id": "q3",
+          "question": "Adresse de livraison",
+          "type": "text",
+          "placeholder": "Entrez votre adresse de livraison",
+          "requis": true
+        },
+        {
+          "id": "q4",
+          "question": "Téléphone",
+          "type": "tel",
+          "placeholder": "Entrez votre numéro de téléphone",
+          "requis": true
+        },
+        {
+          "id": "q5",
+          "question": "Courriel",
+          "type": "email",
+          "placeholder": "Entrez votre adresse courriel",
+          "requis": true
+        }
+      ],
+      "url_slug": "bois-de-construction",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "token": "a4184109ed5076561a41f443b4b3e7e6",
+    "createdAt": "2026-05-29T03:49:14.191Z",
+    "submissions": [
+      {
+        "id": "7e639594",
+        "name": "bleuet bleu",
+        "email": "wtalbot442@gmail.com",
+        "phone": "8193428999",
+        "notes": "",
+        "selectedPrice": {
+          "label": "Bois de pin 2x4",
+          "val": "99 cent le pied linéaire"
+        },
+        "options": [
+          {
+            "nom": "Frais de livraison",
+            "prix": "70 cent le kilomètre"
+          }
+        ],
+        "answers": [
+          {
+            "question": "Quantité de bois de pin 1x6 désirée",
+            "answer": "32"
+          },
+          {
+            "question": "Quantité de bois de pin 2x4 désirée",
+            "answer": "24"
+          },
+          {
+            "question": "Adresse de livraison",
+            "answer": "27 chemain petit quebec la patrie"
+          },
+          {
+            "question": "Téléphone",
+            "answer": "8193428999"
+          },
+          {
+            "question": "Courriel",
+            "answer": "wtalbot442@gmail.com"
+          }
+        ],
+        "total": "8,7 $",
+        "createdAt": "2026-05-29T03:50:23.742Z"
+      }
+    ]
+  },
+  "bougieparfumee": {
+    "slug": "bougieparfumee",
+    "businessName": "léa",
+    "email": "leagauvincote@gmail.com",
+    "phone": "",
+    "city": "",
+    "service": "Bougie",
+    "accent": "#ec4899",
+    "config": {
+      "slogan": "Bougies parfumées et cozy pour un moment de détente",
+      "description": "Découvrez nos bougies parfumées et cozy, faites à partir de cire de soya et conçues pour vous offrir un moment de détente et de relaxation. Chaque bougie a une thématique unique, comme la détente des coliques pour les nouveau-nés ou la confiance en soi pour les mamans.",
+      "paiement": {
+        "structure": "Paiement complet à la livraison",
+        "depot_pct": 0,
+        "depot_label": "Aucun dépôt requis",
+        "solde_label": "Paiement complet à la livraison",
+        "note_paiement": "Paiement par virement interact ou PayPal",
+        "afficher_detail": true
+      },
+      "prix": [
+        {
+          "id": "p1",
+          "label": "Bougie petite",
+          "valeur": "15$",
+          "valeur_num": 15,
+          "detail": "Bougie parfumée et cozy, sans pot",
+          "sous_options": []
+        },
+        {
+          "id": "p2",
+          "label": "Bougie grande",
+          "valeur": "25$",
+          "valeur_num": 25,
+          "detail": "Bougie parfumée et cozy, avec pot",
+          "sous_options": []
+        }
+      ],
+      "options": [
+        {
+          "nom": "Couleur",
+          "type": "select",
+          "options": [
+            {
+              "label": "Blanc",
+              "prix": "0$",
+              "prix_num": 0
+            },
+            {
+              "label": "Ivoire",
+              "prix": "+1$",
+              "prix_num": 1
+            },
+            {
+              "label": "Gris",
+              "prix": "+1$",
+              "prix_num": 1
+            },
+            {
+              "label": "Noir",
+              "prix": "+1$",
+              "prix_num": 1
+            }
+          ]
+        },
+        {
+          "nom": "Forme",
+          "type": "select",
+          "options": [
+            {
+              "label": "Ronde",
+              "prix": "0$",
+              "prix_num": 0
+            },
+            {
+              "label": "Carrée",
+              "prix": "+2$",
+              "prix_num": 2
+            },
+            {
+              "label": "Rectangulaire",
+              "prix": "+2$",
+              "prix_num": 2
+            }
+          ]
+        },
+        {
+          "nom": "Odeur",
+          "type": "select",
+          "options": [
+            {
+              "label": "Vanille",
+              "prix": "0$",
+              "prix_num": 0
+            },
+            {
+              "label": "Fleur d'oranger",
+              "prix": "+3$",
+              "prix_num": 3
+            },
+            {
+              "label": "Lavande",
+              "prix": "+3$",
+              "prix_num": 3
+            },
+            {
+              "label": "Eucalyptus",
+              "prix": "+3$",
+              "prix_num": 3
+            }
+          ]
+        }
+      ],
+      "questions_client": [
+        {
+          "id": "q1",
+          "question": "Combien de bougies souhaitez-vous commander ?",
+          "type": "number",
+          "placeholder": "Entrez le nombre de bougies",
+          "requis": true
+        },
+        {
+          "id": "q2",
+          "question": "Souhaitez-vous ajouter un message personnalisé à votre commande ?",
+          "type": "text",
+          "placeholder": "Entrez votre message",
+          "requis": false
+        }
+      ],
+      "url_slug": "bougie-parfumee",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "token": "fe837ef9f20316afb9a9ab35fba89d0f",
+    "createdAt": "2026-05-29T14:23:57.909Z",
+    "submissions": [
+      {
+        "id": "0e78b49c",
+        "name": "bleuet bleu",
+        "email": "wtalbot442@gmail.com",
+        "phone": "",
+        "notes": "",
+        "selectedPrice": {
+          "label": "Bougie grande",
+          "val": "25$"
+        },
+        "options": [
+          {
+            "nom": "Couleur"
+          }
+        ],
+        "answers": [
+          {
+            "question": "Combien de bougies souhaitez-vous commander ?",
+            "answer": "2"
+          },
+          {
+            "question": "Souhaitez-vous ajouter un message personnalisé à votre commande ?",
+            "answer": "merci toi"
+          }
+        ],
+        "total": "25 $",
+        "createdAt": "2026-05-29T14:25:10.960Z"
+      }
+    ]
+  },
+  "deodorantsnaturels": {
+    "slug": "deodorantsnaturels",
+    "businessName": "William Talbot",
+    "email": "wtalbot442@gmail.com",
+    "phone": "8193428999",
+    "city": "Sherbrooke",
+    "service": "deodorant pour le corp",
+    "accent": "#ec4899",
+    "config": {
+      "slogan": "Déodorants naturels pour un corps sain",
+      "description": "Découvrez nos déodorants en stick faits de produits naturels, disponibles en 5 parfums délicieux",
+      "mode": "soumission",
+      "paiement": {
+        "en_ligne": false,
+        "depot_pct": 0,
+        "depot_label": "Dépôt",
+        "solde_label": "Solde à la livraison",
+        "note_paiement": "",
+        "afficher_detail": true
+      },
+      "prix": [
+        {
+          "id": "p1",
+          "label": "Déodorant en stick",
+          "valeur": "15$",
+          "valeur_num": 15,
+          "detail": "Un déodorant en stick fait de produits naturels",
+          "sous_options": [
+            {
+              "label": "Noix de coco",
+              "valeur": "0$",
+              "valeur_num": 0
+            },
+            {
+              "label": "Beurre de karité",
+              "valeur": "0$",
+              "valeur_num": 0
+            },
+            {
+              "label": "Vanille",
+              "valeur": "0$",
+              "valeur_num": 0
+            },
+            {
+              "label": "Chocolat noir",
+              "valeur": "0$",
+              "valeur_num": 0
+            },
+            {
+              "label": "Rose",
+              "valeur": "0$",
+              "valeur_num": 0
+            }
+          ]
+        },
+        {
+          "id": "p2",
+          "label": "Pack de deux déodorants en stick",
+          "valeur": "25$",
+          "valeur_num": 25,
+          "detail": "Deux déodorants en stick faits de produits naturels",
+          "sous_options": [
+            {
+              "label": "Noix de coco",
+              "valeur": "0$",
+              "valeur_num": 0
+            },
+            {
+              "label": "Beurre de karité",
+              "valeur": "0$",
+              "valeur_num": 0
+            },
+            {
+              "label": "Vanille",
+              "valeur": "0$",
+              "valeur_num": 0
+            },
+            {
+              "label": "Chocolat noir",
+              "valeur": "0$",
+              "valeur_num": 0
+            },
+            {
+              "label": "Rose",
+              "valeur": "0$",
+              "valeur_num": 0
+            }
+          ]
+        }
+      ],
+      "options": [],
+      "questions_client": [],
+      "url_slug": "deodorants-naturels",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "paiementEnLigne": true,
+    "token": "0be2e5e3c9170554fe0f216060effd0f",
+    "createdAt": "2026-05-29T16:13:54.472Z",
+    "submissions": []
+  }
+}

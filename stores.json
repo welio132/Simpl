@@ -1,0 +1,1023 @@
+{
+  "bougies": {
+    "slug": "bougies",
+    "businessName": "William Talbot",
+    "email": "wtalbot442@gmail.com",
+    "phone": "8193428999",
+    "city": "Sherbrooke",
+    "accent": "#10b981",
+    "store": {
+      "slogan": "Bougies personnalisées et écologiques",
+      "description": "Découvrez nos bougies uniques en forme de tasse de café, faites avec de la cire de soya et personnalisables en parfum et couleur",
+      "mode": "boutique",
+      "produits": [
+        {
+          "id": "prod1",
+          "nom": "Bougie personnalisée",
+          "description": "Bougie en forme de tasse de café avec dégradé de couleur et parfum personnalisable",
+          "prix_base": 10,
+          "prix_affiche": "10$",
+          "image_emoji": "🕯️",
+          "variantes": [
+            {
+              "id": "v1",
+              "nom": "Demi-livre",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v2",
+              "nom": "1 livre",
+              "prix_extra": 8,
+              "prix_extra_affiche": "+8$"
+            },
+            {
+              "id": "v3",
+              "nom": "2 livres",
+              "prix_extra": 17,
+              "prix_extra_affiche": "+17$"
+            }
+          ],
+          "options": [
+            {
+              "id": "opt1",
+              "nom": "Parfum",
+              "type": "select",
+              "choix": [
+                {
+                  "id": "c1",
+                  "nom": "Rose",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c2",
+                  "nom": "Fruit des champs",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c3",
+                  "nom": "Beurre de karité",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c4",
+                  "nom": "Vanille",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c5",
+                  "nom": "Brise de printemps",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c6",
+                  "nom": "Café",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c7",
+                  "nom": "Lavende",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                }
+              ]
+            },
+            {
+              "id": "opt2",
+              "nom": "Couleur",
+              "type": "select",
+              "choix": [
+                {
+                  "id": "c8",
+                  "nom": "Mauve",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c9",
+                  "nom": "Blanc",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c10",
+                  "nom": "Campêtre",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c11",
+                  "nom": "Beige",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c12",
+                  "nom": "Brun",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c13",
+                  "nom": "Orange pâle",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                },
+                {
+                  "id": "c14",
+                  "nom": "Dégradé (4 couleurs)",
+                  "prix_extra": 0,
+                  "prix_extra_affiche": ""
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "questions_client": [
+        {
+          "id": "q1",
+          "question": "Veuillez choisir vos 4 couleurs pour le dégradé",
+          "placeholder": "ex: rouge, bleu, vert, jaune"
+        }
+      ],
+      "paiement": {
+        "depot_pct": 0,
+        "depot_label": "Dépôt",
+        "solde_label": "Solde",
+        "note": ""
+      },
+      "url_slug": "bougies",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "token": "505f4c25943b58eda8541132eab79942",
+    "createdAt": "2026-05-29T20:35:15.610Z",
+    "orders": [
+      {
+        "id": "003a0382",
+        "name": "William Talbot",
+        "email": "wtalbot442@gmail.com",
+        "phone": "18193428999",
+        "notes": "",
+        "items": [
+          {
+            "id": "1780086954255n11zkc9pgv",
+            "prodId": "prod1",
+            "prodNom": "Bougie personnalisée",
+            "prodEmoji": "🕯️",
+            "variante": "Demi-livre",
+            "options": [
+              "Parfum: Rose",
+              "Couleur: Dégradé (4 couleurs)"
+            ],
+            "prix": 10,
+            "qty": 4,
+            "total": 40,
+            "questions": {
+              "q1": "orange, beige, brun et blanc"
+            }
+          },
+          {
+            "id": "17800870018620kvmfdq4sdhd",
+            "prodId": "prod1",
+            "prodNom": "Bougie personnalisée",
+            "prodEmoji": "🕯️",
+            "variante": "Demi-livre",
+            "options": [
+              "Parfum: Rose",
+              "Couleur: Mauve"
+            ],
+            "prix": 10,
+            "qty": 1,
+            "total": 10,
+            "questions": {}
+          },
+          {
+            "id": "17800870101461j74qjuhimc",
+            "prodId": "prod1",
+            "prodNom": "Bougie personnalisée",
+            "prodEmoji": "🕯️",
+            "variante": "2 livres",
+            "options": [
+              "Parfum: Rose",
+              "Couleur: Mauve"
+            ],
+            "prix": 27,
+            "qty": 4,
+            "total": 108,
+            "questions": {}
+          }
+        ],
+        "total": "158 $",
+        "mode": "boutique",
+        "status": "nouveau",
+        "createdAt": "2026-05-29T20:36:57.885Z"
+      }
+    ]
+  },
+  "bougie": {
+    "slug": "bougie",
+    "businessName": "bougie chaleur",
+    "email": "wtalbot442@gmail.com",
+    "phone": "8193428999",
+    "city": "Sherbrooke",
+    "accent": "#f59e0b",
+    "store": {
+      "slogan": "Bougies artisanales de qualité",
+      "description": "Découvrez nos bougies à base de soja, disponibles en trois tailles et avec une variété de parfums et de couleurs",
+      "mode": "boutique",
+      "produits": [
+        {
+          "id": "prod1",
+          "nom": "Bougie 500g",
+          "description": "Bougie à base de soja de 500g, disponible en différentes couleurs et parfums",
+          "prix_base": 10,
+          "prix_affiche": "10$",
+          "image_emoji": "🕯️",
+          "image_url": "",
+          "variantes": [],
+          "options": [
+            {
+              "id": "opt1",
+              "nom": "Parfum",
+              "choix": [
+                {
+                  "id": "c1",
+                  "nom": "Karité",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c2",
+                  "nom": "Rose",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c3",
+                  "nom": "Fruit des champs",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c4",
+                  "nom": "Vanille",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c5",
+                  "nom": "Lavendre",
+                  "prix_extra": 0
+                }
+              ]
+            },
+            {
+              "id": "opt2",
+              "nom": "Couleur",
+              "choix": [
+                {
+                  "id": "c6",
+                  "nom": "Rose",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c7",
+                  "nom": "Mauve",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c8",
+                  "nom": "Blanc",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c9",
+                  "nom": "Brun",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c10",
+                  "nom": "Gris",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c11",
+                  "nom": "Bleu pale",
+                  "prix_extra": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "prod2",
+          "nom": "Bougie 1000g",
+          "description": "Bougie à base de soja de 1000g, disponible en différentes couleurs et parfums",
+          "prix_base": 18,
+          "prix_affiche": "18$",
+          "image_emoji": "🕯️",
+          "image_url": "",
+          "variantes": [],
+          "options": [
+            {
+              "id": "opt1",
+              "nom": "Parfum",
+              "choix": [
+                {
+                  "id": "c1",
+                  "nom": "Karité",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c2",
+                  "nom": "Rose",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c3",
+                  "nom": "Fruit des champs",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c4",
+                  "nom": "Vanille",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c5",
+                  "nom": "Lavendre",
+                  "prix_extra": 0
+                }
+              ]
+            },
+            {
+              "id": "opt2",
+              "nom": "Couleur",
+              "choix": [
+                {
+                  "id": "c6",
+                  "nom": "Rose",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c7",
+                  "nom": "Mauve",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c8",
+                  "nom": "Blanc",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c9",
+                  "nom": "Brun",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c10",
+                  "nom": "Gris",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c11",
+                  "nom": "Bleu pale",
+                  "prix_extra": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "prod3",
+          "nom": "Bougie 2000g",
+          "description": "Bougie à base de soja de 2000g, disponible en différentes couleurs et parfums",
+          "prix_base": 27,
+          "prix_affiche": "27$",
+          "image_emoji": "🕯️",
+          "image_url": "",
+          "variantes": [],
+          "options": [
+            {
+              "id": "opt1",
+              "nom": "Parfum",
+              "choix": [
+                {
+                  "id": "c1",
+                  "nom": "Karité",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c2",
+                  "nom": "Rose",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c3",
+                  "nom": "Fruit des champs",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c4",
+                  "nom": "Vanille",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c5",
+                  "nom": "Lavendre",
+                  "prix_extra": 0
+                }
+              ]
+            },
+            {
+              "id": "opt2",
+              "nom": "Couleur",
+              "choix": [
+                {
+                  "id": "c6",
+                  "nom": "Rose",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c7",
+                  "nom": "Mauve",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c8",
+                  "nom": "Blanc",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c9",
+                  "nom": "Brun",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c10",
+                  "nom": "Gris",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c11",
+                  "nom": "Bleu pale",
+                  "prix_extra": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "questions_client": [],
+      "paiement": {
+        "depot_pct": 0,
+        "depot_label": "Dépôt",
+        "solde_label": "Solde",
+        "note": ""
+      },
+      "apparence": {
+        "couleur_accent": "#10b981",
+        "logo_url": "",
+        "banniere_url": "",
+        "police": "Inter",
+        "style": "dark"
+      },
+      "url_slug": "bougie",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "token": "728cf089049f7e238d36d0b1c7950524",
+    "createdAt": "2026-05-29T21:57:07.854Z",
+    "orders": []
+  },
+  "buche": {
+    "slug": "buche",
+    "businessName": "William Talbot",
+    "email": "wtalbot442@gmail.com",
+    "phone": "8193428999",
+    "city": "Sherbrooke",
+    "accent": "#ffffff",
+    "store": {
+      "slogan": "Bûches de qualité",
+      "description": "Vente de bûches pour tous les besoins",
+      "mode": "boutique",
+      "produits": [
+        {
+          "id": "prod1",
+          "nom": "Petite buche",
+          "description": "Bûche de petite taille",
+          "prix_base": 5,
+          "prix_affiche": "5$",
+          "image_emoji": "🌿",
+          "image_url": "",
+          "variantes": [],
+          "options": []
+        },
+        {
+          "id": "prod2",
+          "nom": "Grosse buche",
+          "description": "Bûche de grande taille",
+          "prix_base": 10,
+          "prix_affiche": "10$",
+          "image_emoji": "🌳",
+          "image_url": "",
+          "variantes": [],
+          "options": []
+        },
+        {
+          "id": "prod189f8776",
+          "image_url": "/uploads/buche/8bde81d500c253dc.png",
+          "image_emoji": "🌿",
+          "variantes": [],
+          "options": [],
+          "nom": "grosse caliss de buche a vendre",
+          "prix_base": 15,
+          "prix_affiche": "15$",
+          "description": "une groose buche"
+        }
+      ],
+      "questions_client": [],
+      "paiement": {
+        "depot_pct": 0,
+        "depot_label": "Dépôt",
+        "solde_label": "Solde",
+        "note": ""
+      },
+      "apparence": {
+        "couleur_accent": "#ffffff",
+        "logo_url": "",
+        "banniere_url": "",
+        "police": "Inter",
+        "style": "dark"
+      },
+      "url_slug": "buche",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "token": "b55db8be6b9e7bf750675224f3b1eb9f",
+    "createdAt": "2026-05-30T01:02:22.044Z",
+    "orders": []
+  },
+  "plaquettes": {
+    "slug": "plaquettes",
+    "businessName": "la plaque de bois",
+    "email": "wtalbot442@gmail.com",
+    "phone": "8193428999",
+    "city": "Sherbrooke",
+    "accent": "#3b82f6",
+    "store": {
+      "slogan": "Plaquettes de buche pour tous",
+      "description": "Découvrez nos plaquettes de buche de haute qualité pour le chauffage et la décoration",
+      "mode": "boutique",
+      "produits": [
+        {
+          "id": "prod1",
+          "nom": "Petite plaquette de buche",
+          "description": "Parfaite pour les sous-verres",
+          "prix_base": 8,
+          "prix_affiche": "8$",
+          "image_emoji": "🌿",
+          "image_url": "",
+          "variantes": [
+            {
+              "id": "v1",
+              "nom": "Bois de bouleau",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v2",
+              "nom": "Bois de pin",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v3",
+              "nom": "Bois d'épinette",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v4",
+              "nom": "Bois de cerisier",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v5",
+              "nom": "Bois de chêne",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            }
+          ],
+          "options": []
+        },
+        {
+          "id": "prod2",
+          "nom": "Moyenne plaquette de buche",
+          "description": "Parfaite pour les sous-plats",
+          "prix_base": 12,
+          "prix_affiche": "12$",
+          "image_emoji": "🌿",
+          "image_url": "",
+          "variantes": [
+            {
+              "id": "v6",
+              "nom": "Bois de bouleau",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v7",
+              "nom": "Bois de pin",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v8",
+              "nom": "Bois d'épinette",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v9",
+              "nom": "Bois de cerisier",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v10",
+              "nom": "Bois de chêne",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            }
+          ],
+          "options": []
+        },
+        {
+          "id": "prod3",
+          "nom": "Grande plaquette de buche",
+          "description": "Parfaite pour les présentoirs à objets",
+          "prix_base": 20,
+          "prix_affiche": "20$",
+          "image_emoji": "🌿",
+          "image_url": "",
+          "variantes": [
+            {
+              "id": "v11",
+              "nom": "Bois de bouleau",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v12",
+              "nom": "Bois de pin",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v13",
+              "nom": "Bois d'épinette",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v14",
+              "nom": "Bois de cerisier",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "v15",
+              "nom": "Bois de chêne",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            }
+          ],
+          "options": []
+        }
+      ],
+      "questions_client": [
+        {
+          "id": "q1",
+          "question": "Laissez libre court à votre imagination",
+          "placeholder": "Ex: ..."
+        }
+      ],
+      "paiement": {
+        "depot_pct": 0,
+        "depot_label": "Dépôt",
+        "solde_label": "Solde",
+        "note": "Frais de poste Canada à la charge du client"
+      },
+      "apparence": {
+        "couleur_accent": "#10b981",
+        "logo_url": "/uploads/plaquettes/1d146b567c4da2b1.png",
+        "banniere_url": "/uploads/plaquettes/926a7e49bffe380a.png",
+        "police": "Inter",
+        "style": "dark"
+      },
+      "url_slug": "plaquettes",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "token": "dfc93aca779743847caac2dd4622d090",
+    "createdAt": "2026-05-30T01:28:44.263Z",
+    "orders": []
+  },
+  "pergolas": {
+    "slug": "pergolas",
+    "businessName": "William Talbot",
+    "email": "wtalbot442@gmail.com",
+    "phone": "8193428999",
+    "city": "Sherbrooke",
+    "accent": "#f59e0b",
+    "store": {
+      "slogan": "Pergolas sur mesure",
+      "description": "Pergolas en bois traité pour améliorer vos espaces de vie",
+      "mode": "soumission",
+      "produits": [
+        {
+          "id": "pergola",
+          "nom": "Pergola sur mesure",
+          "description": "Pergola en bois traité avec toile soleil et pluie",
+          "prix_base": 850,
+          "prix_affiche": "850$",
+          "image_emoji": "🏠",
+          "image_url": "https://images.unsplash.com/photo-1777102820842-01cca30a24a5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5NjQ1NzJ8MHwxfHNlYXJjaHwxfHxQZXJnb2xhJTIwc3VyJTIwbWVzdXJlJTIwamUlMjB2ZW5kJTIwZGVzJTIwcGVyZ29sYXxlbnwwfDJ8fHwxNzgwMTA2ODg0fDA&ixlib=rb-4.1.0&q=80&w=400",
+          "variantes": [
+            {
+              "id": "8x8",
+              "nom": "8x8 pieds",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "8x10",
+              "nom": "8x10 pieds",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "8x12",
+              "nom": "8x12 pieds",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "10x10",
+              "nom": "10x10 pieds",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "10x12",
+              "nom": "10x12 pieds",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "12x12",
+              "nom": "12x12 pieds",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            },
+            {
+              "id": "10x16",
+              "nom": "10x16 pieds",
+              "prix_extra": 0,
+              "prix_extra_affiche": ""
+            }
+          ],
+          "options": [
+            {
+              "id": "couleur",
+              "nom": "Couleur de la pergola",
+              "choix": [
+                {
+                  "id": "bd",
+                  "nom": "Bouleau doré",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "ga",
+                  "nom": "Gris ardoise",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "nc",
+                  "nom": "Noir charbon",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "bn",
+                  "nom": "Brun noisette",
+                  "prix_extra": 0
+                }
+              ]
+            },
+            {
+              "id": "toile",
+              "nom": "Couleur de la toile",
+              "choix": [
+                {
+                  "id": "no",
+                  "nom": "Noir",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "gr",
+                  "nom": "Gris",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "br",
+                  "nom": "Brun sable",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "rv",
+                  "nom": "Rouge vin",
+                  "prix_extra": 0
+                }
+              ]
+            },
+            {
+              "id": "eclairage",
+              "nom": "Éclairage LED intégré",
+              "choix": [
+                {
+                  "id": "oui",
+                  "nom": "Oui",
+                  "prix_extra": 75
+                },
+                {
+                  "id": "non",
+                  "nom": "Non",
+                  "prix_extra": 0
+                }
+              ]
+            },
+            {
+              "id": "rideaux",
+              "nom": "Rideaux latéraux",
+              "choix": [
+                {
+                  "id": "1c",
+                  "nom": "1 côté",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "2c",
+                  "nom": "2 côtés",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "3c",
+                  "nom": "3 côtés",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "4c",
+                  "nom": "4 côtés",
+                  "prix_extra": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "questions_client": [
+        {
+          "id": "q1",
+          "question": "Quelle est votre adresse pour l'installation?",
+          "placeholder": "Ex: 123, rue principale"
+        }
+      ],
+      "paiement": {
+        "depot_pct": 0,
+        "depot_label": "Dépôt",
+        "solde_label": "Solde",
+        "note": ""
+      },
+      "apparence": {
+        "couleur_accent": "#10b981",
+        "logo_url": "",
+        "banniere_url": "",
+        "police": "Inter",
+        "style": "dark"
+      },
+      "url_slug": "pergolas",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "token": "537511d5914e053d05f3ebeee09da7b8",
+    "createdAt": "2026-05-30T02:10:03.701Z",
+    "orders": []
+  },
+  "bougies1": {
+    "slug": "bougies1",
+    "businessName": "William Talbot",
+    "email": "wtalbot442@gmail.com",
+    "phone": "8193428999",
+    "city": "Sherbrooke",
+    "accent": "#ef4444",
+    "store": {
+      "slogan": "Bougies parfumées artisanales",
+      "description": "Découvrez nos bougies artisanales parfumées à la rose, au café et au bleuet, disponibles en deux tailles",
+      "mode": "boutique",
+      "produits": [
+        {
+          "id": "prod1",
+          "nom": "Bougie petite",
+          "description": "Bougie parfumée petite",
+          "prix_base": 5,
+          "prix_affiche": "5$",
+          "image_emoji": "🕯️",
+          "image_url": "https://images.unsplash.com/photo-1707839568871-7c18453668ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w5NjQ1NzJ8MHwxfHNlYXJjaHwxfHxCb3VnaWUlMjBwZXRpdGUlMjBib3VnaWV8ZW58MHwyfHx8MTc4MDE0ODI3MXww&ixlib=rb-4.1.0&q=80&w=400",
+          "variantes": [],
+          "options": [
+            {
+              "id": "opt1",
+              "nom": "Parfum",
+              "choix": [
+                {
+                  "id": "c1",
+                  "nom": "Rose",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c2",
+                  "nom": "Café",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c3",
+                  "nom": "Bleuet",
+                  "prix_extra": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "prod2",
+          "nom": "Bougie grosse",
+          "description": "Bougie parfumée grosse",
+          "prix_base": 20,
+          "prix_affiche": "20$",
+          "image_emoji": "🕯️",
+          "image_url": "",
+          "variantes": [],
+          "options": [
+            {
+              "id": "opt1",
+              "nom": "Parfum",
+              "choix": [
+                {
+                  "id": "c1",
+                  "nom": "Rose",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c2",
+                  "nom": "Café",
+                  "prix_extra": 0
+                },
+                {
+                  "id": "c3",
+                  "nom": "Bleuet",
+                  "prix_extra": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "questions_client": [],
+      "paiement": {
+        "depot_pct": 0,
+        "depot_label": "Dépôt",
+        "solde_label": "Solde",
+        "note": ""
+      },
+      "apparence": {
+        "couleur_accent": "#10b981",
+        "logo_url": "",
+        "banniere_url": "",
+        "police": "Inter",
+        "style": "dark"
+      },
+      "url_slug": "bougies",
+      "langue": "fr"
+    },
+    "lang": "fr",
+    "token": "8f919118301a46b882e6799439bf77d0",
+    "createdAt": "2026-05-30T13:38:26.107Z",
+    "orders": []
+  }
+}
