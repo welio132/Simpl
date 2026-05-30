@@ -311,9 +311,28 @@ function detectTheme(s){
   return'light';
 }
 
-function applyTheme(t,a){
-  document.body.className=t!=='light'?t:'';
+function applyTheme(t,a,app){
+  document.body.className=t!=='light'&&t!=='custom'?t:'';
   if(a)document.documentElement.style.setProperty('--a',a);
+  // Apply custom theme colors
+  if(t==='custom'&&app&&app.custom){
+    const c=app.custom;
+    const root=document.documentElement;
+    if(c.bg){root.style.setProperty('--bg',c.bg);root.style.setProperty('--nav-bg',c.bg);root.style.setProperty('--hero-bg',c.bg);}
+    if(c.text){root.style.setProperty('--text',c.text);}
+    if(c.text2){root.style.setProperty('--text2',c.text2);root.style.setProperty('--chip-c',c.text2);}
+    if(c.card){root.style.setProperty('--card-bg',c.card);root.style.setProperty('--surf',c.card);}
+    if(c.border){root.style.setProperty('--border',c.border);root.style.setProperty('--border2',c.border);root.style.setProperty('--surf2',c.border+'33');}
+    if(c.accent){root.style.setProperty('--a',c.accent);}
+  }
+  // Apply custom font
+  if(app&&app.font&&app.font!=='Inter'){
+    const link=document.createElement('link');
+    link.rel='stylesheet';
+    link.href=`https://fonts.googleapis.com/css2?family=${app.font.replace(/ /g,'+')}:wght@400;500;600;700;800&display=swap`;
+    document.head.appendChild(link);
+    document.body.style.fontFamily=`'${app.font}', -apple-system, sans-serif`;
+  }
 }
 
 function fmt(n){return typeof n==='number'?n.toLocaleString('fr-CA')+' $':(n||'—');}
@@ -335,7 +354,7 @@ async function init(){
     vendor=await r.json();store=vendor.store;
     isBoutique=store.mode==='boutique';
     const th=store.apparence?.theme||detectTheme(vendor.service||'');
-    applyTheme(th,vendor.accent||'#7c6dfa');
+    applyTheme(th,vendor.accent||'#7c6dfa',store.apparence||{});
     setSEO();buildStore();
     document.getElementById('loader').classList.add('fade');
     setTimeout(()=>{document.getElementById('loader').style.display='none';document.getElementById('app').style.display='block';},400);

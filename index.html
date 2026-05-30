@@ -26,6 +26,10 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html{scroll-behavior:smooth;}
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2,rgba(0,0,0,0.15));border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--text3,#666);}
 body{font-family:'Instrument Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden;}
 
 /* NOISE TEXTURE */
@@ -466,7 +470,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
             <div class="mode-radio"></div>
             <div class="mode-opt-icon">📋</div>
             <div>
-              <div class="mode-opt-name" id="t-m1">Soumission <span class="mode-badge mb-g">Recommandé</span></div>
+              <div class="mode-opt-name" id="t-m1"><span id="t-m1-txt"></span> <span class="mode-badge mb-g" id="t-recommended"></span></div>
               <div class="mode-opt-desc" id="t-m1d">Le client remplit le formulaire, tu le rappelles pour finaliser.</div>
             </div>
           </div>
@@ -474,7 +478,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
             <div class="mode-radio"></div>
             <div class="mode-opt-icon">🛍</div>
             <div>
-              <div class="mode-opt-name" id="t-m2">Boutique en ligne <span class="mode-badge mb-b">Panier + paiement</span></div>
+              <div class="mode-opt-name" id="t-m2"><span id="t-m2-txt"></span> <span class="mode-badge mb-b" id="t-cart-payment"></span></div>
               <div class="mode-opt-desc" id="t-m2d">Le client ajoute au panier et paie directement.</div>
             </div>
           </div>
@@ -574,6 +578,20 @@ const TX={
     psSlogan:'SLOGAN',psProduits:'PRODUITS',psQs:'QUESTIONS',
     nl1:'Fonctionnalités',nl2:'Tarifs',nl3:'Commencer',
     footer:'© 2025 Simpl — Ta boutique en ligne, créée par l\'IA',
+    pc1n:'Soumission',pc2n:'Boutique',popular:'⚡ Le plus populaire',
+    pc1d:'Parfait pour démarrer. Tes clients soumettent, tu les rappelles.',
+    pc2d:'Paiement en ligne direct. Tes clients paient, toi tu encaisses.',
+    pc1mo:'/mois',pc2mo:'/mois',
+    pp1:'Boutique complète par IA',pp2:'Photos automatiques',pp3:'Dashboard vendeur',pp4:'Commandes illimitées',pp5:'Support par email',
+    pp6:'Tout du plan Soumission',pp7:'Panier + paiement en ligne',pp8:'Notifications email',pp9:'Personnalisation avancée',pp10:'Support prioritaire',
+    pc1b:'Commencer →',pc2b:'Commencer →',
+    tt1:'"J'ai créé ma boutique de bougies en 8 minutes. L'IA a tout compris du premier coup — les 3 tailles, les parfums, les couleurs. Impressionnant."',
+    tt1b:'Bougies artisanales, Québec',
+    tt2:'"Avant je passais 2h par semaine à répondre aux demandes. Maintenant tout se fait tout seul."',
+    tt2b:'Lavage à pression, Montréal',
+    tt3:'"Le dashboard est propre, les commandes arrivent directement. Exactement ce dont j'avais besoin."',
+    tt3b:'Arrangements floraux, Laval',
+    recommended:'Recommandé',cartPayment:'Panier + paiement',
   },
   en:{
     badge:'Next generation of online stores',
@@ -615,6 +633,20 @@ const TX={
     psSlogan:'TAGLINE',psProduits:'PRODUCTS',psQs:'QUESTIONS',
     nl1:'Features',nl2:'Pricing',nl3:'Get started',
     footer:'© 2025 Simpl — Your online store, created by AI',
+    pc1n:'Quote',pc2n:'Store',popular:'⚡ Most popular',
+    pc1d:'Perfect to start. Clients submit, you call them back.',
+    pc2d:'Direct online payment. Clients pay, you receive.',
+    pc1mo:'/month',pc2mo:'/month',
+    pp1:'AI-generated store',pp2:'Automatic photos',pp3:'Vendor dashboard',pp4:'Unlimited orders',pp5:'Email support',
+    pp6:'Everything in Quote plan',pp7:'Cart + online payment',pp8:'Email notifications',pp9:'Advanced customization',pp10:'Priority support',
+    pc1b:'Get started →',pc2b:'Get started →',
+    tt1:'"I created my candle store in 8 minutes. The AI understood everything right away — 3 sizes, scents, colors. Impressive."',
+    tt1b:'Handmade candles, Quebec',
+    tt2:'"I used to spend 2 hours a week on quote requests. Now everything runs automatically."',
+    tt2b:'Pressure washing, Montreal',
+    tt3:'"The dashboard is clean, orders come in directly. Exactly what I needed."',
+    tt3b:'Floral arrangements, Laval',
+    recommended:'Recommended',cartPayment:'Cart + payment',
   }
 };
 
@@ -629,24 +661,40 @@ function setLang(l){
 
 function applyTX(){
   const tx=TX[lang];
-  const m={'t-badge':'badge','t-h1-1':'h11','t-h1-2':'h12','t-sub':'sub','t-hero-cta':'heroCta','t-hero-demo':'heroDemo',
-    't-nav-cta':'navCta','t-feat-label':'featLabel','t-feat-title':'featTitle','t-feat-sub':'featSub',
-    'f1t':'f1t','f1d':'f1d','f2t':'f2t','f2d':'f2d','f3t':'f3t','f3d':'f3d','f4t':'f4t','f4d':'f4d','f5t':'f5t','f5d':'f5d','f6t':'f6t','f6d':'f6d',
+  const m={
+    't-badge':'badge','t-h1-1':'h11','t-h1-2':'h12','t-sub':'sub',
+    't-hero-cta':'heroCta','t-hero-demo':'heroDemo','t-nav-cta':'navCta',
+    't-feat-label':'featLabel','t-feat-title':'featTitle','t-feat-sub':'featSub',
+    'f1t':'f1t','f1d':'f1d','f2t':'f2t','f2d':'f2d','f3t':'f3t','f3d':'f3d',
+    'f4t':'f4t','f4d':'f4d','f5t':'f5t','f5d':'f5d','f6t':'f6t','f6d':'f6d',
     't-how-label':'howLabel','t-how-title':'howTitle','t-how-sub':'howSub',
     's1t':'s1t','s1d':'s1d','s2t':'s2t','s2d':'s2d','s3t':'s3t','s3d':'s3d',
     't-price-label':'priceLabel','t-price-title':'priceTitle','t-price-sub':'priceSub',
+    'pc1n':'pc1n','pc2n':'pc2n','t-popular':'popular',
+    'pc1d':'pc1d','pc2d':'pc2d','pc1s':'pc1mo','pc2s':'pc2mo',
+    'pp1':'pp1','pp2':'pp2','pp3':'pp3','pp4':'pp4','pp5':'pp5',
+    'pp6':'pp6','pp7':'pp7','pp8':'pp8','pp9':'pp9','pp10':'pp10',
+    'pc1b':'pc1b','pc2b':'pc2b',
     't-testi-label':'testiLabel','t-testi-title':'testiTitle',
+    'tt1':'tt1','tt1b':'tt1b','tt2':'tt2','tt2b':'tt2b','tt3':'tt3','tt3b':'tt3b',
     't-cta-h':'ctaH','t-cta-p':'ctaP','t-cta-btn':'ctaBtn',
     't-start-label':'startLabel','t-start-title':'startTitle',
-    't-s1':'s1','t-start-btn':'startBtn','t-s2':'s2','t-preview':'preview','t-adj':'adj',
+    't-s1':'s1','t-start-btn':'startBtn','t-s2':'s2',
+    't-preview':'preview','t-adj':'adj',
     't-restart':'restart','t-next':'next','t-mode':'mode',
     't-m1':'m1','t-m1d':'m1d','t-m2':'m2','t-m2d':'m2d',
-    't-s3':'s3','t-biz':'biz','t-email':'email','t-phone':'phone','t-city':'city','t-color':'color',
-    't-back3':'back3','t-launch':'launch','t-s4h':'s4h','t-s4p':'s4p',
-    't-copy':'copy','t-see':'see','t-dash':'dash','t-footer':'footer',
+    't-s3':'s3','t-biz':'biz','t-email':'email','t-phone':'phone',
+    't-city':'city','t-color':'color','t-back3':'back3','t-launch':'launch',
+    't-s4h':'s4h','t-s4p':'s4p','t-copy':'copy','t-see':'see',
+    't-dash':'dash','t-footer':'footer',
     'nl-feat':'nl1','nl-price':'nl2','nl-start':'nl3',
   };
   Object.entries(m).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.innerHTML=tx[key]||'';});
+  // Mode badges
+  const m1txt=document.getElementById('t-m1-txt');if(m1txt)m1txt.textContent=tx.m1||'';
+  const recEl=document.getElementById('t-recommended');if(recEl)recEl.textContent=tx.recommended||'';
+  const m2txt=document.getElementById('t-m2-txt');if(m2txt)m2txt.textContent=tx.m2||'';
+  const cpEl=document.getElementById('t-cart-payment');if(cpEl)cpEl.textContent=tx.cartPayment||'';
   document.getElementById('svc-in').placeholder=tx.svcPh;
   document.getElementById('chat-in').placeholder=tx.chatPh;
   document.getElementById('adj-in').placeholder=tx.adjPh;
@@ -667,7 +715,8 @@ function goSc(n){
     el.textContent=i+1<n?'✓':(i+1);
     document.getElementById('sl'+(i+1)).className='sl'+(i+1===n?' active':'');
   });
-  window.scrollTo(0,0);
+  const startEl=document.getElementById('start');
+  if(startEl)setTimeout(()=>startEl.scrollIntoView({behavior:'smooth',block:'start'}),50);
 }
 
 function addMsg(role,content){
@@ -790,32 +839,45 @@ async function sendAdjust(){
 
 function renderPreview(store){
   let html='';
-  html+=`<div class="ps"><div class="ps-label">${t('psSlogan')}</div><div class="slogan-text">"${store.slogan||''}"</div></div>`;
-  html+=`<div class="ps"><div class="ps-label">${t('psProduits')}</div>`;
-  (store.produits||[]).forEach(p=>{
-    html+=`<div class="prod-preview">
-      <div class="prod-img-preview">
-        ${p.image_url?`<img src="${p.image_url}" alt="${p.nom}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`:''}
-        <span class="prod-emoji-preview" style="${p.image_url?'display:none':'display:block'}">${p.image_emoji||'📦'}</span>
-      </div>
-      <div class="prod-info">
-        <div class="prod-name-p">${p.nom}</div>
-        <div class="prod-desc-p">${p.description||''}</div>
-        ${(p.variantes||[]).length>0?`<div style="font-size:11px;color:var(--text3);">${(p.variantes||[]).map(v=>v.nom).join(' · ')}</div>`:''}
-        ${(p.options||[]).map(o=>`<div style="font-size:11px;color:var(--text3);">${o.nom}: ${(o.choix||[]).map(c=>c.nom).join(', ')}</div>`).join('')}
-      </div>
-      <span class="prod-price-p">${p.prix_affiche||p.prix_base+'$'}</span>
+
+  if(store.slogan){
+    html+=`<div style="background:var(--surf2);border-radius:10px;padding:12px 16px;margin-bottom:1rem;border-left:3px solid var(--a);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--a);margin-bottom:4px;">Slogan</div>
+      <div style="font-size:15px;color:var(--text);font-style:italic;">"${store.slogan}"</div>
     </div>`;
-  });
-  html+='</div>';
-  if((store.questions_client||[]).length>0){
-    html+=`<div class="ps"><div class="ps-label">${t('psQs')}</div>`;
-    (store.questions_client||[]).forEach((q,i)=>{html+=`<div class="ps-row"><span class="ps-key">${i+1}. ${q.question}</span></div>`;});
+  }
+
+  if((store.produits||[]).length>0){
+    html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--a);margin-bottom:10px;">${store.produits.length} Produit${store.produits.length>1?'s':''}</div>`;
+    html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:1rem;">`;
+    (store.produits||[]).forEach(p=>{
+      const varStr=(p.variantes||[]).map(v=>v.nom).join(', ');
+      const opts=(p.options||[]).map(o=>`<div style="margin-top:3px;font-size:11px;"><span style="color:var(--text3);">${o.nom}:</span> <span style="color:var(--text2);">${(o.choix||[]).slice(0,4).map(c=>c.nom).join(', ')}${(o.choix||[]).length>4?'...':''}</span></div>`).join('');
+      html+=`<div style="background:var(--surf2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+        <div style="height:80px;background:var(--surf3);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
+          ${p.image_url?`<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<span style=font-size:2rem>${p.image_emoji||'📦'}</span>">`:
+          `<span style="font-size:2rem;">${p.image_emoji||'📦'}</span>`}
+        </div>
+        <div style="padding:10px;">
+          <div style="font-size:13px;font-weight:700;">${p.nom}</div>
+          <div style="font-size:14px;font-weight:800;color:var(--a);margin:4px 0;">${p.prix_affiche||p.prix_base+'$'}</div>
+          ${varStr?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px;">📐 ${varStr}</div>`:''}
+          ${opts}
+        </div>
+      </div>`;
+    });
     html+='</div>';
   }
+
+  if((store.questions_client||[]).length>0){
+    html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--a);margin-bottom:8px;">Questions au client</div>`;
+    (store.questions_client||[]).forEach((q,i)=>{
+      html+=`<div style="background:var(--surf2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text2);margin-bottom:6px;">${i+1}. ${q.question}</div>`;
+    });
+  }
+
   document.getElementById('preview-content').innerHTML=html;
   document.getElementById('preview').style.display='block';
-  setTimeout(()=>document.getElementById('preview').scrollIntoView({behavior:'smooth',block:'start'}),100);
 }
 
 function selMode(n){
