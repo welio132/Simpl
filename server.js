@@ -88,7 +88,7 @@ const ADMIN_EMAIL = 'wtalbot442@gmail.com';
 async function sendEmail({ to, subject, html }) {
   try {
     await resend.emails.send({
-      from: 'Simpl <no-reply@simpl-production.up.railway.app>',
+      from: 'Simpl <onboarding@resend.dev>',
       to,
       subject,
       html
