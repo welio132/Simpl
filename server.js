@@ -6,6 +6,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+const { MongoClient } = require('mongodb');
 
 const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
@@ -15,12 +16,34 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.static('.'));
 app.use('/uploads', express.static('uploads'));
 
-const DB_FILE = 'stores.json';
+// ─── MONGODB ───
+const MONGO_URI = process.env.MONGODB_URI;
+let db;
 
-// Multer pour upload de fichiers
+async function connectDB() {
+  const client = new MongoClient(MONGO_URI);
+  await client.connect();
+  db = client.db('simpl');
+  console.log('✅ MongoDB connecté');
+}
+
+async function getVendor(slug) {
+  return db.collection('stores').findOne({ slug });
+}
+
+async function saveVendor(vendor) {
+  await db.collection('stores').updateOne(
+    { slug: vendor.slug },
+    { $set: vendor },
+    { upsert: true }
+  );
+}
+
+// ─── MULTER ───
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = 'uploads/' + req.params.slug;
+    const slug = req.params.slug || 'tmp';
+    const dir = 'uploads/' + slug;
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -31,23 +54,31 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
-function loadDB() {
-  if (!fs.existsSync(DB_FILE)) fs.writeFileSync(DB_FILE, JSON.stringify({}));
-  try { return JSON.parse(fs.readFileSync(DB_FILE, 'utf8')); }
-  catch(e) { return {}; }
-}
-function saveDB(data) { fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2)); }
+// ─── HELPERS ───
 function extractJSON(text) {
-  const s = text.indexOf('{'), e = text.lastIndexOf('}');
-  if (s === -1 || e === -1) throw new Error('No JSON');
-  return JSON.parse(text.substring(s, e + 1));
+  // Plus robuste : cherche le premier { et le } fermant correspondant
+  const start = text.indexOf('{');
+  if (start === -1) throw new Error('No JSON found');
+  let depth = 0;
+  for (let i = start; i < text.length; i++) {
+    if (text[i] === '{') depth++;
+    else if (text[i] === '}') {
+      depth--;
+      if (depth === 0) return JSON.parse(text.substring(start, i + 1));
+    }
+  }
+  throw new Error('Invalid JSON');
 }
+
 function genId() { return crypto.randomBytes(4).toString('hex'); }
-function authVendor(req, res) {
-  const db = loadDB();
-  const v = db[req.params.slug];
-  if (!v || v.token !== req.headers['x-token']) { res.status(403).json({ error: 'Accès refusé' }); return null; }
-  return { db, v };
+
+async function authVendor(req, res) {
+  const v = await getVendor(req.params.slug);
+  if (!v || v.token !== req.headers['x-token']) {
+    res.status(403).json({ error: 'Accès refusé' });
+    return null;
+  }
+  return v;
 }
 
 // ─── AI ROUTES ───
@@ -215,115 +246,109 @@ app.post('/api/adjust', async (req, res) => {
 });
 
 // ─── STORE ROUTES ───
-app.post('/api/store/save', (req, res) => {
+app.post('/api/store/save', async (req, res) => {
   const { businessName, email, phone, city, accent, store, lang } = req.body;
   if (!businessName || !email || !store) return res.status(400).json({ error: 'Données manquantes' });
-  const db = loadDB();
+
   const base = (store.url_slug || businessName).toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 24) || 'store';
   let slug = base; let n = 1;
-  while (db[slug]) { slug = base + n; n++; }
+  while (await getVendor(slug)) { slug = base + n; n++; }
+
   const token = crypto.randomBytes(16).toString('hex');
-  db[slug] = { slug, businessName, email, phone: phone||'', city: city||'', accent: accent||'#10b981', store, lang: lang||'fr', token, createdAt: new Date().toISOString(), orders: [] };
-  saveDB(db);
+  const vendor = {
+    slug, businessName, email,
+    phone: phone || '', city: city || '',
+    accent: accent || '#10b981',
+    store, lang: lang || 'fr',
+    token, createdAt: new Date().toISOString(),
+    orders: []
+  };
+  await saveVendor(vendor);
   res.json({ slug, token });
 });
 
-app.get('/api/store/:slug', (req, res) => {
-  const db = loadDB();
-  const v = db[req.params.slug];
+app.get('/api/store/:slug', async (req, res) => {
+  const v = await getVendor(req.params.slug);
   if (!v) return res.status(404).json({ error: 'Not found' });
-  const { token, email, ...safe } = v;
+  const { token, email, _id, ...safe } = v;
   res.json(safe);
 });
 
-app.post('/api/store/:slug/order', (req, res) => {
-  const db = loadDB();
-  const v = db[req.params.slug];
+app.post('/api/store/:slug/order', async (req, res) => {
+  const v = await getVendor(req.params.slug);
   if (!v) return res.status(404).json({ error: 'Not found' });
   const order = { id: genId(), ...req.body, status: 'nouveau', createdAt: new Date().toISOString() };
+  v.orders = v.orders || [];
   v.orders.push(order);
-  saveDB(db);
+  await saveVendor(v);
   res.json({ success: true, orderId: order.id });
 });
 
-// ─── DASHBOARD ROUTES (authentifiées) ───
-app.get('/api/dashboard/:slug/:token', (req, res) => {
-  const db = loadDB();
-  const v = db[req.params.slug];
+// ─── DASHBOARD ROUTES ───
+app.get('/api/dashboard/:slug/:token', async (req, res) => {
+  const v = await getVendor(req.params.slug);
   if (!v || v.token !== req.params.token) return res.status(403).json({ error: 'Accès refusé' });
-  res.json(v);
+  const { _id, ...safe } = v;
+  res.json(safe);
 });
 
-// Mettre à jour le store complet
-app.put('/api/dashboard/:slug/store', (req, res) => {
-  const auth = authVendor(req, res); if (!auth) return;
-  const { db, v } = auth;
+app.put('/api/dashboard/:slug/store', async (req, res) => {
+  const v = await authVendor(req, res); if (!v) return;
   v.store = { ...v.store, ...req.body };
-  saveDB(db);
+  await saveVendor(v);
   res.json({ success: true });
 });
 
-// Mettre à jour l'apparence
-app.put('/api/dashboard/:slug/apparence', (req, res) => {
-  const auth = authVendor(req, res); if (!auth) return;
-  const { db, v } = auth;
+app.put('/api/dashboard/:slug/apparence', async (req, res) => {
+  const v = await authVendor(req, res); if (!v) return;
   v.store.apparence = { ...(v.store.apparence || {}), ...req.body };
   v.accent = req.body.couleur_accent || v.accent;
-  saveDB(db);
+  await saveVendor(v);
   res.json({ success: true });
 });
 
-// Mettre à jour les infos du vendeur
-app.put('/api/dashboard/:slug/infos', (req, res) => {
-  const auth = authVendor(req, res); if (!auth) return;
-  const { db, v } = auth;
+app.put('/api/dashboard/:slug/infos', async (req, res) => {
+  const v = await authVendor(req, res); if (!v) return;
   const { businessName, phone, city, slogan, description } = req.body;
   if (businessName) v.businessName = businessName;
   if (phone !== undefined) v.phone = phone;
   if (city !== undefined) v.city = city;
   if (slogan !== undefined) v.store.slogan = slogan;
   if (description !== undefined) v.store.description = description;
-  saveDB(db);
+  await saveVendor(v);
   res.json({ success: true });
 });
 
-// Ajouter un produit
-app.post('/api/dashboard/:slug/produit', (req, res) => {
-  const auth = authVendor(req, res); if (!auth) return;
-  const { db, v } = auth;
+app.post('/api/dashboard/:slug/produit', async (req, res) => {
+  const v = await authVendor(req, res); if (!v) return;
   const prod = { id: 'prod' + genId(), image_url: '', image_emoji: '📦', variantes: [], options: [], ...req.body };
   v.store.produits = v.store.produits || [];
   v.store.produits.push(prod);
-  saveDB(db);
+  await saveVendor(v);
   res.json({ success: true, produit: prod });
 });
 
-// Modifier un produit
-app.put('/api/dashboard/:slug/produit/:prodId', (req, res) => {
-  const auth = authVendor(req, res); if (!auth) return;
-  const { db, v } = auth;
+app.put('/api/dashboard/:slug/produit/:prodId', async (req, res) => {
+  const v = await authVendor(req, res); if (!v) return;
   const idx = (v.store.produits || []).findIndex(p => p.id === req.params.prodId);
   if (idx === -1) return res.status(404).json({ error: 'Produit not found' });
   v.store.produits[idx] = { ...v.store.produits[idx], ...req.body };
-  saveDB(db);
+  await saveVendor(v);
   res.json({ success: true });
 });
 
-// Supprimer un produit
-app.delete('/api/dashboard/:slug/produit/:prodId', (req, res) => {
-  const auth = authVendor(req, res); if (!auth) return;
-  const { db, v } = auth;
+app.delete('/api/dashboard/:slug/produit/:prodId', async (req, res) => {
+  const v = await authVendor(req, res); if (!v) return;
   v.store.produits = (v.store.produits || []).filter(p => p.id !== req.params.prodId);
-  saveDB(db);
+  await saveVendor(v);
   res.json({ success: true });
 });
 
 // Upload image produit
-app.post('/api/dashboard/:slug/upload/:prodId', (req, res) => {
-  const db = loadDB();
-  const v = db[req.params.slug];
+app.post('/api/dashboard/:slug/upload/:prodId', async (req, res) => {
+  const v = await getVendor(req.params.slug);
   if (!v || v.token !== req.headers['x-token']) return res.status(403).json({ error: 'Accès refusé' });
-  upload.single('image')(req, res, (err) => {
+  upload.single('image')(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'No file' });
     const url = '/uploads/' + req.params.slug + '/' + req.file.filename;
@@ -333,27 +358,24 @@ app.post('/api/dashboard/:slug/upload/:prodId', (req, res) => {
       const prod = (v.store.produits || []).find(p => p.id === req.params.prodId);
       if (prod) prod.image_url = url;
     }
-    saveDB(db);
+    await saveVendor(v);
     res.json({ success: true, url });
   });
 });
 
-// Mettre à jour le statut d'une commande
-app.put('/api/dashboard/:slug/order/:orderId', (req, res) => {
-  const auth = authVendor(req, res); if (!auth) return;
-  const { db, v } = auth;
-  const order = v.orders.find(o => o.id === req.params.orderId);
+app.put('/api/dashboard/:slug/order/:orderId', async (req, res) => {
+  const v = await authVendor(req, res); if (!v) return;
+  const order = (v.orders || []).find(o => o.id === req.params.orderId);
   if (!order) return res.status(404).json({ error: 'Order not found' });
   order.status = req.body.status || order.status;
   order.note = req.body.note !== undefined ? req.body.note : order.note;
-  saveDB(db);
+  await saveVendor(v);
   res.json({ success: true });
 });
 
 // ─── IA DU DASHBOARD ───
 app.post('/api/dashboard/:slug/ai', async (req, res) => {
-  const auth = authVendor(req, res); if (!auth) return;
-  const { v } = auth;
+  const v = await authVendor(req, res); if (!v) return;
   const { message, conversation = [] } = req.body;
 
   const produits = (v.store.produits || []).map(p => ({
@@ -435,19 +457,17 @@ Suppression produit: {"type":"delete_product","produit_id":"id_existant","messag
     });
     const data = extractJSON(msg.choices[0].message.content);
 
-    // Appliquer les changements automatiquement
-    const db = loadDB();
-    const vendor = db[req.params.slug];
+    const freshV = await getVendor(req.params.slug);
     if (data.type === 'update' && data.store) {
-      vendor.store = { ...vendor.store, ...data.store };
-      saveDB(db);
+      freshV.store = { ...freshV.store, ...data.store };
+      await saveVendor(freshV);
     } else if (data.type === 'add_product' && data.produit) {
-      vendor.store.produits = vendor.store.produits || [];
-      vendor.store.produits.push(data.produit);
-      saveDB(db);
+      freshV.store.produits = freshV.store.produits || [];
+      freshV.store.produits.push(data.produit);
+      await saveVendor(freshV);
     } else if (data.type === 'delete_product' && data.produit_id) {
-      vendor.store.produits = (vendor.store.produits || []).filter(p => p.id !== data.produit_id);
-      saveDB(db);
+      freshV.store.produits = (freshV.store.produits || []).filter(p => p.id !== data.produit_id);
+      await saveVendor(freshV);
     }
 
     res.json(data);
@@ -460,4 +480,11 @@ Suppression produit: {"type":"delete_product","produit_id":"id_existant","messag
 app.get('/s/:slug', (req, res) => res.sendFile(path.join(__dirname, 'store.html')));
 app.get('/dashboard/:slug/:token', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 
-app.listen(3000, () => console.log('Simpl running on http://localhost:3000'));
+// ─── START ───
+const PORT = process.env.PORT || 3000;
+connectDB().then(() => {
+  app.listen(PORT, () => console.log(`Simpl running on port ${PORT}`));
+}).catch(err => {
+  console.error('❌ MongoDB connection failed:', err);
+  process.exit(1);
+});
