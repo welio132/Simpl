@@ -124,6 +124,9 @@ async function emailBoutiqueCreee(vendor, slug, token) {
 // Email 2 : Nouvelle commande → à l'entrepreneur
 async function emailNouvelleCommande(vendor, order) {
   const dashboardUrl = `https://simpl-production.up.railway.app/dashboard/${vendor.slug}/${vendor.token}`;
+  const clientName = order.clientName || order.name || 'N/A';
+  const clientEmail = order.clientEmail || order.email || 'N/A';
+  const clientPhone = order.clientPhone || order.phone || 'N/A';
   const items = (order.items || []).map(i => `<li>${i.qty}x ${i.prodNom} — ${i.prixTotal || ''}$</li>`).join('');
   await sendEmail({
     to: vendor.email,
@@ -131,9 +134,9 @@ async function emailNouvelleCommande(vendor, order) {
     html: `
       <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;">
         <h1 style="color:#10b981;">Nouvelle commande reçue !</h1>
-        <p><strong>Client :</strong> ${order.clientName || 'N/A'}</p>
-        <p><strong>Email :</strong> ${order.clientEmail || 'N/A'}</p>
-        <p><strong>Téléphone :</strong> ${order.clientPhone || 'N/A'}</p>
+        <p><strong>Client :</strong> ${clientName}</p>
+        <p><strong>Email :</strong> ${clientEmail}</p>
+        <p><strong>Téléphone :</strong> ${clientPhone}</p>
         <h3>Produits commandés :</h3>
         <ul>${items || '<li>Voir le dashboard pour les détails</li>'}</ul>
         <br/>
@@ -147,7 +150,10 @@ async function emailNouvelleCommande(vendor, order) {
 
 // Email 3 : Confirmation de commande → au client final
 async function emailConfirmationClient(order, vendor) {
-  if (!order.clientEmail) return;
+  const clientEmail = order.clientEmail || order.email;
+  const clientName = order.clientName || order.name || '';
+  if (!clientEmail) return;
+  order = { ...order, clientEmail, clientName };
   await sendEmail({
     to: order.clientEmail,
     subject: `✅ Commande confirmée — ${vendor.businessName}`,
@@ -412,7 +418,15 @@ app.get('/api/store/:slug', async (req, res) => {
 app.post('/api/store/:slug/order', async (req, res) => {
   const v = await getVendor(req.params.slug);
   if (!v) return res.status(404).json({ error: 'Not found' });
-  const order = { id: genId(), ...req.body, status: 'nouveau', createdAt: new Date().toISOString() };
+  const b = req.body;
+  const order = {
+    id: genId(), ...b,
+    clientName: b.clientName || b.name || '',
+    clientEmail: b.clientEmail || b.email || '',
+    clientPhone: b.clientPhone || b.phone || '',
+    status: 'nouveau',
+    createdAt: new Date().toISOString()
+  };
   v.orders = v.orders || [];
   v.orders.push(order);
   await saveVendor(v);

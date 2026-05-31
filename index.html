@@ -305,7 +305,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
         <div class="demo-dot" style="background:#febc2e;"></div>
         <div class="demo-dot" style="background:#28c840;"></div>
       </div>
-      <div class="demo-url">localhost:3000 — Simpl</div>
+      <div class="demo-url">simpl-production.up.railway.app — Simpl</div>
     </div>
     <div class="demo-content">
       <div class="demo-chat" id="demo-chat">
@@ -536,6 +536,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
 const UNSPLASH_KEY = 'i0SUO7_i_vKNgQi_8yhyLAB2DR5MJPCGRKc7R-nXFZc';
 let lang='fr', service='', conversation=[], currentStore=null;
 let accentColor='#7c6dfa', storeMode=1, resultSlug='', resultToken='', isWaiting=false;
+document.addEventListener('DOMContentLoaded', applyTX);
 
 const TX={
   fr:{
@@ -904,12 +905,12 @@ async function launch(){
     const d=await r.json();
     if(d.error)throw new Error(d.error);
     resultSlug=d.slug;resultToken=d.token;
-    document.getElementById('result-url').textContent='localhost:3000/s/'+d.slug;
+    document.getElementById('result-url').textContent='https://simpl-production.up.railway.app/s/'+d.slug;
     goSc(4);
   }catch(e){showNotif('Erreur: '+e.message);document.getElementById('t-launch').textContent=t('launch');}
 }
 
-function copyUrl(){navigator.clipboard.writeText('http://localhost:3000/s/'+resultSlug);const btn=document.getElementById('t-copy');btn.textContent=t('copied');setTimeout(()=>btn.textContent=t('copy'),2000);}
+function copyUrl(){navigator.clipboard.writeText('https://simpl-production.up.railway.app/s/'+resultSlug);const btn=document.getElementById('t-copy');btn.textContent=t('copied');setTimeout(()=>btn.textContent=t('copy'),2000);}
 function openStore(){window.open('/s/'+resultSlug,'_blank');}
 function openDash(){window.open('/dashboard/'+resultSlug+'/'+resultToken,'_blank');}
 </script>
