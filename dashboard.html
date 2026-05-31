@@ -495,6 +495,7 @@ function build(){
   document.getElementById('p-sl').value=pmt.solde_label||'Solde à la livraison';
   document.getElementById('p-note').value=pmt.note||'';
   const sw=document.getElementById('msw');sw.className='sw'+(V.store.mode==='boutique'?' on':'');
+  const asw=document.getElementById('asw');if(asw)asw.className='sw'+(V.store.requireAddress?' on':'');
   const app=V.store.apparence||{};
   if(app.logo_url){const el=document.getElementById('logo-prev');el.src=app.logo_url;el.style.display='block';}
   if(app.banniere_url){const el=document.getElementById('ban-prev');el.src=app.banniere_url;el.style.display='block';}
@@ -560,7 +561,7 @@ function ro(){
       const it=(o.items||[]).map(x=>x.prodNom+(x.qty>1?' ×'+x.qty:'')).join(', ')||'—';
       const rid='od'+i;
       const ans=(o.items||[]).flatMap(x=>Object.entries(x.questions||{}).map(([k,v])=>`<div class="od-row"><span class="od-key">${k}</span><span>${v}</span></div>`)).join('');
-      return`<tr><td><div class="o-name">${o.name||'—'}</div><div class="o-email">${o.email||''}${o.phone?'<br>'+o.phone:''}</div></td><td style="font-size:12px;color:var(--text2);max-width:160px;">${it}</td><td><span class="o-total">${o.total||'—'}</span></td><td style="font-size:12px;color:var(--text3);">${fd(o.createdAt)}</td><td><select class="status-sel ${sc[o.status]||'s-nouveau'}" onchange="uos('${o.id}',this.value,this)" style="cursor:pointer;border:none;font-weight:700;font-size:11px;font-family:inherit;"><option value="nouveau" ${o.status==='nouveau'?'selected':''}>🔵 Nouveau</option><option value="confirme" ${o.status==='confirme'?'selected':''}>✓ Confirmé</option><option value="livre" ${o.status==='livre'?'selected':''}>📦 Livré</option><option value="annule" ${o.status==='annule'?'selected':''}>✕ Annulé</option></select></td><td><button class="btn btn-g btn-sm" onclick="document.getElementById('${rid}').classList.toggle('on')">Détails</button></td></tr>
+      return`<tr><td><div class="o-name">${o.clientName||o.name||'—'}</div><div class="o-email">${o.clientEmail||o.email||''}${(o.clientPhone||o.phone)?'<br>'+(o.clientPhone||o.phone):''}</div></td><td style="font-size:12px;color:var(--text2);max-width:160px;">${it}</td><td><span class="o-total">${o.total||'—'}</span></td><td style="font-size:12px;color:var(--text3);">${fd(o.createdAt)}</td><td><select class="status-sel ${sc[o.status]||'s-nouveau'}" onchange="uos('${o.id}',this.value,this)" style="cursor:pointer;border:none;font-weight:700;font-size:11px;font-family:inherit;"><option value="nouveau" ${o.status==='nouveau'?'selected':''}>🔵 Nouveau</option><option value="confirme" ${o.status==='confirme'?'selected':''}>✓ Confirmé</option><option value="livre" ${o.status==='livre'?'selected':''}>📦 Livré</option><option value="annule" ${o.status==='annule'?'selected':''}>✕ Annulé</option></select></td><td><button class="btn btn-g btn-sm" onclick="document.getElementById('${rid}').classList.toggle('on')">Détails</button></td></tr>
       <tr><td colspan="6" style="padding:0;"><div class="order-detail" id="${rid}">${o.notes?`<div class="od-row"><span class="od-key">Notes</span><span>${o.notes}</span></div>`:''}${ans||'<span style="color:var(--text3)">Aucune réponse.</span>'}</div></td></tr>`;
     }).join('')}
   </tbody></table>`;
@@ -571,7 +572,7 @@ function rro(){
   if(!o.length){document.getElementById('rec-orders').innerHTML='<div class="empty-state" style="padding:1.5rem"><div class="empty-ic">📭</div><div class="empty-txt">Aucune commande encore.<br>Partage ton lien pour commencer !</div></div>';return;}
   const fd=d=>new Date(d).toLocaleDateString('fr-CA');
   document.getElementById('rec-orders').innerHTML=`<table class="orders-table"><thead><tr><th>Client</th><th>Total</th><th>Date</th><th>Statut</th></tr></thead><tbody>
-    ${o.map(x=>`<tr><td><div class="o-name">${x.name||'—'}</div><div class="o-email">${x.email||''}</div></td><td><span class="o-total">${x.total||'—'}</span></td><td style="font-size:12px;color:var(--text3);">${fd(x.createdAt)}</td><td><span class="status-sel s-${x.status||'nouveau'}" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;">${x.status||'nouveau'}</span></td></tr>`).join('')}
+    ${o.map(x=>`<tr><td><div class="o-name">${x.clientName||x.name||'—'}</div><div class="o-email">${x.clientEmail||x.email||''}</div></td><td><span class="o-total">${x.total||'—'}</span></td><td style="font-size:12px;color:var(--text3);">${fd(x.createdAt)}</td><td><span class="status-sel s-${x.status||'nouveau'}" style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;">${x.status||'nouveau'}</span></td></tr>`).join('')}
   </tbody></table>`;
 }
 
@@ -624,6 +625,7 @@ async function slurl(){const u=document.getElementById('logo-url').value.trim();
 async function sburl(){const u=document.getElementById('ban-url').value.trim();if(!u)return;try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{banniere_url:u});V.store.apparence=V.store.apparence||{};V.store.apparence.banniere_url=u;toast('Bannière sauvegardée ✓');}catch(e){toast('Erreur','err');}}
 async function pc(el){const c=el.dataset.c;document.querySelectorAll('.csw').forEach(s=>s.classList.remove('on'));el.classList.add('on');try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{couleur_accent:c});V.accent=c;toast('Couleur sauvegardée ✓');}catch(e){toast('Erreur','err');}}
 async function pcc(){const c=document.getElementById('cc').value;try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{couleur_accent:c});V.accent=c;document.querySelectorAll('.csw').forEach(s=>s.classList.remove('on'));toast('Couleur personnalisée ✓');}catch(e){toast('Erreur','err');}}
+async function ta(){const asw=document.getElementById('asw');const val=!V.store.requireAddress;asw.className='sw'+(val?' on':'');try{await ac2('PUT',`/api/dashboard/${slug}/store`,{requireAddress:val});V.store.requireAddress=val;toast(val?'Champ adresse activé ✓':'Champ adresse désactivé');}catch(e){toast('Erreur','err');}}
 async function tm(){const sw=document.getElementById('msw');const m=V.store.mode==='boutique'?'soumission':'boutique';sw.className='sw'+(m==='boutique'?' on':'');try{await ac2('PUT',`/api/dashboard/${slug}/store`,{mode:m});V.store.mode=m;toast(m==='boutique'?'Mode boutique activé ✓':'Mode soumission activé ✓');}catch(e){toast('Erreur','err');}}
 
 // INFOS & PARAMS

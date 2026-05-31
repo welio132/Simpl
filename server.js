@@ -424,6 +424,7 @@ app.post('/api/store/:slug/order', async (req, res) => {
     clientName: b.clientName || b.name || '',
     clientEmail: b.clientEmail || b.email || '',
     clientPhone: b.clientPhone || b.phone || '',
+    clientAddress: b.clientAddress || b.address || '',
     status: 'nouveau',
     createdAt: new Date().toISOString()
   };

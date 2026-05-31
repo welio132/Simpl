@@ -256,6 +256,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <div class="cf"><label id="lbl-name">Prénom et nom *</label><input type="text" id="c-name" placeholder="Jean Tremblay" autocomplete="name"></div>
       <div class="cf"><label id="lbl-email">Courriel *</label><input type="email" id="c-email" placeholder="jean@exemple.com" autocomplete="email"></div>
       <div class="cf"><label id="lbl-phone">Téléphone</label><input type="tel" id="c-phone" placeholder="(418) 555-0100" autocomplete="tel"></div>
+      <div class="cf" id="addr-wrap" style="display:none;"><label id="lbl-addr">Adresse de livraison</label><input type="text" id="c-addr" placeholder="123 rue Principale, Montréal, QC" autocomplete="street-address"></div>
       <div class="cf"><label id="lbl-notes">Notes</label><input type="text" id="c-notes" placeholder="Information supplémentaire..."></div>
     </div>
     <button class="submit-btn" id="submit-btn" onclick="submitOrder()">✓ <span id="t-submit">Envoyer ma demande</span></button>
@@ -369,6 +370,7 @@ function buildStore(){
   document.getElementById('store-desc').textContent=store.slogan||store.description||'';
 
   const app=store.apparence||{};
+  if(store.requireAddress){const aw=document.getElementById('addr-wrap');if(aw)aw.style.display='block';}
   if(app.logo_url){document.getElementById('nav-logo-wrap').innerHTML=`<img src="${app.logo_url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;}
   else{document.getElementById('nav-logo-em').textContent=(store.produits||[])[0]?.image_emoji||'🛍';}
 
@@ -559,7 +561,7 @@ async function submitOrder(){
   const btn=document.getElementById('submit-btn');btn.disabled=true;
   const total=cart.reduce((a,i)=>a+i.total,0);
   try{
-    const r=await fetch('/api/store/'+slug+'/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,phone:document.getElementById('c-phone').value,notes:document.getElementById('c-notes').value,items:cart,total:fmt(total),mode:store.mode||'soumission'})});
+    const r=await fetch('/api/store/'+slug+'/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,phone:document.getElementById('c-phone').value,address:document.getElementById('c-addr')?document.getElementById('c-addr').value:'',notes:document.getElementById('c-notes').value,items:cart,total:fmt(total),mode:store.mode||'soumission'})});
     const data=await r.json();
     document.getElementById('order-id-display').textContent='#'+(data.orderId||'—').toUpperCase();
     document.getElementById('checkout-page').classList.remove('open');
