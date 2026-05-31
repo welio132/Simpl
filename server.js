@@ -361,7 +361,7 @@ CRITICAL TECHNICAL RULES:
 - If list given → each item becomes a choice in an option`;
 
   try {
-    const msg = await groq.chat.completions.create({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], max_tokens: 3000, temperature: 0.35 });
+    const msg = await groq.chat.completions.create({ model: 'llama-3.1-8b-instant', messages: [{ role: 'user', content: prompt }], max_tokens: 3000, temperature: 0.35 });
     res.json(extractJSON(msg.choices[0].message.content));
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
