@@ -799,23 +799,55 @@ async function sendMsg(){
   setInput(false);showTyping();
   try{
     const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service,conversation,lang})});
-    const d=await r.json();
+    if(!r.ok)throw new Error('Erreur serveur '+r.status);
     hideTyping();
-    if(d.error)throw new Error(d.error);
-    if(d.type==='question'){
-      addMsg('ai',d.message);
-      conversation.push({role:'assistant',content:d.message});
-      setInput(true);
-    }else if(d.type==='store'){
-      addMsg('ai',lang==='fr'?'✓ Parfait ! Voilà ta boutique. Je cherche des photos pour tes produits...':'✓ Perfect! Here\'s your store. Finding photos for your products...');
-      const enriched=await enrichWithPhotos(d.store);
-      currentStore=enriched;
-      addMsg('sys',t('sysGen'));
-      renderPreview(enriched);
-      setInput(true);
+    const reader=r.body.getReader();const decoder=new TextDecoder();
+    let buffer='';let msgEl=null;
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buffer+=decoder.decode(value,{stream:true});
+      const lines=buffer.split('\n');
+      buffer=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:'))continue;
+        const data=line.slice(5).trim();
+        if(data==='[DONE]')continue;
+        try{
+          const parsed=JSON.parse(data);
+          if(parsed.type==='question'){
+            if(!msgEl){msgEl=addStreamMsg('ai');}
+            setStreamContent(msgEl,parsed.message);
+            conversation.push({role:'assistant',content:parsed.message});
+            setInput(true);
+          }else if(parsed.type==='store'){
+            if(msgEl)setStreamContent(msgEl,lang==='fr'?'Voilà ta boutique ! Je cherche des photos...':'Here is your store! Finding photos...');
+            const enriched=await enrichWithPhotos(parsed.store);
+            currentStore=enriched;
+            addMsg('sys',t('sysGen'));
+            renderPreview(enriched);
+            setInput(true);
+          }else if(parsed.chunk){
+            if(!msgEl)msgEl=addStreamMsg('ai');
+            appendStreamContent(msgEl,parsed.chunk);
+          }
+        }catch(e){}
+      }
     }
+    if(!msgEl)setInput(true);
   }catch(e){hideTyping();addMsg('ai','Erreur: '+e.message);setInput(true);}
 }
+
+function addStreamMsg(role){
+  const box=document.getElementById('chat-box');
+  const div=document.createElement('div');
+  div.className='msg '+role;
+  div.innerHTML=`<span class="ai-name">${t('aiName')}</span><span class="stream-txt"></span>`;
+  box.appendChild(div);box.scrollTop=box.scrollHeight;
+  return div;
+}
+function setStreamContent(el,text){const s=el.querySelector('.stream-txt');if(s)s.textContent=text;const box=document.getElementById('chat-box');box.scrollTop=box.scrollHeight;}
+function appendStreamContent(el,chunk){const s=el.querySelector('.stream-txt');if(s)s.textContent+=chunk;const box=document.getElementById('chat-box');box.scrollTop=box.scrollHeight;}
 
 async function sendAdjust(){
   const input=document.getElementById('adj-in');

@@ -270,107 +270,85 @@ app.post('/api/chat', async (req, res) => {
 }`;
 
   const prompt = lang === 'fr'
-    ? `Tu es l'assistant de configuration intelligent de Simpl, une plateforme SaaS de création de boutiques en ligne et de formulaires de soumission rapide.
+    ? `Tu es l'assistant de configuration intelligent de Simpl, une plateforme SaaS de création de boutiques en ligne.
 
-MISSION Configurer une boutique ou un système de soumission entièrement fonctionnel en moins de 5 minutes. L'objectif n'est pas de recueillir toutes les informations possibles — c'est de lancer rapidement une boutique crédible, complète et vendable avec le minimum d'effort demandé à l'entrepreneur. Tu privilégies toujours l'action plutôt que la collecte d'informations.
+MISSION Configurer une boutique entièrement fonctionnelle en moins de 5 minutes. Tu privilégies toujours l'action plutôt que la collecte d'informations.
 
-RÈGLE ABSOLUE Une seule question par message. Jamais deux. Jamais une question principale avec une sous-question. Jamais une liste.
+RÈGLE ABSOLUE Une seule question par message. Jamais deux.
 
-PHILOSOPHIE Chaque question doit apporter une information essentielle et irremplaçable. Si l'information n'empêche pas la boutique de fonctionner, ne la demande pas. Tu préfères générer puis corriger plutôt que demander puis attendre. Tu agis comme un expert e-commerce qui construit avec le client, pas comme un formulaire administratif.
-
-HYPOTHÈSES INTELLIGENTES Quand tu supposes quelque chose, annonce-le en une phrase : "Je pars avec X pour avancer, on ajuste si besoin." Tu n'attends jamais de confirmation pour une hypothèse non critique. Tu continues automatiquement.
-
-DÉTECTION DU TYPE D'ENTREPRISE Dès les premiers échanges, identifie le secteur parmi : boutique physique, artisanat, produits personnalisés, services professionnels, construction, rénovation, paysagement, fabrication, alimentation, coaching, bien-être, commerce spécialisé. Adapte immédiatement la structure sans le mentionner.
-
-STRUCTURE DES PRODUITS Formats, tailles, volumes, poids ou dimensions différents = produits distincts, chacun avec son propre prix, sa propre fiche, son propre inventaire et ses propres images. Les variations esthétiques (couleurs, parfums, matériaux, saveurs, essences, modèles, finitions) = options sur le produit. Les demandes complexes (nom personnalisé, texte gravé, couleurs multiples, instructions spéciales, description de projet) = champ texte libre, créé automatiquement.
-
-PRIX Si les prix des PRODUITS PRINCIPAUX sont inconnus, estime selon le marché québécois et demande confirmation. Si les prix des OPTIONS (couleurs, parfums, etc.) sont inconnus, demande-les en UNE question groupée: 'Est-ce que les options ont un prix supplémentaire, ou elles sont incluses dans le prix de base?' Ne génère JAMAIS sans avoir au moins le prix de base du produit principal.
-
-ENTREPRISES DE SERVICES Créer automatiquement selon le secteur : soumission rapide, demande d'estimation, demande de rappel, prise de rendez-vous, téléversement de photos si pertinent. Pour construction, rénovation, paysagement, excavation, fabrication ou services techniques : formulaire adapté au secteur généré automatiquement.
-
-GÉNÉRATION AUTOMATIQUE Dès que tu as assez d'informations, arrête de poser des questions et génère tout d'un coup.
-
-GESTION DE L'INCERTITUDE Quand l'information est floue ou manquante : ne bloque jamais, choisis l'option la plus probable, continue sans demander.
-
-INTERDICTIONS Ne jamais poser plusieurs questions. Ne jamais demander une info déjà déductible. Ne jamais attendre une validation intermédiaire. Ne jamais ralentir le processus inutilement.
-
----
+GÉNÉRATION AUTOMATIQUE Dès que tu as assez d'informations, génère tout d'un coup.
 
 Service: "${service}"
 
 Conversation jusqu'ici:
 ${history}
 
----
-
-${userCount >= 4 ? 'Tu as assez d\'informations. Génère la boutique maintenant.' : 'Si une info ESSENTIELLE manque → 1 question courte et naturelle. Sinon génère directement.'}
+${userCount >= 4 ? 'Tu as assez d'informations. Génère la boutique maintenant.' : 'Si une info ESSENTIELLE manque → 1 question courte. Sinon génère directement.'}
 
 FORMAT DE SORTIE — RÈGLE ABSOLUE:
+Si tu poses une question: {"type":"question","message":"ton message"}
+Si tu génères: ${template}
 
-Si tu poses une question:
-{"type":"question","message":"ton message naturel avec la question"}
+RÈGLES TECHNIQUES:
+- prix_base et prix_extra = toujours des NOMBRES
+- url_slug = 1 mot minuscule sans accent
+- ids uniques pour chaque élément`
+    : `You are Simpl's intelligent configuration assistant.
 
-Si tu génères la boutique, réponds UNIQUEMENT avec ce JSON valide. Aucun texte avant ou après. Aucun backtick:
-${template}
+MISSION Configure a fully functional store in under 5 minutes. Always prioritize action.
 
-RÈGLES TECHNIQUES CRITIQUES:
-- prix_base et prix_extra = toujours des NOMBRES (ex: 25), jamais des strings
-- Si pas de prix extra: prix_extra = 0, prix_extra_affiche = ""
-- image_emoji = emoji qui représente le produit
-- url_slug = 1 mot minuscule sans accent sans espace
-- ids uniques pour chaque produit/variante/option/choix
-- variantes = tailles/formats/poids (prix différents)
-- options = parfums/couleurs/matériaux (même prix de base)
-- Si liste donnée → chaque élément devient un choix dans une option`
-
-    : `You are Simpl's intelligent configuration assistant, a SaaS platform for creating online stores and quick quote forms.
-
-MISSION Configure a fully functional store or quote system in under 5 minutes. The goal is not to collect all possible information — it's to quickly launch a credible, complete, sellable store with minimum effort from the entrepreneur. Always prioritize action over information gathering.
-
-ABSOLUTE RULE One question per message. Never two. Never a main question with a sub-question. Never a list.
-
-PHILOSOPHY Each question must bring essential, irreplaceable information. If the information doesn't prevent the store from working, don't ask for it. Prefer generating then correcting rather than asking then waiting.
-
-INTELLIGENT ASSUMPTIONS When you assume something, announce it in one sentence: "I'll go with X to move forward, we adjust if needed." Never wait for confirmation for a non-critical assumption.
-
-PRODUCT STRUCTURE Different formats/sizes/weights = separate products with their own price. Aesthetic variations (colors, scents, materials) = options on the product. Complex customizations = free text field, created automatically.
-
-AUTOMATIC GENERATION As soon as you have enough information, stop asking questions and generate everything at once.
-
----
+ABSOLUTE RULE One question per message. Never two.
 
 Service: "${service}"
+Conversation: ${history}
 
-Conversation so far:
-${history}
+${userCount >= 4 ? 'Generate the store now.' : 'If ESSENTIAL info missing → 1 short question. Otherwise generate directly.'}
 
----
+OUTPUT FORMAT:
+Question: {"type":"question","message":"your message"}
+Store: ${template}
 
-${userCount >= 4 ? 'Generate the store now.' : 'If ESSENTIAL info missing → 1 short natural question. Otherwise generate directly.'}
+RULES: prix_base/prix_extra = NUMBERS, url_slug = 1 lowercase word, unique ids`;
 
-OUTPUT FORMAT — ABSOLUTE RULE:
-
-If asking a question:
-{"type":"question","message":"your natural message with the question"}
-
-If generating the store, reply ONLY with this valid JSON. No text before or after. No backticks:
-${template}
-
-CRITICAL TECHNICAL RULES:
-- prix_base and prix_extra = always NUMBERS (e.g. 25), never strings
-- If no price extra: prix_extra = 0, prix_extra_affiche = ""
-- image_emoji = emoji representing the product
-- url_slug = 1 lowercase word no accent no space
-- unique ids for each product/variant/option/choice
-- variantes = sizes/formats/weights (different prices)
-- options = scents/colors/materials (same base price)
-- If list given → each item becomes a choice in an option`;
+  // Setup SSE streaming
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
 
   try {
-    const msg = await groq.chat.completions.create({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: prompt }], max_tokens: 2000, temperature: 0.35 });
-    res.json(extractJSON(msg.choices[0].message.content));
-  } catch(e) { res.status(500).json({ error: e.message }); }
+    const stream = await groq.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 2000,
+      temperature: 0.35,
+      stream: true
+    });
+
+    let fullText = '';
+    for await (const chunk of stream) {
+      const delta = chunk.choices[0]?.delta?.content || '';
+      if (delta) {
+        fullText += delta;
+        res.write(`data: ${JSON.stringify({ chunk: delta })}\n\n`);
+      }
+    }
+
+    // Parse full response and send final result
+    try {
+      const parsed = extractJSON(fullText);
+      res.write(`data: ${JSON.stringify(parsed)}\n\n`);
+    } catch(e) {
+      res.write(`data: ${JSON.stringify({ type: 'question', message: fullText.trim() })}\n\n`);
+    }
+
+    res.write('data: [DONE]\n\n');
+    res.end();
+  } catch(e) {
+    res.write(`data: ${JSON.stringify({ error: e.message })}\n\n`);
+    res.end();
+  }
 });
+
 
 app.post('/api/adjust', async (req, res) => {
   const { store, instruction, lang = 'fr' } = req.body;
