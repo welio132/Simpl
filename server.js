@@ -283,7 +283,7 @@ Service: "${service}"
 Conversation jusqu'ici:
 ${history}
 
-${userCount >= 4 ? 'Tu as assez d'informations. Génère la boutique maintenant.' : 'Si une info ESSENTIELLE manque → 1 question courte. Sinon génère directement.'}
+${userCount >= 4 ? 'Tu as assez d\'informations. Génère la boutique maintenant.' : 'Si une info ESSENTIELLE manque → 1 question courte. Sinon génère directement.'}
 
 FORMAT DE SORTIE — RÈGLE ABSOLUE:
 Si tu poses une question: {"type":"question","message":"ton message"}
