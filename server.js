@@ -7,9 +7,11 @@ const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
 const { MongoClient } = require('mongodb');
+const { Resend } = require('resend');
 
 const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -56,7 +58,6 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // ─── HELPERS ───
 function extractJSON(text) {
-  // Plus robuste : cherche le premier { et le } fermant correspondant
   const start = text.indexOf('{');
   if (start === -1) throw new Error('No JSON found');
   let depth = 0;
@@ -79,6 +80,135 @@ async function authVendor(req, res) {
     return null;
   }
   return v;
+}
+
+// ─── EMAILS ───
+const ADMIN_EMAIL = 'wtalbot442@gmail.com';
+
+async function sendEmail({ to, subject, html }) {
+  try {
+    await resend.emails.send({
+      from: 'Simpl <no-reply@simpl-production.up.railway.app>',
+      to,
+      subject,
+      html
+    });
+  } catch(e) {
+    console.error('Email error:', e.message);
+    // On log l'erreur mais on crashe pas l'app
+  }
+}
+
+// Email 1 : Confirmation de création de boutique → à l'entrepreneur
+async function emailBoutiqueCreee(vendor, slug, token) {
+  const dashboardUrl = `https://simpl-production.up.railway.app/dashboard/${slug}/${token}`;
+  const storeUrl = `https://simpl-production.up.railway.app/s/${slug}`;
+  await sendEmail({
+    to: vendor.email,
+    subject: '🎉 Ta boutique Simpl est prête !',
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;">
+        <h1 style="color:#10b981;">Bienvenue sur Simpl, ${vendor.businessName} !</h1>
+        <p>Ta boutique est en ligne et prête à recevoir des commandes.</p>
+        <h3>Tes liens importants :</h3>
+        <p>🛒 <strong>Ta boutique :</strong> <a href="${storeUrl}">${storeUrl}</a></p>
+        <p>⚙️ <strong>Ton dashboard :</strong> <a href="${dashboardUrl}">${dashboardUrl}</a></p>
+        <p style="color:#ef4444;font-size:13px;">⚠️ Garde le lien dashboard précieusement — c'est ton accès unique.</p>
+        <br/>
+        <p style="color:#6b7280;font-size:13px;">L'équipe Simpl</p>
+      </div>
+    `
+  });
+}
+
+// Email 2 : Nouvelle commande → à l'entrepreneur
+async function emailNouvelleCommande(vendor, order) {
+  const dashboardUrl = `https://simpl-production.up.railway.app/dashboard/${vendor.slug}/${vendor.token}`;
+  const items = (order.items || []).map(i => `<li>${i.qty}x ${i.prodNom} — ${i.prixTotal || ''}$</li>`).join('');
+  await sendEmail({
+    to: vendor.email,
+    subject: `📦 Nouvelle commande — ${vendor.businessName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;">
+        <h1 style="color:#10b981;">Nouvelle commande reçue !</h1>
+        <p><strong>Client :</strong> ${order.clientName || 'N/A'}</p>
+        <p><strong>Email :</strong> ${order.clientEmail || 'N/A'}</p>
+        <p><strong>Téléphone :</strong> ${order.clientPhone || 'N/A'}</p>
+        <h3>Produits commandés :</h3>
+        <ul>${items || '<li>Voir le dashboard pour les détails</li>'}</ul>
+        <br/>
+        <a href="${dashboardUrl}" style="background:#10b981;color:white;padding:12px 24px;border-radius:8px;text-decoration:none;">Voir dans mon dashboard</a>
+        <br/><br/>
+        <p style="color:#6b7280;font-size:13px;">L'équipe Simpl</p>
+      </div>
+    `
+  });
+}
+
+// Email 3 : Confirmation de commande → au client final
+async function emailConfirmationClient(order, vendor) {
+  if (!order.clientEmail) return;
+  await sendEmail({
+    to: order.clientEmail,
+    subject: `✅ Commande confirmée — ${vendor.businessName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;">
+        <h1 style="color:#10b981;">Ta commande est confirmée !</h1>
+        <p>Bonjour ${order.clientName || ''},</p>
+        <p>Ta commande chez <strong>${vendor.businessName}</strong> a bien été reçue.</p>
+        <p>${vendor.businessName} va te contacter prochainement pour les détails.</p>
+        ${vendor.phone ? `<p>📞 Téléphone : ${vendor.phone}</p>` : ''}
+        <br/>
+        <p style="color:#6b7280;font-size:13px;">Merci de ta confiance !</p>
+      </div>
+    `
+  });
+}
+
+// Email 4 : Changement de statut → au client final
+async function emailStatutCommande(order, vendor, nouveauStatut) {
+  if (!order.clientEmail) return;
+  const labels = {
+    'en_cours': '🔄 En cours de traitement',
+    'complete': '✅ Complétée',
+    'annule': '❌ Annulée'
+  };
+  const label = labels[nouveauStatut] || nouveauStatut;
+  await sendEmail({
+    to: order.clientEmail,
+    subject: `Mise à jour de ta commande — ${vendor.businessName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;">
+        <h1 style="color:#10b981;">Mise à jour de ta commande</h1>
+        <p>Bonjour ${order.clientName || ''},</p>
+        <p>Le statut de ta commande chez <strong>${vendor.businessName}</strong> a changé :</p>
+        <p style="font-size:20px;font-weight:bold;">${label}</p>
+        ${order.note ? `<p><strong>Note :</strong> ${order.note}</p>` : ''}
+        ${vendor.phone ? `<p>📞 Questions ? ${vendor.phone}</p>` : ''}
+        <br/>
+        <p style="color:#6b7280;font-size:13px;">L'équipe Simpl</p>
+      </div>
+    `
+  });
+}
+
+// Email 5 : Notification admin (toi) → nouvelle boutique créée
+async function emailAdminNouvelleBoutique(vendor, slug) {
+  await sendEmail({
+    to: ADMIN_EMAIL,
+    subject: `🆕 Nouvelle boutique — ${vendor.businessName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:600px;margin:auto;padding:32px;">
+        <h2>Nouvelle boutique créée sur Simpl</h2>
+        <p><strong>Nom :</strong> ${vendor.businessName}</p>
+        <p><strong>Email :</strong> ${vendor.email}</p>
+        <p><strong>Téléphone :</strong> ${vendor.phone || 'N/A'}</p>
+        <p><strong>Ville :</strong> ${vendor.city || 'N/A'}</p>
+        <p><strong>Slug :</strong> ${slug}</p>
+        <p><strong>Date :</strong> ${new Date().toLocaleString('fr-CA')}</p>
+      </div>
+    `
+  });
 }
 
 // ─── AI ROUTES ───
@@ -264,6 +394,11 @@ app.post('/api/store/save', async (req, res) => {
     orders: []
   };
   await saveVendor(vendor);
+
+  // Emails de création
+  emailBoutiqueCreee(vendor, slug, token);
+  emailAdminNouvelleBoutique(vendor, slug);
+
   res.json({ slug, token });
 });
 
@@ -281,6 +416,11 @@ app.post('/api/store/:slug/order', async (req, res) => {
   v.orders = v.orders || [];
   v.orders.push(order);
   await saveVendor(v);
+
+  // Emails de commande
+  emailNouvelleCommande(v, order);
+  emailConfirmationClient(order, v);
+
   res.json({ success: true, orderId: order.id });
 });
 
@@ -344,7 +484,6 @@ app.delete('/api/dashboard/:slug/produit/:prodId', async (req, res) => {
   res.json({ success: true });
 });
 
-// Upload image produit
 app.post('/api/dashboard/:slug/upload/:prodId', async (req, res) => {
   const v = await getVendor(req.params.slug);
   if (!v || v.token !== req.headers['x-token']) return res.status(403).json({ error: 'Accès refusé' });
@@ -367,9 +506,16 @@ app.put('/api/dashboard/:slug/order/:orderId', async (req, res) => {
   const v = await authVendor(req, res); if (!v) return;
   const order = (v.orders || []).find(o => o.id === req.params.orderId);
   if (!order) return res.status(404).json({ error: 'Order not found' });
+  const ancienStatut = order.status;
   order.status = req.body.status || order.status;
   order.note = req.body.note !== undefined ? req.body.note : order.note;
   await saveVendor(v);
+
+  // Email changement de statut si différent
+  if (req.body.status && req.body.status !== ancienStatut) {
+    emailStatutCommande(order, v, req.body.status);
+  }
+
   res.json({ success: true });
 });
 
