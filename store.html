@@ -145,10 +145,30 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .pages-nav{display:flex;gap:6px;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);overflow-x:auto;background:var(--nav-bg);}
 .page-nav-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border2);background:var(--chip-bg);color:var(--chip-c);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s;flex-shrink:0;}
 .page-nav-btn:hover,.page-nav-btn.on{border-color:var(--a);color:var(--a);background:transparent;}
-.page-view{display:none;padding:1.5rem 1.25rem;max-width:700px;margin:0 auto;}
+.page-view{display:none;}
 .page-view.on{display:block;}
-.page-view-title{font-size:1.4rem;font-weight:800;margin-bottom:1rem;display:flex;align-items:center;gap:10px;}
-.page-view-content{font-size:15px;line-height:1.8;color:var(--text2);white-space:pre-wrap;}
+
+/* PAGE SECTIONS */
+.pv-section{padding:2.5rem 1.5rem;max-width:780px;margin:0 auto;}
+.pv-hero{text-align:center;padding:3.5rem 1.5rem 2.5rem;}
+.pv-hero-title{font-size:clamp(1.6rem,5vw,2.4rem);font-weight:900;letter-spacing:-.03em;margin-bottom:.75rem;}
+.pv-hero-sub{font-size:16px;line-height:1.7;opacity:.75;max-width:540px;margin:0 auto;}
+.pv-sec-heading{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;margin-bottom:1rem;}
+.pv-sec-heading:before{content:'';display:block;width:36px;height:3px;border-radius:2px;background:var(--a);margin-bottom:.625rem;}
+.pv-body{font-size:15px;line-height:1.8;white-space:pre-wrap;}
+.pv-points{display:flex;flex-direction:column;gap:10px;margin-top:.5rem;}
+.pv-point{display:flex;align-items:flex-start;gap:12px;font-size:15px;line-height:1.6;}
+.pv-point-ic{color:var(--a);font-size:18px;flex-shrink:0;margin-top:1px;}
+.pv-contact-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:.75rem;}
+.pv-contact-item{background:rgba(255,255,255,0.12);backdrop-filter:blur(4px);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:10px;font-size:14px;}
+.pv-contact-item-ic{font-size:1.3rem;flex-shrink:0;}
+.pv-faq{display:flex;flex-direction:column;gap:12px;margin-top:.5rem;}
+.pv-faq-item{background:rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.25rem;}
+.pv-faq-q{font-size:14px;font-weight:700;margin-bottom:.4rem;}
+.pv-faq-a{font-size:14px;line-height:1.65;opacity:.8;}
+.pv-cta{text-align:center;padding:2.5rem 1.5rem;border-radius:16px;margin:1rem 1.5rem;background:rgba(255,255,255,0.1);backdrop-filter:blur(4px);}
+.pv-cta-text{font-size:1.1rem;font-weight:700;line-height:1.5;margin-bottom:1rem;}
+.pv-cta-phone{display:inline-flex;align-items:center;gap:8px;background:var(--a);color:#fff;padding:12px 28px;border-radius:12px;font-size:15px;font-weight:700;text-decoration:none;}
 
 /* CART */
 .cart-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:none;backdrop-filter:blur(4px);}
@@ -429,12 +449,15 @@ function buildStore(){
     pnav.innerHTML = '<button class="page-nav-btn on" onclick="showPage(&quot;home&quot;,this)">' + (isFr?'🏠 Accueil':'🏠 Home') + '</button>' +
       pages.map(p => `<button class="page-nav-btn" onclick="showPage('${p.id}',this)">${p.icon||'📄'} ${p.title}</button>`).join('');
     const pcv = document.getElementById('page-content-views');
-    pcv.innerHTML = pages.map(p => `
-      <div class="page-view" id="pv-${p.id}">
-        <div class="page-view-title">${p.icon||'📄'} ${p.title}</div>
-        <div class="page-view-content">${(p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
-      </div>
-    `).join('');
+    const accent = store.apparence?.couleur_accent || '#7c6dfa';
+    pcv.innerHTML = pages.map(p => {
+      const bg = !p.color || p.color === 'accent' ? accent : p.color;
+      const isDark = isPageDark(bg);
+      const textColor = isDark ? '#fff' : '#111';
+      const textMuted = isDark ? 'rgba(255,255,255,0.72)' : 'rgba(0,0,0,0.55)';
+      const sectionsHtml = renderPageSections(p.sections || [], accent, isDark, textColor, textMuted);
+      return `<div class="page-view" id="pv-${p.id}" style="background:${bg};color:${textColor};min-height:60vh;">${sectionsHtml}</div>`;
+    }).join('');
   }
 
   // Adresse de livraison
@@ -609,6 +632,53 @@ async function submitOrder(){
     document.getElementById('success-page').classList.add('open');
     cart=[];updateCartUI();window.scrollTo(0,0);
   }catch(e){showNotif('Erreur: '+e.message);btn.disabled=false;}
+}
+
+function isPageDark(hex){
+  if(!hex||hex==='#ffffff'||hex==='#faf8f3'||hex==='#f4f5f7'||hex==='#f0fdf4')return false;
+  if(hex==='#111111'||hex==='#0d0d0d')return true;
+  try{const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);return(r*299+g*587+b*114)/1000<140;}catch(e){return false;}
+}
+
+function esc(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function renderPageSections(sections, accent, isDark, textColor, textMuted){
+  if(!sections||!sections.length) return '<div style="padding:3rem;text-align:center;opacity:.5;">Page vide</div>';
+  return sections.map(sec=>{
+    const d = sec.data || {};
+    switch(sec.type){
+      case 'hero':
+        return `<div class="pv-hero"><div class="pv-hero-title">${esc(d.title||'')}</div>${d.subtitle?`<div class="pv-hero-sub" style="color:${textMuted};">${esc(d.subtitle)}</div>`:''}</div>`;
+      case 'text':
+        return `<div class="pv-section">${d.heading?`<div class="pv-sec-heading" style="color:${textColor};">${esc(d.heading)}</div>`:''}<div class="pv-body" style="color:${textMuted};">${esc(d.body||'')}</div></div>`;
+      case 'points':{
+        const pts = (d.points||'').split('\n').filter(l=>l.trim());
+        return `<div class="pv-section">${d.heading?`<div class="pv-sec-heading" style="color:${textColor};">${esc(d.heading)}</div>`:''}<div class="pv-points">${pts.map(pt=>`<div class="pv-point"><span class="pv-point-ic" style="color:${accent};">✓</span><span style="color:${textMuted};">${esc(pt)}</span></div>`).join('')}</div></div>`;
+      }
+      case 'contact':{
+        const rows=[];
+        if(d.phone)rows.push(`<div class="pv-contact-item"><span class="pv-contact-item-ic">📞</span><span>${esc(d.phone)}</span></div>`);
+        if(d.email)rows.push(`<div class="pv-contact-item"><span class="pv-contact-item-ic">✉️</span><span>${esc(d.email)}</span></div>`);
+        if(d.address)rows.push(`<div class="pv-contact-item"><span class="pv-contact-item-ic">📍</span><span>${esc(d.address)}</span></div>`);
+        if(d.hours)rows.push(`<div class="pv-contact-item"><span class="pv-contact-item-ic">🕐</span><span>${esc(d.hours)}</span></div>`);
+        return `<div class="pv-section">${d.heading?`<div class="pv-sec-heading" style="color:${textColor};">${esc(d.heading)}</div>`:''}<div class="pv-contact-grid">${rows.join('')}</div></div>`;
+      }
+      case 'faq':{
+        const items=(d.items||'').split(/\n\n+/).map(block=>{
+          const lines=block.split('\n');
+          const q=lines.find(l=>l.startsWith('Q:'));
+          const r=lines.find(l=>l.startsWith('R:'));
+          if(!q&&!r)return '';
+          return `<div class="pv-faq-item"><div class="pv-faq-q" style="color:${textColor};">${esc((q||'').replace(/^Q:\s*/,''))}</div><div class="pv-faq-a" style="color:${textMuted};">${esc((r||'').replace(/^R:\s*/,''))}</div></div>`;
+        }).filter(Boolean);
+        return `<div class="pv-section">${d.heading?`<div class="pv-sec-heading" style="color:${textColor};">${esc(d.heading)}</div>`:''}<div class="pv-faq">${items.join('')}</div></div>`;
+      }
+      case 'cta':
+        return `<div class="pv-cta"><div class="pv-cta-text" style="color:${textColor};">${esc(d.text||'')}</div>${d.phone?`<a class="pv-cta-phone" href="tel:${esc(d.phone)}" style="background:${accent};">📞 ${esc(d.phone)}</a>`:''}</div>`;
+      default:
+        return '';
+    }
+  }).join('');
 }
 
 init();

@@ -175,6 +175,33 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .page-title-t{font-size:14px;font-weight:700;}
 .page-preview{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
 .page-ac{display:flex;gap:6px;flex-shrink:0;}
+
+/* PAGE BUILDER */
+.tpl-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:1.25rem;}
+@media(max-width:500px){.tpl-grid{grid-template-columns:repeat(2,1fr);}}
+.tpl-btn{padding:10px 8px;border-radius:10px;border:1.5px solid var(--border);background:var(--surf2);cursor:pointer;font-family:inherit;text-align:center;transition:all .15s;}
+.tpl-btn:hover,.tpl-btn.on{border-color:var(--a);background:var(--ag);}
+.tpl-ic{font-size:1.4rem;margin-bottom:4px;}
+.tpl-lbl{font-size:11px;font-weight:600;color:var(--text2);}
+.sections-list{display:flex;flex-direction:column;gap:8px;margin-bottom:1rem;}
+.sec-block{background:var(--surf2);border:1.5px solid var(--border);border-radius:10px;padding:.875rem;position:relative;}
+.sec-block-head{display:flex;align-items:center;gap:8px;margin-bottom:.625rem;}
+.sec-block-ic{font-size:1rem;}
+.sec-block-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);}
+.sec-block-rm{margin-left:auto;background:transparent;border:none;cursor:pointer;color:var(--text3);font-size:14px;padding:2px 6px;border-radius:5px;}
+.sec-block-rm:hover{color:var(--red);background:#fef2f2;}
+.sec-input{width:100%;padding:8px 11px;background:var(--surf);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit;margin-bottom:6px;}
+.sec-input:last-child{margin-bottom:0;}
+.sec-input:focus{border-color:var(--a);}
+.sec-textarea{width:100%;padding:8px 11px;background:var(--surf);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit;resize:vertical;min-height:70px;line-height:1.55;}
+.sec-textarea:focus{border-color:var(--a);}
+.add-sec-row{display:flex;flex-wrap:wrap;gap:6px;}
+.add-sec-btn{padding:6px 12px;border-radius:8px;border:1.5px dashed var(--border);background:transparent;color:var(--text3);font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;transition:all .15s;}
+.add-sec-btn:hover{border-color:var(--a);color:var(--a);}
+.pg-color-row{display:flex;align-items:center;gap:10px;margin-bottom:1rem;}
+.pg-color-swatch{width:30px;height:30px;border-radius:7px;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:all .15s;}
+.pg-color-swatch.on{border-color:var(--text);transform:scale(1.15);}
+.builder-sep{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin:1rem 0 .625rem;}
 </style>
 </head>
 <body>
@@ -416,25 +443,46 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div id="pages-list"></div>
     </div>
 
-    <!-- MODAL PAGE -->
+    <!-- MODAL PAGE BUILDER -->
     <div class="modal-overlay" id="pgmod">
-      <div class="modal" style="max-width:640px;">
+      <div class="modal" style="max-width:680px;">
         <div class="modal-head">
           <span class="modal-title" id="pgm-t">Ajouter une page</span>
           <button class="modal-close" onclick="cpgm()">✕</button>
         </div>
-        <div class="field">
-          <label>Titre de la page *</label>
-          <input type="text" id="pg-title" placeholder="Ex: À propos, Témoignages, Contact, FAQ...">
+
+        <!-- Titre + icône -->
+        <div class="field-row" style="margin-bottom:.875rem;">
+          <div class="field" style="margin:0;">
+            <label>Titre de la page *</label>
+            <input type="text" id="pg-title" placeholder="Ex: Nous joindre, À propos, FAQ...">
+          </div>
+          <div class="field" style="margin:0;max-width:110px;">
+            <label>Icône</label>
+            <input type="text" id="pg-icon" placeholder="📞">
+          </div>
         </div>
-        <div class="field">
-          <label>Contenu</label>
-          <textarea id="pg-content" style="min-height:200px;font-size:13px;line-height:1.6;" placeholder="Écris le contenu de ta page ici...&#10;&#10;Tu peux aussi demander à l'Assistant IA de générer ce contenu pour toi !"></textarea>
+
+        <!-- Couleur de fond -->
+        <div class="builder-sep">Couleur de la page</div>
+        <div class="pg-color-row" id="pg-colors"></div>
+
+        <!-- Templates rapides -->
+        <div class="builder-sep">Templates rapides</div>
+        <div class="tpl-grid" id="tpl-grid"></div>
+
+        <!-- Sections -->
+        <div class="builder-sep">Sections <span style="font-weight:400;color:var(--text3);font-size:11px;">(glisse pour réorganiser)</span></div>
+        <div class="sections-list" id="sections-list"></div>
+        <div class="add-sec-row">
+          <button class="add-sec-btn" onclick="addSection('hero')">+ Hero</button>
+          <button class="add-sec-btn" onclick="addSection('text')">+ Texte</button>
+          <button class="add-sec-btn" onclick="addSection('points')">+ Points clés</button>
+          <button class="add-sec-btn" onclick="addSection('contact')">+ Contact</button>
+          <button class="add-sec-btn" onclick="addSection('faq')">+ FAQ</button>
+          <button class="add-sec-btn" onclick="addSection('cta')">+ Appel à l'action</button>
         </div>
-        <div class="field">
-          <label>Icône (emoji)</label>
-          <input type="text" id="pg-icon" placeholder="Ex: 💬 📖 ⭐ 📞" style="max-width:120px;">
-        </div>
+
         <div class="modal-footer">
           <button class="btn btn-g" onclick="cpgm()" style="flex:1;">Annuler</button>
           <button class="btn btn-a" onclick="savePage()" style="flex:2;">💾 Sauvegarder</button>
@@ -770,6 +818,78 @@ async function sendAiMsg(){
 // PAGES SUPPLÉMENTAIRES
 const PAGE_LIMITS = { soumission: 2, boutique: 5 };
 let editPageId = null;
+let pageSections = [];
+let pageColor = '';
+
+const PAGE_COLORS = [
+  { label: 'Accent', val: 'accent' },
+  { label: 'Blanc', val: '#ffffff' },
+  { label: 'Sombre', val: '#111111' },
+  { label: 'Beige', val: '#faf8f3' },
+  { label: 'Gris', val: '#f4f5f7' },
+  { label: 'Vert', val: '#f0fdf4' },
+];
+
+const SECTION_TYPES = {
+  hero:    { ic: '🌟', label: 'Hero', fields: [{ key:'title', ph:'Titre accrocheur', big:false }, { key:'subtitle', ph:'Sous-titre ou description courte', big:false }] },
+  text:    { ic: '📝', label: 'Texte', fields: [{ key:'heading', ph:'Titre de section (optionnel)', big:false }, { key:'body', ph:'Contenu...', big:true }] },
+  points:  { ic: '✅', label: 'Points clés', fields: [{ key:'heading', ph:'Titre de la liste', big:false }, { key:'points', ph:'Un point par ligne\nEx: Livraison rapide\nService personnalisé', big:true }] },
+  contact: { ic: '📞', label: 'Contact', fields: [{ key:'heading', ph:'Titre (ex: Nous joindre)', big:false }, { key:'phone', ph:'Téléphone', big:false }, { key:'email', ph:'Courriel', big:false }, { key:'address', ph:'Adresse ou ville', big:false }, { key:'hours', ph:'Heures d\'ouverture (optionnel)', big:false }] },
+  faq:     { ic: '❓', label: 'FAQ', fields: [{ key:'heading', ph:'Titre (ex: Questions fréquentes)', big:false }, { key:'items', ph:'Q: Ma question ?\nR: Ma réponse.\n\nQ: Autre question ?\nR: Autre réponse.', big:true }] },
+  cta:     { ic: '🚀', label: 'Appel à l\'action', fields: [{ key:'text', ph:'Ex: Prêt à commander ? Contacte-nous dès aujourd\'hui !', big:false }, { key:'phone', ph:'Numéro à afficher (optionnel)', big:false }] },
+};
+
+const PAGE_TEMPLATES = {
+  contact: {
+    icon: '📞', title: 'Nous joindre', color: 'accent',
+    sections: () => {
+      const phone = V.phone || '';
+      const city = V.city || '';
+      return [
+        { type:'hero', data:{ title: 'Nous joindre', subtitle: 'On est là pour toi — n\'hésite pas à nous contacter !' } },
+        { type:'contact', data:{ heading: 'Coordonnées', phone, email: V.email||'', address: city, hours: '' } },
+        { type:'cta', data:{ text: 'Prêt à démarrer ton projet ? Appelle-nous ou envoie-nous un message !', phone } },
+      ];
+    }
+  },
+  about: {
+    icon: '🏢', title: 'À propos', color: '#ffffff',
+    sections: () => [
+      { type:'hero', data:{ title: 'À propos de ' + V.businessName, subtitle: V.store?.description || '' } },
+      { type:'text', data:{ heading: 'Notre histoire', body: 'Raconte ton histoire ici...' } },
+      { type:'points', data:{ heading: 'Nos valeurs', points: 'Qualité avant tout\nService personnalisé\nSatisfaction garantie' } },
+    ]
+  },
+  faq: {
+    icon: '❓', title: 'FAQ', color: '#f4f5f7',
+    sections: () => [
+      { type:'hero', data:{ title: 'Questions fréquentes', subtitle: 'Tout ce que tu as besoin de savoir.' } },
+      { type:'faq', data:{ heading: '', items: 'Q: Quels sont vos délais de livraison ?\nR: Nous livrons généralement sous 5-7 jours ouvrables.\n\nQ: Acceptez-vous les commandes personnalisées ?\nR: Oui ! Contacte-nous pour discuter de ton projet.' } },
+    ]
+  },
+  temoignages: {
+    icon: '⭐', title: 'Témoignages', color: '#faf8f3',
+    sections: () => [
+      { type:'hero', data:{ title: 'Ce que disent nos clients', subtitle: 'Des centaines de clients satisfaits !' } },
+      { type:'points', data:{ heading: 'Avis clients', points: '⭐⭐⭐⭐⭐ "Super service, je recommande !"\n⭐⭐⭐⭐⭐ "Qualité exceptionnelle, livraison rapide."\n⭐⭐⭐⭐⭐ "Équipe professionnelle et à l\'écoute."' } },
+    ]
+  },
+  galerie: {
+    icon: '🖼', title: 'Galerie', color: '#111111',
+    sections: () => [
+      { type:'hero', data:{ title: 'Notre galerie', subtitle: 'Découvre nos réalisations.' } },
+      { type:'text', data:{ heading: 'Nos projets', body: 'Ajoute ici une description de tes projets ou réalisations. Les images peuvent être intégrées via les liens de tes produits.' } },
+    ]
+  },
+  services: {
+    icon: '🔧', title: 'Services', color: '#ffffff',
+    sections: () => [
+      { type:'hero', data:{ title: 'Nos services', subtitle: 'Tout ce qu\'on peut faire pour toi.' } },
+      { type:'points', data:{ heading: 'Ce qu\'on offre', points: 'Service 1\nService 2\nService 3' } },
+      { type:'cta', data:{ text: 'Intéressé par nos services ? Contacte-nous !', phone: V.phone||'' } },
+    ]
+  },
+};
 
 function rpa() {
   const pages = V.store.pages || [];
@@ -797,10 +917,10 @@ function rpa() {
   }
   list.innerHTML = pages.map(p => `
     <div class="page-item">
-      <div class="page-ic">${p.icon || '📄'}</div>
+      <div class="page-ic" style="${p.color && p.color !== 'accent' ? 'background:' + p.color + ';' : p.color === 'accent' ? 'background:' + (V.store?.apparence?.couleur_accent || V.accent || '#7c6dfa') + ';' : ''}">${p.icon || '📄'}</div>
       <div class="page-info">
         <div class="page-title-t">${p.title}</div>
-        <div class="page-preview">${(p.content||'').substring(0,80)}${(p.content||'').length>80?'...':''}</div>
+        <div class="page-preview">${p.sections ? p.sections.length + ' section' + (p.sections.length > 1 ? 's' : '') : 'Page vide'}</div>
       </div>
       <div class="page-ac">
         <button class="btn btn-g btn-sm" onclick="editPage('${p.id}')">Modifier</button>
@@ -810,24 +930,124 @@ function rpa() {
   `).join('');
 }
 
+function initPageBuilder() {
+  // Colors
+  const accent = V.store?.apparence?.couleur_accent || V.accent || '#7c6dfa';
+  const colorsEl = document.getElementById('pg-colors');
+  colorsEl.innerHTML = PAGE_COLORS.map(c => {
+    const bg = c.val === 'accent' ? accent : c.val;
+    const isDark = c.val === '#111111' || c.val === 'accent' && isColorDark(accent);
+    return `<div class="pg-color-swatch${pageColor === c.val ? ' on' : ''}" style="background:${bg};border:2px solid ${pageColor === c.val ? '#333' : '#ddd'};" title="${c.label}" onclick="setPgColor('${c.val}')"></div>`;
+  }).join('');
+
+  // Templates
+  const tplEl = document.getElementById('tpl-grid');
+  tplEl.innerHTML = Object.entries(PAGE_TEMPLATES).map(([key, tpl]) =>
+    `<button class="tpl-btn" onclick="applyTemplate('${key}')"><div class="tpl-ic">${tpl.icon}</div><div class="tpl-lbl">${tpl.title}</div></button>`
+  ).join('');
+
+  renderSections();
+}
+
+function isColorDark(hex) {
+  const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return (r * 299 + g * 587 + b * 114) / 1000 < 128;
+}
+
+function setPgColor(val) {
+  pageColor = val;
+  initPageBuilder();
+}
+
+function applyTemplate(key) {
+  const tpl = PAGE_TEMPLATES[key];
+  if (!tpl) return;
+  document.getElementById('pg-title').value = tpl.title;
+  document.getElementById('pg-icon').value = tpl.icon;
+  pageColor = tpl.color;
+  pageSections = tpl.sections().map(s => ({ ...s, id: 'sec' + Date.now() + Math.random().toString(36).slice(2) }));
+  initPageBuilder();
+}
+
+function renderSections() {
+  const list = document.getElementById('sections-list');
+  if (!pageSections.length) {
+    list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text3);font-size:13px;">Aucune section — choisis un template ou ajoute des sections ci-dessous.</div>';
+    return;
+  }
+  list.innerHTML = pageSections.map((sec, idx) => {
+    const def = SECTION_TYPES[sec.type];
+    if (!def) return '';
+    const fieldsHtml = def.fields.map(f => {
+      const val = sec.data?.[f.key] || '';
+      return f.big
+        ? `<textarea class="sec-textarea" placeholder="${f.ph}" oninput="updateSecField(${idx},'${f.key}',this.value)">${val}</textarea>`
+        : `<input class="sec-input" type="text" placeholder="${f.ph}" value="${val.replace(/"/g,'&quot;')}" oninput="updateSecField(${idx},'${f.key}',this.value)">`;
+    }).join('');
+    return `
+      <div class="sec-block">
+        <div class="sec-block-head">
+          <span class="sec-block-ic">${def.ic}</span>
+          <span class="sec-block-type">${def.label}</span>
+          ${idx > 0 ? `<button class="add-sec-btn" style="padding:2px 8px;margin-left:4px;" onclick="moveSection(${idx},-1)">↑</button>` : ''}
+          ${idx < pageSections.length-1 ? `<button class="add-sec-btn" style="padding:2px 8px;" onclick="moveSection(${idx},1)">↓</button>` : ''}
+          <button class="sec-block-rm" onclick="removeSection(${idx})">✕</button>
+        </div>
+        ${fieldsHtml}
+      </div>`;
+  }).join('');
+}
+
+function updateSecField(idx, key, val) {
+  if (!pageSections[idx].data) pageSections[idx].data = {};
+  pageSections[idx].data[key] = val;
+}
+
+function addSection(type) {
+  const prefill = {};
+  if (type === 'contact') {
+    prefill.phone = V.phone || '';
+    prefill.email = V.email || '';
+    prefill.address = V.city || '';
+  }
+  pageSections.push({ id: 'sec' + Date.now(), type, data: prefill });
+  renderSections();
+}
+
+function removeSection(idx) {
+  pageSections.splice(idx, 1);
+  renderSections();
+}
+
+function moveSection(idx, dir) {
+  const to = idx + dir;
+  if (to < 0 || to >= pageSections.length) return;
+  [pageSections[idx], pageSections[to]] = [pageSections[to], pageSections[idx]];
+  renderSections();
+}
+
 function addPage() {
   editPageId = null;
+  pageSections = [];
+  pageColor = 'accent';
   document.getElementById('pgm-t').textContent = 'Ajouter une page';
   document.getElementById('pg-title').value = '';
-  document.getElementById('pg-content').value = '';
   document.getElementById('pg-icon').value = '';
   document.getElementById('pgmod').classList.add('on');
+  initPageBuilder();
 }
 
 function editPage(id) {
   const p = (V.store.pages || []).find(x => x.id === id);
   if (!p) return;
   editPageId = id;
+  pageSections = JSON.parse(JSON.stringify(p.sections || []));
+  pageColor = p.color || 'accent';
   document.getElementById('pgm-t').textContent = 'Modifier la page';
   document.getElementById('pg-title').value = p.title || '';
-  document.getElementById('pg-content').value = p.content || '';
   document.getElementById('pg-icon').value = p.icon || '';
   document.getElementById('pgmod').classList.add('on');
+  initPageBuilder();
 }
 
 function cpgm() { document.getElementById('pgmod').classList.remove('on'); editPageId = null; }
@@ -838,8 +1058,9 @@ async function savePage() {
   const page = {
     id: editPageId || 'pg' + Date.now(),
     title,
-    content: document.getElementById('pg-content').value.trim(),
     icon: document.getElementById('pg-icon').value.trim() || '📄',
+    color: pageColor || 'accent',
+    sections: pageSections,
     createdAt: new Date().toISOString()
   };
   V.store.pages = V.store.pages || [];
