@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simpl Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surf:#111118;--surf2:#1a1a24;--surf3:#22222e;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);--text:#ededf0;--text2:#8888a0;--text3:#444458;--a:#7c6dfa;--ag:rgba(124,109,250,0.1);--green:#10b981;--red:#ef4444;--yellow:#f59e0b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+/* LOGIN */
+.login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.login-card{background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:2.5rem;width:100%;max-width:380px;text-align:center;}
+.login-logo{font-size:2rem;font-weight:900;letter-spacing:-.04em;margin-bottom:.5rem;}
+.login-logo span{color:var(--a);}
+.login-sub{font-size:13px;color:var(--text2);margin-bottom:2rem;}
+.login-input{width:100%;padding:12px 16px;background:var(--surf2);border:1.5px solid var(--border2);border-radius:12px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s;font-family:inherit;text-align:center;letter-spacing:.2em;margin-bottom:1rem;}
+.login-input:focus{border-color:var(--a);}
+.login-btn{width:100%;padding:13px;border-radius:12px;background:var(--a);border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.login-btn:hover{filter:brightness(1.1);}
+.login-err{font-size:13px;color:var(--red);margin-top:.75rem;display:none;}
+
+/* LAYOUT */
+.admin-wrap{display:none;min-height:100vh;}
+.topbar{background:var(--surf);border-bottom:1px solid var(--border);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.tb-logo{font-size:1.1rem;font-weight:900;letter-spacing:-.03em;}
+.tb-logo span{color:var(--a);}
+.tb-badge{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--ag);color:var(--a);border:1px solid rgba(124,109,250,.2);margin-left:10px;}
+.tb-right{display:flex;align-items:center;gap:12px;}
+.tb-refresh{padding:7px 14px;border-radius:8px;background:var(--surf2);border:1px solid var(--border2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;}
+.tb-refresh:hover{color:var(--text);}
+.layout{display:flex;min-height:calc(100vh - 56px);}
+.sidebar{width:200px;background:var(--surf);border-right:1px solid var(--border);padding:1rem 0;flex-shrink:0;position:sticky;top:56px;height:calc(100vh - 56px);}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.6rem 1rem;font-size:13px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;margin:1px 8px;border-radius:8px;}
+.nav-item:hover{background:var(--surf2);color:var(--text);}
+.nav-item.on{background:var(--ag);color:var(--a);font-weight:600;}
+.main{flex:1;padding:1.5rem 2rem;overflow-y:auto;}
+.panel{display:none;}.panel.on{display:block;}
+.page-title{font-size:1.25rem;font-weight:800;margin-bottom:1.5rem;}
+
+/* METRICS */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.5rem;}
+.metric{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:1.1rem;}
+.metric-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.metric-val{font-size:1.8rem;font-weight:800;letter-spacing:-.03em;}
+.metric-sub{font-size:11px;color:var(--text2);margin-top:4px;}
+.metric.green .metric-val{color:var(--green);}
+.metric.purple .metric-val{color:var(--a);}
+.metric.yellow .metric-val{color:var(--yellow);}
+.metric.red .metric-val{color:var(--red);}
+
+/* CHART */
+.chart-card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.chart-title{font-size:14px;font-weight:700;margin-bottom:1.25rem;}
+.chart-wrap{display:flex;align-items:flex-end;gap:8px;height:120px;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;}
+.bar{width:100%;border-radius:6px 6px 0 0;background:var(--a);opacity:.7;transition:all .3s;min-height:4px;cursor:pointer;position:relative;}
+.bar:hover{opacity:1;}
+.bar-tooltip{position:absolute;top:-28px;left:50%;transform:translateX(-50%);background:var(--surf3);border:1px solid var(--border2);border-radius:6px;padding:3px 8px;font-size:11px;font-weight:700;color:var(--text);white-space:nowrap;display:none;}
+.bar:hover .bar-tooltip{display:block;}
+.bar-label{font-size:10px;color:var(--text3);text-align:center;}
+
+/* TABLE */
+.card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
+.card-title{font-size:14px;font-weight:700;margin-bottom:1rem;}
+.table{width:100%;border-collapse:collapse;font-size:13px;}
+.table th{text-align:left;padding:8px 0;color:var(--text3);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid var(--border);}
+.table td{padding:12px 0;border-bottom:1px solid var(--border);vertical-align:middle;}
+.table tr:last-child td{border-bottom:none;}
+.table tr:hover td{background:var(--surf2);}
+.store-name{font-weight:600;font-size:13px;}
+.store-email{font-size:11px;color:var(--text3);margin-top:2px;}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;}
+.badge-active{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.2);}
+.badge-suspended{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+.badge-paid{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.2);}
+.badge-unpaid{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.2);}
+.badge-soumission{background:var(--ag);color:var(--a);border:1px solid rgba(124,109,250,.2);}
+.badge-boutique{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2);}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .15s;}
+.btn-a{background:var(--a);color:#fff;}.btn-a:hover{filter:brightness(1.1);}
+.btn-g{background:var(--surf2);color:var(--text2);border:1px solid var(--border2);}.btn-g:hover{color:var(--text);}
+.btn-green{background:rgba(16,185,129,.15);color:var(--green);border:1px solid rgba(16,185,129,.2);}
+.btn-red{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+.btn-yellow{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.2);}
+.actions{display:flex;gap:6px;flex-wrap:wrap;}
+.search-bar{width:100%;padding:9px 14px;background:var(--surf2);border:1.5px solid var(--border2);border-radius:10px;color:var(--text);font-size:13px;outline:none;font-family:inherit;margin-bottom:1rem;}
+.search-bar:focus{border-color:var(--a);}
+.filter-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;}
+.filter-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:var(--surf2);color:var(--text2);font-family:inherit;transition:all .15s;}
+.filter-btn.on{background:var(--a);color:#fff;border-color:var(--a);}
+.empty{text-align:center;padding:3rem;color:var(--text3);font-size:14px;}
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surf);border:1px solid var(--border2);border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;z-index:999;transform:translateY(100px);opacity:0;transition:all .3s;}
+.toast.on{transform:translateY(0);opacity:1;}
+.toast.ok{border-color:var(--green);color:var(--green);}
+.toast.err{border-color:var(--red);color:var(--red);}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);display:inline-block;animation:pulse 2s infinite;margin-right:6px;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.mrr-big{font-size:3rem;font-weight:900;letter-spacing:-.04em;color:var(--green);}
+.mrr-label{font-size:13px;color:var(--text2);margin-top:4px;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;}
+@media(max-width:768px){.sidebar{display:none;}.main{padding:1rem;}.two-col{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-wrap" id="login-wrap">
+  <div class="login-card">
+    <div class="login-logo">Simpl<span>.</span></div>
+    <div class="login-sub">Panel administrateur</div>
+    <input class="login-input" type="password" id="pw-input" placeholder="••••••" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="login-btn" onclick="doLogin()">Accéder →</button>
+    <div class="login-err" id="login-err">Mot de passe incorrect</div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div class="admin-wrap" id="admin-wrap">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;">
+      <div class="tb-logo">Simpl<span>.</span> <span style="font-size:11px;font-weight:600;color:var(--text2);">Admin</span></div>
+      <span class="tb-badge"><span class="live-dot"></span>Live</span>
+    </div>
+    <div class="tb-right">
+      <span style="font-size:12px;color:var(--text3);" id="last-update"></span>
+      <button class="tb-refresh" onclick="loadData()">↻ Actualiser</button>
+    </div>
+  </div>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="nav-item on" onclick="sp('overview',this)"><span>📊</span> Vue d'ensemble</div>
+      <div class="nav-item" onclick="sp('clients',this)"><span>🏪</span> Boutiques</div>
+      <div class="nav-item" onclick="sp('finances',this)"><span>💰</span> Finances</div>
+      <div class="nav-item" onclick="sp('activity',this)"><span>⚡</span> Activité</div>
+    </div>
+    <div class="main">
+
+      <!-- VUE D'ENSEMBLE -->
+      <div class="panel on" id="p-overview">
+        <div class="page-title">Vue d'ensemble</div>
+        <div class="metrics" id="metrics-overview"></div>
+        <div class="two-col">
+          <div class="chart-card">
+            <div class="chart-title">Revenus mensuels (6 derniers mois)</div>
+            <div class="chart-wrap" id="revenue-chart"></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Nouvelles boutiques (6 derniers mois)</div>
+            <div class="chart-wrap" id="stores-chart"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">Dernières boutiques créées</div>
+          <div id="recent-stores-list"></div>
+        </div>
+      </div>
+
+      <!-- BOUTIQUES -->
+      <div class="panel" id="p-clients">
+        <div class="page-title">Gestion des boutiques</div>
+        <input class="search-bar" type="text" placeholder="🔍 Rechercher par nom, email, ville..." oninput="filterStores(this.value)">
+        <div class="filter-row">
+          <button class="filter-btn on" onclick="setFilter('all',this)">Toutes</button>
+          <button class="filter-btn" onclick="setFilter('active',this)">Actives</button>
+          <button class="filter-btn" onclick="setFilter('suspended',this)">Suspendues</button>
+          <button class="filter-btn" onclick="setFilter('paid',this)">Payées</button>
+          <button class="filter-btn" onclick="setFilter('unpaid',this)">Non payées</button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden;">
+          <table class="table" style="padding:0;">
+            <thead style="padding:0 1.25rem;">
+              <tr style="padding:0 1.25rem;">
+                <th style="padding:12px 1.25rem;">Boutique</th>
+                <th>Plan</th>
+                <th>Commandes</th>
+                <th>Créée le</th>
+                <th>Statut</th>
+                <th>Paiement</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="stores-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FINANCES -->
+      <div class="panel" id="p-finances">
+        <div class="page-title">Finances</div>
+        <div class="metrics" id="metrics-finances"></div>
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">✅ Boutiques payées ce mois</div>
+            <div id="paid-list"></div>
+          </div>
+          <div class="card">
+            <div class="card-title">⚠️ En attente de paiement</div>
+            <div id="unpaid-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ACTIVITÉ -->
+      <div class="panel" id="p-activity">
+        <div class="page-title">Activité récente</div>
+        <div class="metrics" id="metrics-activity"></div>
+        <div class="card">
+          <div class="card-title">Dernières boutiques créées</div>
+          <div id="activity-stores"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let adminToken = null;
+let data = null;
+let currentFilter = 'all';
+let searchQuery = '';
+
+async function doLogin() {
+  const pw = document.getElementById('pw-input').value;
+  try {
+    const r = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+    const d = await r.json();
+    if (d.success) {
+      adminToken = d.token;
+      document.getElementById('login-wrap').style.display = 'none';
+      document.getElementById('admin-wrap').style.display = 'block';
+      loadData();
+      setInterval(loadData, 30000); // Auto-refresh every 30s
+    } else {
+      document.getElementById('login-err').style.display = 'block';
+    }
+  } catch(e) {
+    document.getElementById('login-err').style.display = 'block';
+  }
+}
+
+async function loadData() {
+  try {
+    const r = await fetch('/api/admin/stats', { headers: { 'x-admin-token': adminToken } });
+    data = await r.json();
+    document.getElementById('last-update').textContent = 'Mis à jour : ' + new Date().toLocaleTimeString('fr-CA');
+    renderOverview();
+    renderStores();
+    renderFinances();
+    renderActivity();
+  } catch(e) { toast('Erreur de chargement', 'err'); }
+}
+
+function sp(id, el) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('p-' + id).classList.add('on');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('on'));
+  if (el) el.classList.add('on');
+}
+
+function fmt(n) { return n.toLocaleString('fr-CA') + '$'; }
+function fdate(d) { return new Date(d).toLocaleDateString('fr-CA'); }
+
+function renderOverview() {
+  const { totalStores, activeStores, suspendedStores, newThisMonth, mrr, paidCount, unpaidCount, totalOrders, ordersThisMonth } = data;
+
+  document.getElementById('metrics-overview').innerHTML = `
+    <div class="metric green"><div class="metric-label">MRR</div><div class="metric-val">${fmt(mrr)}</div><div class="metric-sub">Revenus mensuels récurrents</div></div>
+    <div class="metric purple"><div class="metric-label">Boutiques actives</div><div class="metric-val">${activeStores}</div><div class="metric-sub">${suspendedStores} suspendue${suspendedStores>1?'s':''}</div></div>
+    <div class="metric"><div class="metric-label">Nouvelles ce mois</div><div class="metric-val">${newThisMonth}</div><div class="metric-sub">boutiques créées</div></div>
+    <div class="metric yellow"><div class="metric-label">Non payées</div><div class="metric-val">${unpaidCount}</div><div class="metric-sub">en attente</div></div>
+    <div class="metric"><div class="metric-label">Commandes totales</div><div class="metric-val">${totalOrders}</div><div class="metric-sub">${ordersThisMonth} ce mois</div></div>
+    <div class="metric green"><div class="metric-label">Clients payants</div><div class="metric-val">${paidCount}</div><div class="metric-sub">sur ${totalStores} boutiques</div></div>
+  `;
+
+  // Revenue chart
+  const maxRev = Math.max(...data.monthlyRevenue.map(m => m.revenue), 1);
+  document.getElementById('revenue-chart').innerHTML = data.monthlyRevenue.map(m => `
+    <div class="bar-col">
+      <div class="bar" style="height:${Math.max((m.revenue/maxRev)*100, 4)}%;">
+        <div class="bar-tooltip">${fmt(m.revenue)}</div>
+      </div>
+      <div class="bar-label">${m.month}</div>
+    </div>
+  `).join('');
+
+  // Stores chart (new stores per month)
+  const storesByMonth = data.monthlyRevenue.map((m, i) => {
+    const start = new Date(); start.setMonth(start.getMonth() - (5 - i)); start.setDate(1);
+    const end = new Date(start); end.setMonth(end.getMonth() + 1);
+    const count = data.stores.filter(s => { const d = new Date(s.createdAt); return d >= start && d < end; }).length;
+    return { month: m.month, count };
+  });
+  const maxStores = Math.max(...storesByMonth.map(m => m.count), 1);
+  document.getElementById('stores-chart').innerHTML = storesByMonth.map(m => `
+    <div class="bar-col">
+      <div class="bar" style="height:${Math.max((m.count/maxStores)*100, 4)}%;background:var(--green);">
+        <div class="bar-tooltip">${m.count} boutique${m.count>1?'s':''}</div>
+      </div>
+      <div class="bar-label">${m.month}</div>
+    </div>
+  `).join('');
+
+  // Recent stores
+  const recent = data.stores.slice().sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+  document.getElementById('recent-stores-list').innerHTML = recent.length ? `
+    <table class="table">
+      <thead><tr><th>Boutique</th><th>Plan</th><th>Commandes</th><th>Créée</th><th>Statut</th></tr></thead>
+      <tbody>${recent.map(s => `
+        <tr>
+          <td><div class="store-name">${s.businessName}</div><div class="store-email">${s.email}</div></td>
+          <td><span class="badge badge-${s.plan||'soumission'}">${s.plan||'soumission'}</span></td>
+          <td>${s.ordersCount}</td>
+          <td>${fdate(s.createdAt)}</td>
+          <td><span class="badge badge-${s.status||'active'}">${s.status||'active'}</span></td>
+        </tr>
+      `).join('')}</tbody>
+    </table>
+  ` : '<div class="empty">Aucune boutique encore</div>';
+}
+
+function renderStores() {
+  let stores = data.stores.slice();
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    stores = stores.filter(s => s.businessName.toLowerCase().includes(q) || s.email.toLowerCase().includes(q) || (s.city||'').toLowerCase().includes(q));
+  }
+  if (currentFilter === 'active') stores = stores.filter(s => s.status !== 'suspended');
+  else if (currentFilter === 'suspended') stores = stores.filter(s => s.status === 'suspended');
+  else if (currentFilter === 'paid') stores = stores.filter(s => s.paid);
+  else if (currentFilter === 'unpaid') stores = stores.filter(s => !s.paid && s.status !== 'suspended');
+
+  stores.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  document.getElementById('stores-tbody').innerHTML = stores.length ? stores.map(s => `
+    <tr>
+      <td style="padding-left:1.25rem;">
+        <div class="store-name">${s.businessName}</div>
+        <div class="store-email">${s.email}${s.city ? ' · ' + s.city : ''}</div>
+      </td>
+      <td><span class="badge badge-${s.plan||'soumission'}">${s.plan==='boutique'?'99$/mo':'49$/mo'}</span></td>
+      <td style="font-weight:600;">${s.ordersCount}</td>
+      <td style="font-size:12px;color:var(--text2);">${fdate(s.createdAt)}</td>
+      <td><span class="badge badge-${s.status||'active'}">${s.status==='suspended'?'⏸ Suspendue':'✓ Active'}</span></td>
+      <td><span class="badge badge-${s.paid?'paid':'unpaid'}">${s.paid?'✓ Payée':'⚠ Non payée'}</span></td>
+      <td style="padding-right:1.25rem;">
+        <div class="actions">
+          <button class="btn btn-g" onclick="window.open('/dashboard/${s.slug}/${s.token}','_blank')" title="Voir dashboard">🔗</button>
+          ${s.paid ? 
+            `<button class="btn btn-yellow" onclick="togglePaid('${s.slug}',false)">Impayé</button>` :
+            `<button class="btn btn-green" onclick="togglePaid('${s.slug}',true)">Marquer payé</button>`
+          }
+          ${s.status === 'suspended' ?
+            `<button class="btn btn-green" onclick="toggleStatus('${s.slug}','active')">Réactiver</button>` :
+            `<button class="btn btn-red" onclick="toggleStatus('${s.slug}','suspended')">Suspendre</button>`
+          }
+          <button class="btn btn-g" onclick="setPlan('${s.slug}','${s.plan==='boutique'?'soumission':'boutique'}')" title="Changer plan">${s.plan==='boutique'?'→ Soumission':'→ Boutique'}</button>
+        </div>
+      </td>
+    </tr>
+  `).join('') : `<tr><td colspan="7"><div class="empty">Aucune boutique trouvée</div></td></tr>`;
+}
+
+function renderFinances() {
+  const { mrr, paidCount, unpaidCount, totalStores, monthlyRevenue } = data;
+  const totalRev = monthlyRevenue.reduce((sum, m) => sum + m.revenue, 0);
+  const thisMonthRev = monthlyRevenue[monthlyRevenue.length - 1]?.revenue || 0;
+
+  document.getElementById('metrics-finances').innerHTML = `
+    <div class="metric green"><div class="metric-label">MRR actuel</div><div class="metric-val">${fmt(mrr)}</div><div class="metric-sub">Revenus mensuels récurrents</div></div>
+    <div class="metric"><div class="metric-label">Ce mois</div><div class="metric-val">${fmt(thisMonthRev)}</div><div class="metric-sub">encaissé</div></div>
+    <div class="metric"><div class="metric-label">Total 6 mois</div><div class="metric-val">${fmt(totalRev)}</div><div class="metric-sub">revenus cumulés</div></div>
+    <div class="metric yellow"><div class="metric-label">À collecter</div><div class="metric-val">${unpaidCount}</div><div class="metric-sub">boutiques non payées</div></div>
+  `;
+
+  const paid = data.stores.filter(s => s.paid).sort((a,b) => new Date(b.paidAt||b.createdAt) - new Date(a.paidAt||a.createdAt));
+  document.getElementById('paid-list').innerHTML = paid.length ? paid.map(s => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border);">
+      <div><div style="font-size:13px;font-weight:600;">${s.businessName}</div><div style="font-size:11px;color:var(--text3);">${s.email}</div></div>
+      <div style="text-align:right;"><div style="font-size:13px;font-weight:700;color:var(--green);">${s.plan==='boutique'?'99$':'49$'}/mo</div><div style="font-size:11px;color:var(--text3);">${s.paidAt?fdate(s.paidAt):''}</div></div>
+    </div>
+  `).join('') : '<div class="empty">Aucun paiement enregistré</div>';
+
+  const unpaid = data.stores.filter(s => !s.paid && s.status !== 'suspended').sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
+  document.getElementById('unpaid-list').innerHTML = unpaid.length ? unpaid.map(s => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 0;border-bottom:1px solid var(--border);">
+      <div><div style="font-size:13px;font-weight:600;">${s.businessName}</div><div style="font-size:11px;color:var(--text3);">${s.email}</div></div>
+      <div style="text-align:right;">
+        <div style="font-size:13px;font-weight:700;color:var(--yellow);">${s.plan==='boutique'?'99$':'49$'}/mo</div>
+        <button class="btn btn-green" style="margin-top:4px;font-size:11px;" onclick="togglePaid('${s.slug}',true)">Marquer payé</button>
+      </div>
+    </div>
+  `).join('') : '<div class="empty" style="padding:1rem;">Tout le monde a payé ! 🎉</div>';
+}
+
+function renderActivity() {
+  const { totalOrders, ordersThisMonth, newThisMonth, totalStores } = data;
+  document.getElementById('metrics-activity').innerHTML = `
+    <div class="metric"><div class="metric-label">Commandes totales</div><div class="metric-val">${totalOrders}</div></div>
+    <div class="metric purple"><div class="metric-label">Commandes ce mois</div><div class="metric-val">${ordersThisMonth}</div></div>
+    <div class="metric green"><div class="metric-label">Nouvelles boutiques</div><div class="metric-val">${newThisMonth}</div><div class="metric-sub">ce mois</div></div>
+    <div class="metric"><div class="metric-label">Total boutiques</div><div class="metric-val">${totalStores}</div></div>
+  `;
+
+  const recent = data.stores.slice().sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 10);
+  document.getElementById('activity-stores').innerHTML = recent.length ? `
+    <table class="table">
+      <thead><tr><th>Boutique</th><th>Email</th><th>Plan</th><th>Commandes</th><th>Créée</th><th>Actions</th></tr></thead>
+      <tbody>${recent.map(s => `
+        <tr>
+          <td><div class="store-name">${s.businessName}</div></td>
+          <td style="font-size:12px;color:var(--text2);">${s.email}</td>
+          <td><span class="badge badge-${s.plan||'soumission'}">${s.plan||'soumission'}</span></td>
+          <td>${s.ordersCount}</td>
+          <td style="font-size:12px;color:var(--text2);">${fdate(s.createdAt)}</td>
+          <td><button class="btn btn-g" onclick="window.open('/dashboard/${s.slug}/${s.token}','_blank')">🔗 Dashboard</button></td>
+        </tr>
+      `).join('')}</tbody>
+    </table>
+  ` : '<div class="empty">Aucune activité</div>';
+}
+
+function filterStores(q) { searchQuery = q; renderStores(); }
+function setFilter(f, el) { currentFilter = f; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('on')); el.classList.add('on'); renderStores(); }
+
+async function toggleStatus(slug, status) {
+  try {
+    await fetch(`/api/admin/store/${slug}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken }, body: JSON.stringify({ status }) });
+    const s = data.stores.find(x => x.slug === slug); if (s) s.status = status;
+    renderStores(); renderOverview();
+    toast(status === 'suspended' ? 'Boutique suspendue' : 'Boutique réactivée', 'ok');
+  } catch(e) { toast('Erreur', 'err'); }
+}
+
+async function togglePaid(slug, paid) {
+  try {
+    const paidAt = paid ? new Date().toISOString() : null;
+    await fetch(`/api/admin/store/${slug}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken }, body: JSON.stringify({ paid, paidAt }) });
+    const s = data.stores.find(x => x.slug === slug); if (s) { s.paid = paid; s.paidAt = paidAt; }
+    renderStores(); renderFinances(); renderOverview();
+    toast(paid ? '✓ Paiement enregistré' : 'Paiement retiré', 'ok');
+  } catch(e) { toast('Erreur', 'err'); }
+}
+
+async function setPlan(slug, plan) {
+  try {
+    await fetch(`/api/admin/store/${slug}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken }, body: JSON.stringify({ plan }) });
+    const s = data.stores.find(x => x.slug === slug); if (s) s.plan = plan;
+    renderStores(); renderFinances(); renderOverview();
+    toast('Plan mis à jour ✓', 'ok');
+  } catch(e) { toast('Erreur', 'err'); }
+}
+
+function toast(msg, type='ok') {
+  const el = document.getElementById('toast');
+  el.textContent = (type === 'ok' ? '✓ ' : '✕ ') + msg;
+  el.className = 'toast on ' + type;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('on'), 3000);
+}
+</script>
+</body>
+</html>

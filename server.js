@@ -661,9 +661,111 @@ Suppression produit: {"type":"delete_product","produit_id":"id_existant","messag
   }
 });
 
+
+// ─── ADMIN ROUTES ───
+const ADMIN_PASSWORD = '14416';
+
+app.post('/api/admin/login', (req, res) => {
+  if (req.body.password === ADMIN_PASSWORD) {
+    res.json({ success: true, token: Buffer.from(ADMIN_PASSWORD + ':simpl-admin').toString('base64') });
+  } else {
+    res.status(401).json({ error: 'Mot de passe incorrect' });
+  }
+});
+
+function adminAuth(req, res) {
+  const token = req.headers['x-admin-token'];
+  const expected = Buffer.from(ADMIN_PASSWORD + ':simpl-admin').toString('base64');
+  if (token !== expected) { res.status(403).json({ error: 'Non autorisé' }); return false; }
+  return true;
+}
+
+app.get('/api/admin/stats', async (req, res) => {
+  if (!adminAuth(req, res)) return;
+  try {
+    const stores = await db.collection('stores').find({}).toArray();
+    const now = new Date();
+    const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+
+    const totalStores = stores.length;
+    const activeStores = stores.filter(s => s.status !== 'suspended').length;
+    const suspendedStores = stores.filter(s => s.status === 'suspended').length;
+    const newThisMonth = stores.filter(s => new Date(s.createdAt) >= thisMonth).length;
+
+    // Revenue stats (paid stores)
+    const paidStores = stores.filter(s => s.paid === true);
+    const unpaidStores = stores.filter(s => s.status !== 'suspended' && !s.paid);
+    const mrr = paidStores.reduce((sum, s) => sum + (s.plan === 'boutique' ? 99 : 49), 0);
+
+    // Monthly revenue history (last 6 months)
+    const monthlyRevenue = [];
+    for (let i = 5; i >= 0; i--) {
+      const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      const monthStores = stores.filter(s => {
+        const d = new Date(s.paidAt || s.createdAt);
+        return s.paid && d >= start && d < end;
+      });
+      const rev = monthStores.reduce((sum, s) => sum + (s.plan === 'boutique' ? 99 : 49), 0);
+      monthlyRevenue.push({
+        month: start.toLocaleDateString('fr-CA', { month: 'short', year: '2-digit' }),
+        revenue: rev,
+        count: monthStores.length
+      });
+    }
+
+    // All orders across all stores
+    const allOrders = stores.flatMap(s => (s.orders || []).map(o => ({ ...o, storeName: s.businessName, storeSlug: s.slug })));
+    const ordersThisMonth = allOrders.filter(o => new Date(o.createdAt) >= thisMonth).length;
+
+    // Recent stores
+    const recentStores = stores.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 5);
+
+    res.json({
+      totalStores, activeStores, suspendedStores, newThisMonth,
+      mrr, paidCount: paidStores.length, unpaidCount: unpaidStores.length,
+      monthlyRevenue, ordersThisMonth, totalOrders: allOrders.length,
+      recentStores,
+      stores: stores.map(s => ({
+        slug: s.slug, businessName: s.businessName, email: s.email,
+        phone: s.phone || '', city: s.city || '',
+        createdAt: s.createdAt, status: s.status || 'active',
+        paid: s.paid || false, paidAt: s.paidAt || null,
+        plan: s.plan || 'soumission',
+        ordersCount: (s.orders || []).length,
+        token: s.token
+      }))
+    });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.put('/api/admin/store/:slug', async (req, res) => {
+  if (!adminAuth(req, res)) return;
+  try {
+    const { status, paid, plan, paidAt } = req.body;
+    const update = {};
+    if (status !== undefined) update.status = status;
+    if (paid !== undefined) update.paid = paid;
+    if (plan !== undefined) update.plan = plan;
+    if (paidAt !== undefined) update.paidAt = paidAt;
+    await db.collection('stores').updateOne({ slug: req.params.slug }, { $set: update });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+app.delete('/api/admin/store/:slug', async (req, res) => {
+  if (!adminAuth(req, res)) return;
+  try {
+    await db.collection('stores').deleteOne({ slug: req.params.slug });
+    res.json({ success: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 // ─── PAGE ROUTES ───
 app.get('/s/:slug', (req, res) => res.sendFile(path.join(__dirname, 'store.html')));
 app.get('/dashboard/:slug/:token', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
 
 // ─── START ───
 const PORT = process.env.PORT || 3000;
