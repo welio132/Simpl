@@ -168,6 +168,13 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .emoji-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
 .ep-em{width:34px;height:34px;border-radius:8px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1.15rem;cursor:pointer;transition:all .15s;}
 .ep-em:hover{border-color:var(--a);background:var(--ag);}
+.page-item{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:1rem;display:flex;align-items:center;gap:12px;margin-bottom:10px;transition:border-color .2s;}
+.page-item:hover{border-color:var(--a);}
+.page-ic{width:44px;height:44px;border-radius:10px;background:var(--surf2);display:flex;align-items:center;justify-content:center;font-size:1.25rem;flex-shrink:0;}
+.page-info{flex:1;min-width:0;}
+.page-title-t{font-size:14px;font-weight:700;}
+.page-preview{font-size:12px;color:var(--text3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.page-ac{display:flex;gap:6px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -192,6 +199,8 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="nav-item" onclick="sp('apparence',this)"><span class="nav-ic">🖼</span>Logo & bannière</div>
     <div class="nav-item" onclick="sp('infos',this)"><span class="nav-ic">⚙️</span>Informations</div>
     <div class="nav-item" onclick="sp('params',this)"><span class="nav-ic">🔧</span>Paramètres</div>
+    <div class="nav-group">Pages</div>
+    <div class="nav-item" onclick="sp('pages',this)"><span class="nav-ic">📄</span>Pages supplémentaires</div>
     <div class="nav-group">Assistant IA</div>
     <div class="nav-item" onclick="sp('ai',this)"><span class="nav-ic">✦</span>Assistant Simpl</div>
   </div>
@@ -388,6 +397,54 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       </div>
     </div>
 
+    <!-- PAGES SUPPLÉMENTAIRES -->
+    <div class="panel" id="p-pages">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+        <div class="page-title" style="margin:0;">Pages supplémentaires</div>
+        <button class="btn btn-a" id="btn-add-page" onclick="addPage()">+ Ajouter une page</button>
+      </div>
+      <div class="card" style="background:linear-gradient(135deg,rgba(124,109,250,0.06),transparent);border-color:rgba(124,109,250,0.2);margin-bottom:1rem;">
+        <div style="display:flex;gap:12px;align-items:flex-start;">
+          <div style="font-size:1.5rem;flex-shrink:0;">✦</div>
+          <div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Crée tes pages avec l'IA</div>
+            <div style="font-size:13px;color:var(--text2);line-height:1.6;">Décris le contenu de ta page à l'Assistant Simpl et il la génère pour toi. Tu peux ensuite la modifier à ta guise.</div>
+            <button class="btn btn-a btn-sm" onclick="sp('ai',null)" style="margin-top:.75rem;">Ouvrir l'assistant →</button>
+          </div>
+        </div>
+      </div>
+      <div id="pages-limit-banner" style="display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:.875rem 1rem;margin-bottom:1rem;font-size:13px;color:#92400e;">
+        ⚠️ <strong>Limite atteinte.</strong> Ton plan <span id="pages-plan-name"></span> inclut <span id="pages-limit-num"></span> pages supplémentaires. <a href="#" style="color:var(--a);font-weight:600;">Passer au plan Boutique →</a>
+      </div>
+      <div id="pages-list"></div>
+    </div>
+
+    <!-- MODAL PAGE -->
+    <div class="modal-overlay" id="pgmod">
+      <div class="modal" style="max-width:640px;">
+        <div class="modal-head">
+          <span class="modal-title" id="pgm-t">Ajouter une page</span>
+          <button class="modal-close" onclick="cpgm()">✕</button>
+        </div>
+        <div class="field">
+          <label>Titre de la page *</label>
+          <input type="text" id="pg-title" placeholder="Ex: À propos, Témoignages, Contact, FAQ...">
+        </div>
+        <div class="field">
+          <label>Contenu</label>
+          <textarea id="pg-content" style="min-height:200px;font-size:13px;line-height:1.6;" placeholder="Écris le contenu de ta page ici...&#10;&#10;Tu peux aussi demander à l'Assistant IA de générer ce contenu pour toi !"></textarea>
+        </div>
+        <div class="field">
+          <label>Icône (emoji)</label>
+          <input type="text" id="pg-icon" placeholder="Ex: 💬 📖 ⭐ 📞" style="max-width:120px;">
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-g" onclick="cpgm()" style="flex:1;">Annuler</button>
+          <button class="btn btn-a" onclick="savePage()" style="flex:2;">💾 Sauvegarder</button>
+        </div>
+      </div>
+    </div>
+
     <!-- AI ASSISTANT -->
     <div class="panel" id="p-ai">
       <div class="page-title">Assistant Simpl IA</div>
@@ -527,7 +584,7 @@ function build(){
   if(newOrders>0){const nb=document.getElementById('nb-new');nb.textContent=newOrders;nb.classList.add('show');}
   // AI welcome
   addAiMsg('ai','Bonjour ! Je suis ton assistant Simpl. Je connais ta boutique sur le bout des doigts — dis-moi ce que tu veux changer et je m\'en occupe.');
-  rm();rp();ro();rro();
+  rm();rp();ro();rro();rpa();
 }
 
 function sp(id,el){
@@ -712,6 +769,104 @@ async function sendAiMsg(){
     }
   }catch(e){hideAiTyping();addAiMsg('ai','Désolé, une erreur est survenue. Réessaie.');}
   document.getElementById('ai-send').disabled=false;isAiWaiting=false;
+}
+
+// PAGES SUPPLÉMENTAIRES
+const PAGE_LIMITS = { soumission: 2, boutique: 5 };
+let editPageId = null;
+
+function rpa() {
+  const pages = V.store.pages || [];
+  const plan = V.plan || 'soumission';
+  const limit = PAGE_LIMITS[plan] || 2;
+  const btnAdd = document.getElementById('btn-add-page');
+  const banner = document.getElementById('pages-limit-banner');
+
+  if (pages.length >= limit) {
+    if (btnAdd) btnAdd.disabled = true;
+    if (banner) {
+      banner.style.display = 'block';
+      document.getElementById('pages-plan-name').textContent = plan;
+      document.getElementById('pages-limit-num').textContent = limit;
+    }
+  } else {
+    if (btnAdd) btnAdd.disabled = false;
+    if (banner) banner.style.display = 'none';
+  }
+
+  const list = document.getElementById('pages-list');
+  if (!pages.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-ic">📄</div><div class="empty-txt">Aucune page encore.<br>Clique sur "+ Ajouter une page" pour commencer.</div></div>';
+    return;
+  }
+  list.innerHTML = pages.map(p => `
+    <div class="page-item">
+      <div class="page-ic">${p.icon || '📄'}</div>
+      <div class="page-info">
+        <div class="page-title-t">${p.title}</div>
+        <div class="page-preview">${(p.content||'').substring(0,80)}${(p.content||'').length>80?'...':''}</div>
+      </div>
+      <div class="page-ac">
+        <button class="btn btn-g btn-sm" onclick="editPage('${p.id}')">Modifier</button>
+        <button class="btn btn-d btn-sm" onclick="deletePage('${p.id}')">Supprimer</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function addPage() {
+  editPageId = null;
+  document.getElementById('pgm-t').textContent = 'Ajouter une page';
+  document.getElementById('pg-title').value = '';
+  document.getElementById('pg-content').value = '';
+  document.getElementById('pg-icon').value = '';
+  document.getElementById('pgmod').classList.add('on');
+}
+
+function editPage(id) {
+  const p = (V.store.pages || []).find(x => x.id === id);
+  if (!p) return;
+  editPageId = id;
+  document.getElementById('pgm-t').textContent = 'Modifier la page';
+  document.getElementById('pg-title').value = p.title || '';
+  document.getElementById('pg-content').value = p.content || '';
+  document.getElementById('pg-icon').value = p.icon || '';
+  document.getElementById('pgmod').classList.add('on');
+}
+
+function cpgm() { document.getElementById('pgmod').classList.remove('on'); editPageId = null; }
+
+async function savePage() {
+  const title = document.getElementById('pg-title').value.trim();
+  if (!title) return toast('Titre requis', 'err');
+  const page = {
+    id: editPageId || 'pg' + Date.now(),
+    title,
+    content: document.getElementById('pg-content').value.trim(),
+    icon: document.getElementById('pg-icon').value.trim() || '📄',
+    createdAt: new Date().toISOString()
+  };
+  V.store.pages = V.store.pages || [];
+  if (editPageId) {
+    const idx = V.store.pages.findIndex(p => p.id === editPageId);
+    if (idx !== -1) V.store.pages[idx] = page;
+  } else {
+    V.store.pages.push(page);
+  }
+  try {
+    await ac2('PUT', `/api/dashboard/${slug}/store`, { pages: V.store.pages });
+    rpa(); cpgm();
+    toast(editPageId ? 'Page modifiée ✓' : 'Page ajoutée ✓');
+  } catch(e) { toast('Erreur', 'err'); }
+}
+
+async function deletePage(id) {
+  if (!confirm('Supprimer cette page ?')) return;
+  V.store.pages = (V.store.pages || []).filter(p => p.id !== id);
+  try {
+    await ac2('PUT', `/api/dashboard/${slug}/store`, { pages: V.store.pages });
+    rpa(); toast('Page supprimée');
+  } catch(e) { toast('Erreur', 'err'); }
 }
 
 function cpUrl(){navigator.clipboard.writeText('https://simpl-production.up.railway.app/s/'+slug);toast('Lien copié ✓');}
