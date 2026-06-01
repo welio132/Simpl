@@ -12,6 +12,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 
 /* LOGIN */
 .login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;}
+.login-wrap.hidden{display:none!important;}
 .login-card{background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:2.5rem;width:100%;max-width:380px;text-align:center;}
 .login-logo{font-size:2rem;font-weight:900;letter-spacing:-.04em;margin-bottom:.5rem;}
 .login-logo span{color:var(--a);}
@@ -23,7 +24,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .login-err{font-size:13px;color:var(--red);margin-top:.75rem;display:none;}
 
 /* LAYOUT */
-.admin-wrap{display:none;min-height:100vh;}
+.admin-wrap{display:none;min-height:100vh;}.admin-wrap.visible{display:block!important;}
 .topbar{background:var(--surf);border-bottom:1px solid var(--border);padding:0 1.5rem;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
 .tb-logo{font-size:1.1rem;font-weight:900;letter-spacing:-.03em;}
 .tb-logo span{color:var(--a);}
@@ -232,8 +233,8 @@ async function doLogin() {
     const d = await r.json();
     if (d.success) {
       adminToken = d.token;
-      document.getElementById('login-wrap').style.display = 'none';
-      document.getElementById('admin-wrap').style.display = 'block';
+      document.getElementById('login-wrap').classList.add('hidden');
+      document.getElementById('admin-wrap').classList.add('visible');
       loadData();
       setInterval(loadData, 30000); // Auto-refresh every 30s
     } else {
@@ -360,6 +361,7 @@ function renderStores() {
             `<button class="btn btn-red" onclick="toggleStatus('${s.slug}','suspended')">Suspendre</button>`
           }
           <button class="btn btn-g" onclick="setPlan('${s.slug}','${s.plan==='boutique'?'soumission':'boutique'}')" title="Changer plan">${s.plan==='boutique'?'→ Soumission':'→ Boutique'}</button>
+          <button class="btn btn-red" onclick="deleteStore('${s.slug}','${s.businessName.replace(/'/g,"\\'")}')">🗑</button>
         </div>
       </td>
     </tr>
