@@ -238,7 +238,9 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       </button>
     </div>
   </nav>
+  <div class="pages-nav" id="pages-nav" style="display:none;"></div>
 
+  <div id="main-store-view">
   <div id="store-view">
     <div class="store-hero">
       <div id="hero-banner-wrap"></div>
@@ -263,6 +265,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
       <div class="cf"><label id="lbl-name">Prénom et nom *</label><input type="text" id="c-name" placeholder="Jean Tremblay" autocomplete="name"></div>
       <div class="cf"><label id="lbl-email">Courriel *</label><input type="email" id="c-email" placeholder="jean@exemple.com" autocomplete="email"></div>
       <div class="cf"><label id="lbl-phone">Téléphone</label><input type="tel" id="c-phone" placeholder="(418) 555-0100" autocomplete="tel"></div>
+      <div class="cf" id="addr-wrap" style="display:none;"><label id="lbl-addr">Adresse de livraison</label><input type="text" id="c-addr" placeholder="123 rue Principale..." autocomplete="street-address"></div>
       <div class="cf"><label id="lbl-notes">Notes</label><input type="text" id="c-notes" placeholder="Information supplémentaire..."></div>
     </div>
     <button class="submit-btn" id="submit-btn" onclick="submitOrder()">✓ <span id="t-submit">Envoyer ma demande</span></button>
@@ -610,6 +613,7 @@ async function submitOrder(){
 
 init();
 </script>
+  </div><!-- end main-store-view -->
   </div><!-- end main-store-view -->
   <div id="page-content-views"></div>
 </body>
