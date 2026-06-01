@@ -436,6 +436,7 @@ app.post('/api/store/save', async (req, res) => {
 });
 
 app.get('/api/store/:slug', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
   const v = await getVendor(req.params.slug);
   if (!v) return res.status(404).json({ error: 'Not found' });
   const { token, email, _id, ...safe } = v;
