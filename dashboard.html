@@ -555,7 +555,6 @@ function build(){
   document.getElementById('p-dl').value=pmt.depot_label||'Dépôt';
   document.getElementById('p-sl').value=pmt.solde_label||'Solde à la livraison';
   document.getElementById('p-note').value=pmt.note||'';
-  const sw=document.getElementById('msw');sw.className='sw'+(V.store.mode==='boutique'?' on':'');
   const asw=document.getElementById('asw');if(asw)asw.className='sw'+(V.store.requireAddress?' on':'');
   const app=V.store.apparence||{};
   if(app.logo_url){const el=document.getElementById('logo-prev');el.src=app.logo_url;el.style.display='block';}
@@ -687,7 +686,7 @@ async function sburl(){const u=document.getElementById('ban-url').value.trim();i
 async function pc(el){const c=el.dataset.c;document.querySelectorAll('.csw').forEach(s=>s.classList.remove('on'));el.classList.add('on');try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{couleur_accent:c});V.accent=c;toast('Couleur sauvegardée ✓');}catch(e){toast('Erreur','err');}}
 async function pcc(){const c=document.getElementById('cc').value;try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{couleur_accent:c});V.accent=c;document.querySelectorAll('.csw').forEach(s=>s.classList.remove('on'));toast('Couleur personnalisée ✓');}catch(e){toast('Erreur','err');}}
 async function ta(){const asw=document.getElementById('asw');const val=!V.store.requireAddress;asw.className='sw'+(val?' on':'');try{await ac2('PUT',`/api/dashboard/${slug}/store`,{requireAddress:val});V.store.requireAddress=val;toast(val?'Champ adresse activé ✓':'Champ adresse désactivé');}catch(e){toast('Erreur','err');}}
-async function tm(){const sw=document.getElementById('msw');const m=V.store.mode==='boutique'?'soumission':'boutique';sw.className='sw'+(m==='boutique'?' on':'');try{await ac2('PUT',`/api/dashboard/${slug}/store`,{mode:m});V.store.mode=m;toast(m==='boutique'?'Mode boutique activé ✓':'Mode soumission activé ✓');}catch(e){toast('Erreur','err');}}
+async function tm(){}
 
 // INFOS & PARAMS
 async function si(){try{await ac2('PUT',`/api/dashboard/${slug}/infos`,{businessName:document.getElementById('i-biz').value.trim(),slogan:document.getElementById('i-sl').value.trim(),description:document.getElementById('i-desc').value.trim(),phone:document.getElementById('i-ph').value.trim(),city:document.getElementById('i-ci').value.trim()});V.businessName=document.getElementById('i-biz').value.trim();document.getElementById('tb-biz').textContent=V.businessName;toast('Informations sauvegardées ✓');}catch(e){toast('Erreur','err');}}
