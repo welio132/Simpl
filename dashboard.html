@@ -768,7 +768,7 @@ async function sendAiMsg(){
       addAiMsg('sys','✓ Boutique mise à jour');
     }
   }catch(e){hideAiTyping();addAiMsg('ai','Désolé, une erreur est survenue. Réessaie.');}
-  document.getElementById('ai-send').disabled=false;isAiWaiting=false;
+  finally{document.getElementById('ai-send').disabled=false;isAiWaiting=false;}
 }
 
 // PAGES SUPPLÉMENTAIRES

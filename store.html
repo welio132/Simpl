@@ -417,6 +417,25 @@ function buildStore(){
 
   prods.forEach(p=>{quantities[p.id]=1;});
   renderProducts(prods,isFr);
+
+  // Pages supplémentaires
+  const pages = store.pages || [];
+  if(pages.length > 0){
+    const pnav = document.getElementById('pages-nav');
+    pnav.style.display = 'flex';
+    pnav.innerHTML = '<button class="page-nav-btn on" onclick="showPage('home',this)">' + (isFr?'🏠 Accueil':'🏠 Home') + '</button>' +
+      pages.map(p => `<button class="page-nav-btn" onclick="showPage('${p.id}',this)">${p.icon||'📄'} ${p.title}</button>`).join('');
+    const pcv = document.getElementById('page-content-views');
+    pcv.innerHTML = pages.map(p => `
+      <div class="page-view" id="pv-${p.id}">
+        <div class="page-view-title">${p.icon||'📄'} ${p.title}</div>
+        <div class="page-view-content">${(p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>
+    `).join('');
+  }
+
+  // Adresse de livraison
+  if(store.requireAddress){const aw=document.getElementById('addr-wrap');if(aw)aw.style.display='block';}
 }
 
 function renderProducts(prods,isFr){
