@@ -423,7 +423,7 @@ function buildStore(){
   if(pages.length > 0){
     const pnav = document.getElementById('pages-nav');
     pnav.style.display = 'flex';
-    pnav.innerHTML = '<button class="page-nav-btn on" onclick="showPage('home',this)">' + (isFr?'🏠 Accueil':'🏠 Home') + '</button>' +
+    pnav.innerHTML = '<button class="page-nav-btn on" onclick="showPage(&quot;home&quot;,this)">' + (isFr?'🏠 Accueil':'🏠 Home') + '</button>' +
       pages.map(p => `<button class="page-nav-btn" onclick="showPage('${p.id}',this)">${p.icon||'📄'} ${p.title}</button>`).join('');
     const pcv = document.getElementById('page-content-views');
     pcv.innerHTML = pages.map(p => `
