@@ -456,6 +456,16 @@ async function setPlan(slug, plan) {
   } catch(e) { toast('Erreur', 'err'); }
 }
 
+async function deleteStore(slug, name) {
+  if (!confirm(`Supprimer la boutique "${name}" ? Cette action est irréversible.`)) return;
+  try {
+    await fetch(`/api/admin/store/${slug}`, { method: 'DELETE', headers: { 'x-admin-token': adminToken } });
+    data.stores = data.stores.filter(s => s.slug !== slug);
+    renderStores(); renderOverview(); renderFinances(); renderActivity();
+    toast('Boutique supprimée', 'ok');
+  } catch(e) { toast('Erreur', 'err'); }
+}
+
 function toast(msg, type='ok') {
   const el = document.getElementById('toast');
   el.textContent = (type === 'ok' ? '✓ ' : '✕ ') + msg;
