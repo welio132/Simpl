@@ -152,7 +152,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
 .card{background:var(--surf);border:1px solid var(--border2);border-radius:16px;padding:1.5rem;margin-bottom:1rem;}
 .card-title{font-family:'Cabinet Grotesk',sans-serif;font-size:1rem;font-weight:800;margin-bottom:1.25rem;}
 .svc-row{display:flex;gap:10px;}
-.svc-in{flex:1;padding:13px 16px;background:var(--surf2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-size:15px;outline:none;transition:border-color .2s;font-family:inherit;}
+.svc-in{flex:1;padding:13px 16px;background:var(--surf2);border:1px solid var(--border2);border-radius:12px;color:var(--text);-webkit-text-fill-color:var(--text);font-size:15px;outline:none;transition:border-color .2s;font-family:inherit;-webkit-appearance:none;}
 .svc-in:focus{border-color:var(--a);}
 .svc-in::placeholder{color:var(--text3);}
 .steps-bar-wrap{display:flex;align-items:center;justify-content:center;margin-bottom:2rem;}
@@ -175,7 +175,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
 .typing span:nth-child(3){animation-delay:.3s;}
 @keyframes blink{0%,80%,100%{opacity:.2;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
 .chat-row{display:flex;gap:8px;align-items:flex-end;}
-.chat-ta{flex:1;padding:11px 14px;background:var(--surf2);border:1px solid var(--border2);border-radius:12px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s;resize:none;overflow:hidden;line-height:1.55;min-height:44px;max-height:160px;font-family:inherit;}
+.chat-ta{flex:1;padding:11px 14px;background:var(--surf2);border:1px solid var(--border2);border-radius:12px;color:var(--text);-webkit-text-fill-color:var(--text);font-size:14px;outline:none;transition:border-color .2s;resize:none;overflow:hidden;line-height:1.55;min-height:44px;max-height:160px;font-family:inherit;-webkit-appearance:none;}
 .chat-ta:focus{border-color:var(--a);}
 .chat-ta::placeholder{color:var(--text3);}
 .btn-send{width:44px;height:44px;border-radius:11px;background:var(--a);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px;transition:all .15s;}
@@ -933,7 +933,7 @@ async function launch(){
   if(!currentStore)return showNotif(lang==='fr'?'Configure ta boutique d\'abord.':'Configure your store first.');
   document.getElementById('t-launch').textContent=t('launching');
   try{
-    const r=await fetch('/api/store/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({businessName:name,email,phone:document.getElementById('biz-phone').value,city:document.getElementById('biz-city').value,accent:accentColor,store:currentStore,lang})});
+    const r=await fetch('/api/store/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({businessName:name,email,phone:document.getElementById('biz-phone').value,city:document.getElementById('biz-city').value,accent:accentColor,store:currentStore,lang,plan:storeMode===2?'boutique':'soumission'})});
     const d=await r.json();
     if(d.error)throw new Error(d.error);
     resultSlug=d.slug;resultToken=d.token;

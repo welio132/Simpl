@@ -420,6 +420,9 @@ app.post('/api/store/save', async (req, res) => {
     phone: phone || '', city: city || '',
     accent: accent || '#10b981',
     store, lang: lang || 'fr',
+    plan: req.body.plan || (store.mode === 'boutique' ? 'boutique' : 'soumission'),
+    paid: false,
+    status: 'active',
     token, createdAt: new Date().toISOString(),
     orders: []
   };
