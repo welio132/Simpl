@@ -142,9 +142,47 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .cp-footer{display:flex;align-items:center;justify-content:space-between;padding-top:1rem;border-top:1px solid var(--border);gap:12px;}
 .cp-price{font-size:1.75rem;font-weight:900;color:var(--a);line-height:1;}
 .cp-price-sub{font-size:12px;color:var(--text3);margin-top:2px;}
-.add-btn{padding:12px 22px;border-radius:12px;background:var(--a);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;flex-shrink:0;white-space:nowrap;}
+.add-btn{padding:12px 22px;border-radius:var(--btn-r,12px);background:var(--a);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;flex-shrink:0;white-space:nowrap;}
 .add-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
 @media(max-width:500px){.cp-footer{flex-direction:column;align-items:stretch;}.add-btn{text-align:center;}}
+
+/* BADGE PRODUIT */
+.prod-badge{position:absolute;top:10px;left:10px;z-index:10;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.03em;text-transform:uppercase;box-shadow:0 2px 8px rgba(0,0,0,.2);}
+.badge-populaire{background:#ff6b00;color:#fff;}
+.badge-nouveau{background:#10b981;color:#fff;}
+.badge-solde{background:#ef4444;color:#fff;}
+.badge-exclusif{background:linear-gradient(135deg,#7c6dfa,#a855f7);color:#fff;}
+.badge-custom{background:var(--a);color:#fff;}
+
+/* PRODUIT VEDETTE */
+.prod-card.featured{grid-column:span 2;border-color:var(--a);box-shadow:0 0 0 2px var(--a),var(--card-hs);}
+.prod-card.featured .prod-img-wrap.medium{height:260px;}
+@media(max-width:500px){.prod-card.featured{grid-column:span 1;}}
+
+/* COMPTE À REBOURS */
+.countdown-wrap{display:flex;gap:6px;margin-top:.5rem;}
+.cd-unit{text-align:center;background:var(--a);color:#fff;border-radius:6px;padding:4px 8px;min-width:36px;}
+.cd-num{font-size:16px;font-weight:900;line-height:1;}
+.cd-lbl{font-size:8px;font-weight:600;text-transform:uppercase;opacity:.8;}
+
+/* MESSAGE BIENVENUE */
+.welcome-banner{background:var(--a);color:#fff;text-align:center;padding:.625rem 1rem;font-size:13px;font-weight:600;letter-spacing:.01em;position:relative;}
+.welcome-banner-close{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.2);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:12px;display:flex;align-items:center;justify-content:center;}
+
+/* SECTION POURQUOI NOUS */
+.why-section{padding:2.5rem 1.5rem;border-top:1px solid var(--border);}
+.why-section-title{font-size:1.1rem;font-weight:800;text-align:center;margin-bottom:1.75rem;letter-spacing:-.02em;}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1.25rem;max-width:900px;margin:0 auto;}
+.why-card{text-align:center;padding:1.25rem 1rem;}
+.why-card-ic{font-size:2rem;margin-bottom:.75rem;}
+.why-card-title{font-size:14px;font-weight:700;margin-bottom:.375rem;}
+.why-card-desc{font-size:13px;color:var(--text2);line-height:1.55;}
+
+/* BOUTON FLOTTANT */
+.float-btn{position:fixed;bottom:24px;right:24px;z-index:150;display:flex;align-items:center;gap:10px;background:var(--a);color:#fff;border:none;border-radius:999px;padding:14px 22px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 20px rgba(0,0,0,.25);transition:all .2s;text-decoration:none;}
+.float-btn:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(0,0,0,.3);}
+.float-btn-ic{font-size:1.1rem;}
+@media(max-width:500px){.float-btn{bottom:16px;right:16px;padding:12px 18px;font-size:13px;}}
 .pages-nav{display:flex;gap:6px;padding:.75rem 1.25rem;border-bottom:1px solid var(--border);overflow-x:auto;background:var(--nav-bg);}
 .page-nav-btn{padding:6px 14px;border-radius:8px;border:1.5px solid var(--border2);background:var(--chip-bg);color:var(--chip-c);font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;font-family:inherit;transition:all .15s;flex-shrink:0;}
 .page-nav-btn:hover,.page-nav-btn.on{border-color:var(--a);color:var(--a);background:transparent;}
@@ -250,8 +288,10 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
   <div><div class="ld-logo">Simpl<span>.</span> <div class="spin"></div></div></div>
 </div>
 
-<div id="app" style="display:none;">
-  <nav class="nav">
+<div id="bg-pattern" style="position:fixed;inset:0;pointer-events:none;z-index:0;"></div>
+<div id="app" style="display:none;position:relative;z-index:1;">
+  <div id="welcome-banner" style="display:none;"></div>
+  <nav class="nav" id="main-nav">
     <div class="nav-left">
       <div class="nav-logo" id="nav-logo-wrap"><span id="nav-logo-em">🛍</span></div>
       <div class="nav-biz" id="nav-biz"></div>
@@ -281,6 +321,7 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
     <div class="main" id="main-content">
       <div class="notif" id="notif"></div>
       <div id="store-inner"></div>
+      <div id="why-section" style="display:none;"></div>
     </div>
   </div>
 
@@ -329,6 +370,8 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
   </div>
 </div>
 
+<div id="float-btn-wrap"></div>
+
 <div class="pow">Boutique créée avec <a href="https://simpl-production.up.railway.app">Simpl</a></div>
 
 <script>
@@ -360,18 +403,20 @@ const EXTRA_FONTS=['Playfair Display','Nunito','Barlow','Space Grotesk','Lora','
 let _loadedFonts=new Set();
 
 function loadFont(f){
-  if(!f||f==='Inter'||_loadedFonts.has(f))return;
+  if(!f||f==='Inter'||_loadedFonts.has(f))return Promise.resolve();
   _loadedFonts.add(f);
-  const l=document.createElement('link');l.rel='stylesheet';
-  l.href=`https://fonts.googleapis.com/css2?family=${f.replace(/ /g,'+')}:wght@300;400;500;600;700;800;900&display=swap`;
-  document.head.appendChild(l);
+  return new Promise(resolve=>{
+    const l=document.createElement('link');l.rel='stylesheet';
+    l.href=`https://fonts.googleapis.com/css2?family=${f.replace(/ /g,'+')}:wght@300;400;500;600;700;800;900&display=swap`;
+    l.onload=resolve;l.onerror=resolve;
+    document.head.appendChild(l);
+  });
 }
 
 function applyTheme(themeId, accentOverride, app){
   const t=SIMPL_THEMES[themeId]||SIMPL_THEMES.moderne;
   const r=document.documentElement;
   const v=t.vars;
-  // Apply base vars
   r.style.setProperty('--bg',v.bg);
   r.style.setProperty('--surf',v.surf);
   r.style.setProperty('--surf2',v.surf2);
@@ -389,10 +434,8 @@ function applyTheme(themeId, accentOverride, app){
   r.style.setProperty('--card-hs',t.card.hs);
   r.style.setProperty('--card-b',t.card.b);
   r.style.setProperty('--hero-tw',t.hero.tw);
-  // Accent — custom overrides theme
-  const accent=accentOverride||app?.couleur_accent||v.accent||'#7c6dfa';
+  const accent=accentOverride||app?.couleur_accent||'#7c6dfa';
   r.style.setProperty('--a',accent);
-  // Custom full override
   if(app?.custom&&app.theme==='custom'){
     const c=app.custom;
     if(c.bg){r.style.setProperty('--bg',c.bg);r.style.setProperty('--nav-bg',c.bg);}
@@ -402,10 +445,44 @@ function applyTheme(themeId, accentOverride, app){
     if(c.border){r.style.setProperty('--border',c.border);r.style.setProperty('--border2',c.border);}
     if(c.accent)r.style.setProperty('--a',c.accent);
   }
-  // Font
+  // Pattern de fond
+  const pattern=app?.pattern||'none';
+  const patternColor=app?.patternColor||'rgba(0,0,0,0.04)';
+  applyPattern(pattern,patternColor);
+  // Fond fixe (parallax)
+  if(app?.heroFixed){document.getElementById('store-hero').style.backgroundAttachment='fixed';}
+  // Hauteur hero
+  const heroH={small:'200px',medium:'320px',large:'460px',fullscreen:'100vh'};
+  const hh=heroH[app?.heroHeight]||'320px';
+  document.getElementById('store-hero').style.minHeight=hh;
+  // Forme boutons
+  const btnRadius={square:'4px',rounded:'12px',pill:'999px'};
+  r.style.setProperty('--btn-r',btnRadius[app?.btnShape]||'12px');
+  // Font — apply after load to avoid FOUT
   const font=app?.font||t.font||'Inter';
-  loadFont(font);
-  if(font!=='Inter')document.body.style.fontFamily=`'${font}', -apple-system, sans-serif`;
+  loadFont(font).then(()=>{
+    document.body.style.fontFamily=`'${font}', -apple-system, sans-serif`;
+  });
+}
+
+function applyPattern(pattern, color){
+  const el=document.getElementById('bg-pattern');
+  if(!el)return;
+  const patterns={
+    dots:`radial-gradient(${color} 1.5px, transparent 1.5px)`,
+    grid:`linear-gradient(${color} 1px, transparent 1px), linear-gradient(90deg, ${color} 1px, transparent 1px)`,
+    diagonal:`repeating-linear-gradient(45deg, ${color} 0, ${color} 1px, transparent 0, transparent 50%)`,
+    waves:`url("data:image/svg+xml,%3Csvg width='60' height='20' viewBox='0 0 60 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 10 Q15 0 30 10 Q45 20 60 10' fill='none' stroke='${encodeURIComponent(color)}' stroke-width='1.5'/%3E%3C/svg%3E")`,
+    triangles:`url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='20,4 36,36 4,36' fill='none' stroke='${encodeURIComponent(color)}' stroke-width='1'/%3E%3C/svg%3E")`,
+    hexagons:`url("data:image/svg+xml,%3Csvg width='50' height='58' viewBox='0 0 50 58' xmlns='http://www.w3.org/2000/svg'%3E%3Cpolygon points='25,2 48,14.5 48,43.5 25,56 2,43.5 2,14.5' fill='none' stroke='${encodeURIComponent(color)}' stroke-width='1'/%3E%3C/svg%3E")`,
+    grain:`url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E")`,
+  };
+  if(pattern==='none'||!patterns[pattern]){el.style.backgroundImage='none';return;}
+  el.style.backgroundImage=patterns[pattern];
+  const sizes={dots:'24px 24px',grid:'32px 32px',diagonal:'8px 8px',waves:'60px 20px',triangles:'40px 40px',hexagons:'50px 58px',grain:'256px 256px'};
+  el.style.backgroundSize=sizes[pattern]||'32px 32px';
+  el.style.backgroundRepeat='repeat';
+  el.style.backgroundAttachment='local';
 }
 
 function darkenColor(hex,factor){
@@ -500,26 +577,65 @@ function buildStore(){
   renderProducts(prods,isFr);
 
   // Pages supplémentaires
-  const pages = store.pages || [];
-  if(pages.length > 0){
-    const pnav = document.getElementById('pages-nav');
-    pnav.style.display = 'flex';
-    pnav.innerHTML = '<button class="page-nav-btn on" onclick="showPage(&quot;home&quot;,this)">' + (isFr?'🏠 Accueil':'🏠 Home') + '</button>' +
-      pages.map(p => `<button class="page-nav-btn" onclick="showPage('${p.id}',this)">${p.icon||'📄'} ${p.title}</button>`).join('');
-    const pcv = document.getElementById('page-content-views');
-    const accent = store.apparence?.couleur_accent || '#7c6dfa';
-    pcv.innerHTML = pages.map(p => {
-      const bg = !p.color || p.color === 'accent' ? accent : p.color;
-      const isDark = isPageDark(bg);
-      const textColor = isDark ? '#fff' : '#111';
-      const textMuted = isDark ? 'rgba(255,255,255,0.72)' : 'rgba(0,0,0,0.55)';
-      const sectionsHtml = renderPageSections(p.sections || [], accent, isDark, textColor, textMuted);
+  const pages=store.pages||[];
+  if(pages.length>0){
+    const pnav=document.getElementById('pages-nav');
+    pnav.style.display='flex';
+    pnav.innerHTML='<button class="page-nav-btn on" onclick="showPage(&quot;home&quot;,this)">'+(isFr?'🏠 Accueil':'🏠 Home')+'</button>'+
+      pages.map(p=>`<button class="page-nav-btn" onclick="showPage('${p.id}',this)">${p.icon||'📄'} ${p.title}</button>`).join('');
+    const pcv=document.getElementById('page-content-views');
+    const accent2=app.couleur_accent||accent;
+    pcv.innerHTML=pages.map(p=>{
+      const bg=!p.color||p.color==='accent'?accent2:p.color;
+      const isDark=isPageDark(bg);
+      const textColor=isDark?'#fff':'#111';
+      const textMuted=isDark?'rgba(255,255,255,0.72)':'rgba(0,0,0,0.55)';
+      const sectionsHtml=renderPageSections(p.sections||[],accent2,isDark,textColor,textMuted);
       return `<div class="page-view" id="pv-${p.id}" style="background:${bg};color:${textColor};min-height:60vh;">${sectionsHtml}</div>`;
     }).join('');
   }
 
   // Adresse de livraison
   if(store.requireAddress){const aw=document.getElementById('addr-wrap');if(aw)aw.style.display='block';}
+
+  // Message de bienvenue
+  const wb=document.getElementById('welcome-banner');
+  if(store.welcomeMsg){
+    wb.style.display='block';
+    wb.innerHTML=`<div class="welcome-banner">${esc(store.welcomeMsg)}<button class="welcome-banner-close" onclick="this.closest('#welcome-banner').style.display='none'">✕</button></div>`;
+  }
+
+  // Bouton flottant
+  const fb=document.getElementById('float-btn-wrap');
+  if(store.floatBtn&&store.floatBtn.label){
+    const href=store.floatBtn.type==='phone'?`tel:${store.floatBtn.value||''}`:store.floatBtn.type==='email'?`mailto:${store.floatBtn.value||''}`:'#';
+    fb.innerHTML=`<a class="float-btn" href="${href}"><span class="float-btn-ic">${store.floatBtn.icon||'📞'}</span>${esc(store.floatBtn.label)}</a>`;
+  }
+
+  // Section Pourquoi nous
+  const ws=document.getElementById('why-section');
+  if(store.whyUs&&store.whyUs.items&&store.whyUs.items.length){
+    ws.style.display='block';
+    const items=store.whyUs.items.map(i=>`<div class="why-card"><div class="why-card-ic">${i.icon||'✓'}</div><div class="why-card-title">${esc(i.title||'')}</div><div class="why-card-desc">${esc(i.desc||'')}</div></div>`).join('');
+    ws.innerHTML=`<div class="why-section"><div class="why-section-title">${esc(store.whyUs.title||'Pourquoi nous choisir ?')}</div><div class="why-grid">${items}</div></div>`;
+  }
+
+  // Comptes à rebours
+  prods.filter(p=>p.countdown).forEach(p=>startCountdown(p.id,p.countdown));
+}
+
+// Countdown timer
+const _cdTimers={};
+function startCountdown(prodId,endDate){
+  if(_cdTimers[prodId])clearInterval(_cdTimers[prodId]);
+  function tick(){
+    const el=document.getElementById('cd-'+prodId);if(!el)return;
+    const diff=new Date(endDate)-Date.now();
+    if(diff<=0){el.innerHTML='<span style="font-size:12px;color:var(--text3);">Offre expirée</span>';clearInterval(_cdTimers[prodId]);return;}
+    const d=Math.floor(diff/86400000),h=Math.floor((diff%86400000)/3600000),m=Math.floor((diff%3600000)/60000),s=Math.floor((diff%60000)/1000);
+    el.innerHTML=`<div class="countdown-wrap">${d>0?`<div class="cd-unit"><div class="cd-num">${d}</div><div class="cd-lbl">j</div></div>`:''}<div class="cd-unit"><div class="cd-num">${String(h).padStart(2,'0')}</div><div class="cd-lbl">h</div></div><div class="cd-unit"><div class="cd-num">${String(m).padStart(2,'0')}</div><div class="cd-lbl">m</div></div><div class="cd-unit"><div class="cd-num">${String(s).padStart(2,'0')}</div><div class="cd-lbl">s</div></div></div>`;
+  }
+  tick();_cdTimers[prodId]=setInterval(tick,1000);
 }
 
 function renderProducts(prods,isFr){
@@ -539,12 +655,18 @@ function renderProducts(prods,isFr){
   let gridClass=n<=2?'layout-few':n<=6?'layout-grid':'layout-many';
   const imgSize=n<=2?'tall':n<=6?'medium':'short';
 
+  const badgeClasses={populaire:'badge-populaire',nouveau:'badge-nouveau',solde:'badge-solde',exclusif:'badge-exclusif'};
+
   const cardsHtml=prods.map(p=>{
+    const isFeatured=p.featured&&n>1;
+    const imgSz=isFeatured?'medium':imgSize;
+    const badgeHtml=p.badge?`<div class="prod-badge ${badgeClasses[p.badge]||'badge-custom'}">${p.badge==='populaire'?'🔥 Populaire':p.badge==='nouveau'?'✨ Nouveau':p.badge==='solde'?'🏷 Solde':p.badge==='exclusif'?'⭐ Exclusif':p.badgeLabel||p.badge}</div>`:'';
     const imgHtml=p.image_url
-      ?`<div class="prod-img-wrap ${imgSize}"><img src="${p.image_url}" alt="${p.nom}" loading="lazy"></div>`
-      :`<div class="prod-emoji-wrap ${imgSize}">${p.image_emoji||'📦'}</div>`;
+      ?`<div class="prod-img-wrap ${imgSz}" style="position:relative;">${badgeHtml}<img src="${p.image_url}" alt="${p.nom}" loading="lazy"></div>`
+      :`<div class="prod-emoji-wrap ${imgSz}" style="position:relative;">${badgeHtml}${p.image_emoji||'📦'}</div>`;
     const cta=isBoutique?(isFr?'Ajouter':'Add'):(isFr?'Choisir':'Sélectionner');
-    return`<div class="prod-card" id="pc-${p.id}" onclick="selectProd('${p.id}')">${imgHtml}<div class="prod-body"><div class="prod-name">${p.nom}</div><div class="prod-desc">${p.description||''}</div><div class="prod-footer"><span class="prod-price">${p.prix_affiche||fmt(p.prix_base)}</span><button class="prod-cta">${cta}</button></div></div></div>`;
+    const cdHtml=p.countdown?`<div id="cd-${p.id}" style="margin-top:.5rem;"></div>`:'';
+    return`<div class="prod-card${isFeatured?' featured':''}" id="pc-${p.id}" onclick="selectProd('${p.id}')">${imgHtml}<div class="prod-body"><div class="prod-name">${p.nom}</div><div class="prod-desc">${p.description||''}</div><div class="prod-footer"><span class="prod-price">${p.prix_affiche||fmt(p.prix_base)}</span><button class="prod-cta">${cta}</button></div>${cdHtml}</div></div>`;
   }).join('');
 
   const configPanel=`<div class="config-panel" id="config-panel"></div>`;
