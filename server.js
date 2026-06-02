@@ -263,7 +263,7 @@ app.post('/api/chat', async (req, res) => {
     ],
     "questions_client": [{"id": "q1", "question": "Question au client", "placeholder": "Ex: ..."}],
     "paiement": {"depot_pct": 0, "depot_label": "Dépôt", "solde_label": "Solde", "note": ""},
-    "apparence": {"couleur_accent": "#10b981", "logo_url": "", "banniere_url": "", "police": "Inter", "style": "dark"},
+    "apparence": {"couleur_accent": "#7c6dfa", "logo_url": "", "banniere_url": "", "font": "Inter", "theme": "moderne"},
     "url_slug": "motcourt",
     "langue": "${lang}"
   }

@@ -104,33 +104,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .empty-txt{color:var(--text3);font-size:13px;}
 
 /* THEME EDITOR */
-.theme-presets{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1.5rem;}
-.theme-preset{padding:12px;border-radius:10px;border:2px solid var(--border);cursor:pointer;transition:all .2s;}
-.theme-preset:hover{border-color:var(--a);}
-.theme-preset.on{border-color:var(--a);background:var(--ag);}
-.theme-preview{height:32px;border-radius:7px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;}
-.theme-name{font-size:13px;font-weight:600;margin-bottom:2px;}
-.theme-desc{font-size:11px;color:var(--text3);}
-
-/* CUSTOM THEME */
-.custom-theme-section{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);}
-.custom-theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:1rem;}
-.ct-item{}
-.ct-label{font-size:12px;font-weight:500;color:var(--text2);margin-bottom:5px;}
-.ct-input{display:flex;align-items:center;gap:8px;}
-.ct-input input[type=color]{width:40px;height:36px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;padding:2px;}
-.ct-input input[type=text]{flex:1;padding:7px 10px;background:var(--surf2);border:1.5px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;outline:none;font-family:inherit;}
-.ct-input input[type=text]:focus{border-color:var(--a);}
+/* THEME GRID */
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+@media(max-width:600px){.theme-grid{grid-template-columns:repeat(2,1fr);}}
+.theme-card{border:2px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;background:var(--surf);}
+.theme-card:hover{border-color:var(--a);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08);}
+.theme-card.on{border-color:var(--a);box-shadow:0 0 0 1px var(--a);}
+.theme-thumb{height:72px;display:flex;align-items:flex-end;padding:8px;position:relative;overflow:hidden;}
+.theme-thumb-bars{display:flex;gap:3px;align-items:flex-end;}
+.theme-thumb-bar{border-radius:3px 3px 0 0;}
+.theme-thumb-check{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--a);color:#fff;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:800;}
+.theme-card.on .theme-thumb-check{display:flex;}
+.theme-info{padding:8px 10px 10px;border-top:1px solid var(--border);}
+.theme-name{font-size:12px;font-weight:700;margin-bottom:2px;}
+.theme-desc{font-size:10px;color:var(--text3);line-height:1.4;}
 .font-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
-.font-opt{padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf2);cursor:pointer;font-size:13px;transition:all .15s;}
-.font-opt:hover,.font-opt.on{border-color:var(--a);background:var(--ag);color:var(--a);}
-.preview-live{background:var(--surf2);border-radius:12px;padding:1rem;margin-top:1rem;border:1px solid var(--border);}
-.preview-live-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:.75rem;}
-.preview-card{border-radius:10px;overflow:hidden;border:1.5px solid #e0e0e0;background:#fff;display:inline-block;width:140px;vertical-align:top;}
-.preview-card-img{height:80px;display:flex;align-items:center;justify-content:center;font-size:2rem;}
-.preview-card-body{padding:8px;}
-.preview-card-name{font-size:12px;font-weight:700;margin-bottom:2px;}
-.preview-card-price{font-size:13px;font-weight:800;}
+.font-opt{padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf2);cursor:pointer;font-size:13px;transition:all .15s;font-weight:500;}
+.font-opt:hover,.font-opt.on{border-color:var(--a);background:var(--ag);color:var(--a);font-weight:600;}
 
 /* AI ASSISTANT */
 .ai-panel{background:var(--surf);border:1px solid var(--border);border-radius:16px;overflow:hidden;}
@@ -279,76 +269,25 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div class="page-title">Thème & couleurs</div>
 
       <div class="card">
-        <div class="card-title">Thème de la boutique</div>
-        <p style="font-size:13px;color:var(--text3);margin-bottom:1rem;">Choisis un thème de base ou crée le tien avec les options ci-dessous.</p>
-        <div class="theme-presets" id="theme-presets"></div>
+        <div class="card-title">Choisis ton thème</div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:1.25rem;">Chaque thème change complètement le look de ta boutique — couleurs, polices, arrondis, ombres.</p>
+        <div id="theme-grid"></div>
       </div>
 
       <div class="card">
         <div class="card-title">Couleur principale</div>
+        <p style="font-size:13px;color:var(--text3);margin-bottom:1rem;">S'applique sur les boutons, prix et éléments interactifs de ta boutique.</p>
         <div class="color-grid" id="cg"></div>
         <div style="margin-top:1rem;display:flex;gap:8px;align-items:center;">
-          <input type="color" id="cc" value="#7c6dfa" style="width:40px;height:40px;border-radius:8px;border:1.5px solid var(--border);background:transparent;cursor:pointer;padding:2px;">
+          <input type="color" id="cc" value="#7c6dfa" style="width:44px;height:44px;border-radius:10px;border:1.5px solid var(--border);background:transparent;cursor:pointer;padding:2px;">
           <button class="btn btn-g btn-sm" onclick="pcc()">Couleur personnalisée</button>
         </div>
       </div>
 
       <div class="card">
-        <div class="card-title">Thème entièrement custom</div>
-        <p style="font-size:13px;color:var(--text3);margin-bottom:1rem;">Des centaines de milliers de combinaisons possibles.</p>
-        <div class="custom-theme-grid">
-          <div class="ct-item">
-            <div class="ct-label">Couleur de fond</div>
-            <div class="ct-input">
-              <input type="color" id="ct-bg" value="#ffffff" oninput="updateCustomTheme()">
-              <input type="text" id="ct-bg-txt" value="#ffffff" oninput="syncColor('ct-bg','ct-bg-txt')">
-            </div>
-          </div>
-          <div class="ct-item">
-            <div class="ct-label">Couleur du texte</div>
-            <div class="ct-input">
-              <input type="color" id="ct-text" value="#111111" oninput="updateCustomTheme()">
-              <input type="text" id="ct-text-txt" value="#111111" oninput="syncColor('ct-text','ct-text-txt')">
-            </div>
-          </div>
-          <div class="ct-item">
-            <div class="ct-label">Couleur des cartes</div>
-            <div class="ct-input">
-              <input type="color" id="ct-card" value="#ffffff" oninput="updateCustomTheme()">
-              <input type="text" id="ct-card-txt" value="#ffffff" oninput="syncColor('ct-card','ct-card-txt')">
-            </div>
-          </div>
-          <div class="ct-item">
-            <div class="ct-label">Couleur accent</div>
-            <div class="ct-input">
-              <input type="color" id="ct-accent" value="#7c6dfa" oninput="updateCustomTheme()">
-              <input type="text" id="ct-accent-txt" value="#7c6dfa" oninput="syncColor('ct-accent','ct-accent-txt')">
-            </div>
-          </div>
-          <div class="ct-item">
-            <div class="ct-label">Couleur bordures</div>
-            <div class="ct-input">
-              <input type="color" id="ct-border" value="#eeeeee" oninput="updateCustomTheme()">
-              <input type="text" id="ct-border-txt" value="#eeeeee" oninput="syncColor('ct-border','ct-border-txt')">
-            </div>
-          </div>
-          <div class="ct-item">
-            <div class="ct-label">Couleur texte secondaire</div>
-            <div class="ct-input">
-              <input type="color" id="ct-text2" value="#666666" oninput="updateCustomTheme()">
-              <input type="text" id="ct-text2-txt" value="#666666" oninput="syncColor('ct-text2','ct-text2-txt')">
-            </div>
-          </div>
-        </div>
-        <div class="ct-item" style="margin-top:1rem;">
-          <div class="ct-label">Police de caractère</div>
-          <div class="font-opts" id="font-opts"></div>
-        </div>
-        <div class="preview-live">
-          <div class="preview-live-title">Aperçu en direct</div>
-          <div id="theme-preview-live"></div>
-        </div>
-        <button class="btn btn-a btn-fw" onclick="saveCustomTheme()" style="margin-top:1rem;">💾 Appliquer ce thème</button>
+        <div class="card-title">Police de caractère</div>
+        <div class="font-opts" id="font-opts" style="margin-top:.5rem;"></div>
+        <button class="btn btn-a btn-sm" onclick="saveFont()" style="margin-top:1rem;">💾 Sauvegarder la police</button>
       </div>
     </div>
 
@@ -571,13 +510,7 @@ let V=null,eid=null,pif=null,aiConv=[];
 let isAiWaiting=false;
 const EMOJIS=['🕯️','🧴','💐','🍃','🌺','🎁','✨','🛍','💎','🌿','🍋','🌸','🧺','🪴','🎀','🍯','🧁','🫙','🥀','🌙','☕','🫧','🪷','🌻','🏠','🔧','🪵','⚡','🌊','🍕','🧸','📸'];
 const COLORS=['#7c6dfa','#10b981','#f59e0b','#ef4444','#ec4899','#3b82f6','#8b5cf6','#14b8a6','#f97316','#e11d48'];
-const FONTS=['Inter','Georgia','Playfair Display','Roboto','Montserrat','Poppins','Lato'];
-const THEMES_LIST=[
-  {id:'light',name:'Clair & épuré',desc:'Style Apple Store',bg:'#ffffff',tc:'#111111',emoji:'☀️'},
-  {id:'dark',name:'Sombre & premium',desc:'Style luxe tech',bg:'#0d0d0d',tc:'#f0f0f0',emoji:'🌙'},
-  {id:'nature',name:'Nature & bio',desc:'Tons beiges organiques',bg:'#faf8f3',tc:'#2c2416',emoji:'🌿'},
-  {id:'pro',name:'Pro & corporatif',desc:'Style SaaS moderne',bg:'#f4f5f7',tc:'#172b4d',emoji:'💼'},
-];
+// FONTS et THEMES sont définis dans buildThemeGrid() et buildFontOpts()
 
 async function init(){
   try{
@@ -608,22 +541,11 @@ function build(){
   if(app.logo_url){const el=document.getElementById('logo-prev');el.src=app.logo_url;el.style.display='block';}
   if(app.banniere_url){const el=document.getElementById('ban-prev');el.src=app.banniere_url;el.style.display='block';}
   const acc=V.accent||'#7c6dfa';
+  // Theme grid + fonts
+  buildThemeGrid();
+  buildFontOpts();
   document.getElementById('cg').innerHTML=COLORS.map(c=>`<div class="csw${c===acc?' on':''}" style="background:${c}" data-c="${c}" onclick="pc(this)"></div>`).join('');
   document.getElementById('epk').innerHTML=EMOJIS.map(e=>`<div class="ep-em" onclick="se('${e}')">${e}</div>`).join('');
-  // Theme presets
-  const curTheme=app.theme||'light';
-  document.getElementById('theme-presets').innerHTML=THEMES_LIST.map(th=>`<div class="theme-preset${th.id===curTheme?' on':''}" onclick="setTheme('${th.id}',this)"><div class="theme-preview" style="background:${th.bg};border:1px solid #e5e5e5;color:${th.tc};">${th.emoji}</div><div class="theme-name">${th.name}</div><div class="theme-desc">${th.desc}</div></div>`).join('');
-  // Fonts
-  document.getElementById('font-opts').innerHTML=FONTS.map(f=>`<button class="font-opt${(app.font||'Inter')===f?' on':''}" style="font-family:${f}" onclick="selectFont('${f}',this)">${f}</button>`).join('');
-  // Custom theme defaults
-  if(app.custom){
-    const c=app.custom;
-    ['bg','text','card','accent','border','text2'].forEach(k=>{
-      const el=document.getElementById('ct-'+k);const tel=document.getElementById('ct-'+k+'-txt');
-      if(el&&c[k]){el.value=c[k];if(tel)tel.value=c[k];}
-    });
-  }
-  updateThemePreviewLive();
   const newOrders=(V.orders||[]).filter(o=>o.status==='nouveau').length;
   if(newOrders>0){const nb=document.getElementById('nb-new');nb.textContent=newOrders;nb.classList.add('show');}
   // AI welcome
@@ -684,47 +606,89 @@ function rro(){
   </tbody></table>`;
 }
 
-// THEME
-function selectFont(f,el){document.querySelectorAll('.font-opt').forEach(b=>b.classList.remove('on'));el.classList.add('on');updateThemePreviewLive();}
-function syncColor(colorId,textId){const tv=document.getElementById(textId).value;if(/^#[0-9a-f]{6}$/i.test(tv)){document.getElementById(colorId).value=tv;}updateThemePreviewLive();}
-function updateCustomTheme(){['bg','text','card','accent','border','text2'].forEach(k=>{const el=document.getElementById('ct-'+k);const tel=document.getElementById('ct-'+k+'-txt');if(el&&tel)tel.value=el.value;});updateThemePreviewLive();}
-function updateThemePreviewLive(){
-  const bg=document.getElementById('ct-bg').value||'#fff';
-  const card=document.getElementById('ct-card').value||'#fff';
-  const text=document.getElementById('ct-text').value||'#111';
-  const accent=document.getElementById('ct-accent').value||'#7c6dfa';
-  const border=document.getElementById('ct-border').value||'#eee';
-  const font=document.querySelector('.font-opt.on')?.textContent||'Inter';
-  document.getElementById('theme-preview-live').innerHTML=`
-    <div style="background:${bg};padding:12px;border-radius:10px;font-family:'${font}',sans-serif;border:1px solid ${border};">
-      <div style="display:flex;gap:10px;">
-        <div class="preview-card" style="border-color:${border};background:${card};">
-          <div class="preview-card-img" style="background:${bg};">🕯️</div>
-          <div class="preview-card-body">
-            <div class="preview-card-name" style="color:${text};font-family:'${font}',sans-serif;">Bougie artisanale</div>
-            <div class="preview-card-price" style="color:${accent};font-family:'${font}',sans-serif;">18$</div>
-          </div>
-        </div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:700;color:${text};margin-bottom:4px;font-family:'${font}',sans-serif;">Ma Boutique</div>
-          <div style="font-size:11px;color:${text}99;margin-bottom:10px;font-family:'${font}',sans-serif;">Bougies artisanales</div>
-          <div style="background:${accent};color:#fff;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;display:inline-block;font-family:'${font}',sans-serif;">Ajouter au panier</div>
-        </div>
+// THEME SYSTEM — 15 thèmes
+const SIMPL_THEMES_DASH={
+  moderne:{label:'Moderne',desc:'Épuré, blanc',bg:'#ffffff',text:'#0a0a0a',accent:'#7c6dfa',card:'#f8f8f8',font:'Inter'},
+  bold:{label:'Bold',desc:'Sombre, impact',bg:'#0a0a0a',text:'#f5f5f5',accent:'#ff3b3b',card:'#1e1e1e',font:'Inter'},
+  artisanal:{label:'Artisanal',desc:'Bois, chaleureux',bg:'#faf7f2',text:'#2c1f0e',accent:'#c27c3a',card:'#f3ede2',font:'Playfair Display'},
+  elegant:{label:'Élégant',desc:'Crème, or, luxe',bg:'#fdfbf7',text:'#1a1208',accent:'#b4963c',card:'#f7f3ec',font:'Cormorant Garamond'},
+  nature:{label:'Nature',desc:'Vert, bio, frais',bg:'#f4f9f4',text:'#0d2b0d',accent:'#2d7a2d',card:'#ebf5eb',font:'Nunito'},
+  construction:{label:'Construction',desc:'Acier, robuste',bg:'#f2f3f5',text:'#1a2035',accent:'#e85c1a',card:'#ffffff',font:'Barlow'},
+  tech:{label:'Tech',desc:'Bleu nuit, digital',bg:'#070b14',text:'#e8eeff',accent:'#4d8fff',card:'#0d1525',font:'Space Grotesk'},
+  cafe:{label:'Café',desc:'Espresso, cosy',bg:'#faf6f1',text:'#2d1a08',accent:'#b05a1a',card:'#f2ebe0',font:'Lora'},
+  mode:{label:'Mode',desc:'Rose, fashion',bg:'#fdf8f8',text:'#1a0808',accent:'#d4547a',card:'#f8f0f0',font:'DM Sans'},
+  sport:{label:'Sport',desc:'Énergie, impact',bg:'#0f0f0f',text:'#ffffff',accent:'#ff6b00',card:'#1a1a1a',font:'Barlow'},
+  medical:{label:'Médical',desc:'Clinique, propre',bg:'#f5f8ff',text:'#0a1a40',accent:'#1a6fd4',card:'#ffffff',font:'Inter'},
+  resto:{label:'Resto',desc:'Rouge, appétissant',bg:'#1a0a08',text:'#fdf0eb',accent:'#d4401a',card:'#2a1210',font:'Playfair Display'},
+  vintage:{label:'Vintage',desc:'Sépia, rétro',bg:'#f5f0e8',text:'#2a1e0a',accent:'#8a5a1a',card:'#ede5d8',font:'Playfair Display'},
+  minimaliste:{label:'Minimaliste',desc:'Ultra-épuré, gris',bg:'#fafafa',text:'#222',accent:'#444',card:'#f5f5f5',font:'Inter'},
+  sombre_pro:{label:'Sombre Pro',desc:'Anthracite, premium',bg:'#1c1c1e',text:'#f2f2f7',accent:'#7c6dfa',card:'#2c2c2e',font:'Space Grotesk'}
+};
+
+const FONTS_DASH=['Inter','Playfair Display','Cormorant Garamond','Nunito','Barlow','Space Grotesk','Lora','DM Sans','Raleway','Montserrat'];
+
+function buildThemeGrid(){
+  const curTheme=(V.store.apparence||{}).theme||'moderne';
+  const grid=document.getElementById('theme-grid');
+  if(!grid)return;
+  grid.className='theme-grid';
+  grid.innerHTML=Object.entries(SIMPL_THEMES_DASH).map(([id,t])=>{
+    // Mini preview bars
+    const bars=[
+      `<div class="theme-thumb-bar" style="width:8px;height:28px;background:${t.accent};"></div>`,
+      `<div class="theme-thumb-bar" style="width:8px;height:20px;background:${t.accent}88;"></div>`,
+      `<div class="theme-thumb-bar" style="width:8px;height:34px;background:${t.accent};"></div>`,
+      `<div class="theme-thumb-bar" style="width:8px;height:16px;background:${t.accent}66;"></div>`,
+    ].join('');
+    return `<div class="theme-card${id===curTheme?' on':''}" onclick="setTheme('${id}',this)">
+      <div class="theme-thumb" style="background:${t.bg};">
+        <div class="theme-thumb-bars">${bars}</div>
+        <div class="theme-thumb-check">✓</div>
+        <div style="position:absolute;top:8px;left:10px;font-size:11px;font-weight:800;color:${t.text};font-family:'${t.font}',sans-serif;opacity:.9;">${t.label}</div>
+      </div>
+      <div class="theme-info">
+        <div class="theme-name">${t.label}</div>
+        <div class="theme-desc">${t.desc}</div>
       </div>
     </div>`;
+  }).join('');
 }
-async function saveCustomTheme(){
-  const custom={bg:document.getElementById('ct-bg').value,text:document.getElementById('ct-text').value,card:document.getElementById('ct-card').value,accent:document.getElementById('ct-accent').value,border:document.getElementById('ct-border').value,text2:document.getElementById('ct-text2').value};
-  const font=document.querySelector('.font-opt.on')?.textContent||'Inter';
+
+function buildFontOpts(){
+  const curFont=(V.store.apparence||{}).font||'Inter';
+  const fo=document.getElementById('font-opts');
+  if(!fo)return;
+  // Load fonts for preview
+  FONTS_DASH.filter(f=>f!=='Inter').forEach(f=>{
+    const l=document.createElement('link');l.rel='stylesheet';
+    l.href=`https://fonts.googleapis.com/css2?family=${f.replace(/ /g,'+')}:wght@400;600;700&display=swap`;
+    document.head.appendChild(l);
+  });
+  fo.innerHTML=FONTS_DASH.map(f=>`<button class="font-opt${f===curFont?' on':''}" style="font-family:'${f}',sans-serif;" onclick="selectFont('${f}',this)">${f}</button>`).join('');
+}
+
+function selectFont(f,el){
+  document.querySelectorAll('.font-opt').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+}
+
+async function saveFont(){
+  const f=document.querySelector('.font-opt.on')?.textContent||'Inter';
   try{
-    await ac2('PUT',`/api/dashboard/${slug}/apparence`,{custom,font,theme:'custom'});
-    await ac2('PUT',`/api/dashboard/${slug}/apparence`,{couleur_accent:custom.accent});
-    V.store.apparence=V.store.apparence||{};V.store.apparence.custom=custom;V.store.apparence.font=font;
-    toast('Thème personnalisé appliqué ✓');
+    await ac2('PUT',`/api/dashboard/${slug}/apparence`,{font:f});
+    V.store.apparence=V.store.apparence||{};V.store.apparence.font=f;
+    toast('Police sauvegardée ✓');
   }catch(e){toast('Erreur','err');}
 }
+
 async function setTheme(id,el){
-  try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{theme:id});V.store.apparence=V.store.apparence||{};V.store.apparence.theme=id;document.querySelectorAll('.theme-preset').forEach(t=>t.classList.remove('on'));el.classList.add('on');toast('Thème mis à jour ✓');}catch(e){toast('Erreur','err');}
+  try{
+    await ac2('PUT',`/api/dashboard/${slug}/apparence`,{theme:id});
+    V.store.apparence=V.store.apparence||{};V.store.apparence.theme=id;
+    document.querySelectorAll('.theme-card').forEach(t=>t.classList.remove('on'));
+    el.classList.add('on');
+    toast('Thème appliqué ✓');
+  }catch(e){toast('Erreur','err');}
 }
 
 // APPARENCE
