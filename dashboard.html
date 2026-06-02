@@ -341,6 +341,10 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
             <button class="btn btn-g btn-sm" data-v="fullscreen" onclick="setHeroHeight('fullscreen',this)">Plein écran</button>
           </div>
         </div>
+        <div class="sw-row" style="border:none;padding:.5rem 0;">
+          <div><div class="sw-lbl">Fond fixe au scroll (parallax)</div><div class="sw-desc">L'image de fond reste immobile pendant que le contenu scroll</div></div>
+          <button class="sw" id="hero-fixed-sw" onclick="toggleHeroFixed(this)"><div class="sw-th"></div></button>
+        </div>
         <button class="btn btn-a btn-sm" onclick="saveHeroTitle()" style="margin-top:.5rem;">💾 Sauvegarder</button>
       </div>
 
@@ -825,6 +829,11 @@ async function setTheme(id,el){
 }
 
 // APPARENCE — nouvelles fonctions
+async function toggleHeroFixed(el){
+  el.classList.toggle('on');
+  const val=el.classList.contains('on');
+  try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{heroFixed:val});V.store.apparence=V.store.apparence||{};V.store.apparence.heroFixed=val;toast(val?'Fond fixe activé ✓':'Fond fixe désactivé');}catch(e){toast('Erreur','err');}
+}
 async function saveHeroTitle(){
   const t=document.getElementById('hero-title-input').value.trim();
   try{await ac2('PUT',`/api/dashboard/${slug}/store`,{heroTitle:t});V.store.heroTitle=t;toast('Titre hero sauvegardé ✓');}catch(e){toast('Erreur','err');}
@@ -897,6 +906,9 @@ async function clearWhyUs(){
 }
 function loadApparencePanel(){
   const app=V.store.apparence||{};
+  // Hero fixed
+  const hfsw=document.getElementById('hero-fixed-sw');
+  if(hfsw)hfsw.className='sw'+(app.heroFixed?' on':'');
   // Hero title
   const hti=document.getElementById('hero-title-input');if(hti)hti.value=V.store.heroTitle||'';
   // Hero height
@@ -927,7 +939,9 @@ function loadApparencePanel(){
   const wt=document.getElementById('why-title');if(wt)wt.value=wu.title||'';
   whyItems=JSON.parse(JSON.stringify(wu.items||[]));
   buildWhyItemsList();
-}if(!input.files[0])return;const fd=new FormData();fd.append('image',input.files[0]);try{const r=await fetch(`/api/dashboard/${slug}/upload/${type}`,{method:'POST',headers:{'x-token':token},body:fd});const d=await r.json();if(d.url){if(type==='logo'){document.getElementById('logo-prev').src=d.url;document.getElementById('logo-prev').style.display='block';}else{document.getElementById('ban-prev').src=d.url;document.getElementById('ban-prev').style.display='block';}toast('Image uploadée ✓');}}catch(e){toast('Erreur upload','err');}}
+}
+
+async function upl(type,input){if(!input.files[0])return;const fd=new FormData();fd.append('image',input.files[0]);try{const r=await fetch(`/api/dashboard/${slug}/upload/${type}`,{method:'POST',headers:{'x-token':token},body:fd});const d=await r.json();if(d.url){if(type==='logo'){document.getElementById('logo-prev').src=d.url;document.getElementById('logo-prev').style.display='block';}else{document.getElementById('ban-prev').src=d.url;document.getElementById('ban-prev').style.display='block';}toast('Image uploadée ✓');}}catch(e){toast('Erreur upload','err');}}
 async function slurl(){const u=document.getElementById('logo-url').value.trim();if(!u)return;try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{logo_url:u});V.store.apparence=V.store.apparence||{};V.store.apparence.logo_url=u;toast('Logo sauvegardé ✓');}catch(e){toast('Erreur','err');}}
 async function sburl(){const u=document.getElementById('ban-url').value.trim();if(!u)return;try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{banniere_url:u});V.store.apparence=V.store.apparence||{};V.store.apparence.banniere_url=u;toast('Bannière sauvegardée ✓');}catch(e){toast('Erreur','err');}}
 async function pc(el){const c=el.dataset.c;document.querySelectorAll('.csw').forEach(s=>s.classList.remove('on'));el.classList.add('on');try{await ac2('PUT',`/api/dashboard/${slug}/apparence`,{couleur_accent:c});V.accent=c;toast('Couleur sauvegardée ✓');}catch(e){toast('Erreur','err');}}
