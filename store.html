@@ -533,6 +533,7 @@ function buildStore(){
   document.getElementById('store-title').textContent=store.heroTitle||vendor.businessName;
 
   // Hero hauteur + parallax (DOM dispo ici)
+  const prods=store.produits||[];
   const heroEl=document.getElementById('store-hero');
   const heroH={small:'200px',medium:'320px',large:'460px',fullscreen:'100vh'};
   heroEl.style.minHeight=heroH[app.heroHeight]||'320px';
