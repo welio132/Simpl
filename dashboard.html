@@ -114,15 +114,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .font-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
 .font-opt{padding:7px 14px;border-radius:8px;border:1.5px solid var(--border);background:var(--surf2);cursor:pointer;font-size:13px;transition:all .15s;font-weight:500;}
 .font-opt:hover,.font-opt.on{border-color:var(--a);background:var(--ag);color:var(--a);font-weight:600;}
-.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-@media(max-width:600px){.theme-grid{grid-template-columns:repeat(2,1fr);}}
+.theme-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+@media(max-width:700px){.theme-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:420px){.theme-grid{grid-template-columns:1fr;}}
 .theme-card{border:2px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;background:var(--surf);}
-.theme-card:hover{border-color:var(--a);transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.08);}
-.theme-card.on{border-color:var(--a);box-shadow:0 0 0 1px var(--a);}
-.theme-thumb{height:72px;display:flex;align-items:flex-end;padding:8px;position:relative;overflow:hidden;}
-.theme-thumb-bars{display:flex;gap:3px;align-items:flex-end;}
-.theme-thumb-bar{border-radius:3px 3px 0 0;}
-.theme-thumb-check{position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--a);color:#fff;display:none;align-items:center;justify-content:center;font-size:11px;font-weight:800;}
+.theme-card:hover{border-color:var(--a);transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.1);}
+.theme-card.on{border-color:var(--a);box-shadow:0 0 0 2px var(--a);}
+.theme-thumb{height:130px;position:relative;overflow:hidden;}
+.theme-thumb svg{width:100%;height:100%;display:block;}
+.theme-thumb-check{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;background:var(--a);color:#fff;display:none;align-items:center;justify-content:center;font-size:12px;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.25);}
 .theme-card.on .theme-thumb-check{display:flex;}
 .theme-info{padding:8px 10px 10px;border-top:1px solid var(--border);}
 .theme-name{font-size:12px;font-weight:700;margin-bottom:2px;}
@@ -764,25 +764,63 @@ const SIMPL_THEMES_DASH={
 
 const FONTS_DASH=['Inter','Playfair Display','Cormorant Garamond','Nunito','Barlow','Space Grotesk','Lora','DM Sans','Raleway','Montserrat'];
 
+function sanitizeId(s){return s.replace(/\s/g,'').replace(/[^a-zA-Z0-9_-]/g,'_');}
+
+function makeThemePreviewSVG(t){
+  const bg=t.bg, card=t.card, text=t.text, accent=t.accent;
+  const gid='hg'+sanitizeId(t.label);
+  const nav=`<rect x="0" y="0" width="300" height="22" fill="${bg}"/>
+    <rect x="0" y="21" width="300" height="1" fill="${text}22"/>
+    <rect x="8" y="6" width="22" height="10" rx="3" fill="${accent}33"/>
+    <rect x="36" y="8" width="40" height="6" rx="2" fill="${text}44"/>
+    <rect x="252" y="6" width="40" height="10" rx="5" fill="${accent}"/>`;
+  // Hero
+  const heroH=42;
+  const hero=`<rect x="0" y="22" width="300" height="${heroH}" fill="${accent}cc"/>
+    <rect x="0" y="22" width="300" height="${heroH}" fill="url(#${gid})"/>
+    <text x="12" y="40" font-family="system-ui,sans-serif" font-size="9" font-weight="800" fill="white" opacity="0.95">${t.label}</text>
+    <text x="12" y="52" font-family="system-ui,sans-serif" font-size="6" fill="white" opacity="0.7">Boutique en ligne • Sherbrooke</text>`;
+  // Product cards
+  const cardY=72, cardR=t.cardR||4;
+  const card1=`<rect x="8" y="${cardY}" width="85" height="50" rx="${cardR}" fill="${card}" stroke="${text}15" stroke-width="1"/>
+    <rect x="8" y="${cardY}" width="85" height="28" rx="${cardR}" fill="${text}0D"/>
+    <rect x="13" y="${cardY+30}" width="40" height="5" rx="2" fill="${text}cc"/>
+    <rect x="13" y="${cardY+38}" width="25" height="5" rx="2" fill="${accent}"/>
+    <rect x="62" y="${cardY+36}" width="24" height="7" rx="${Math.min(parseInt(cardR),3)}" fill="${accent}"/>`;
+  const card2=`<rect x="100" y="${cardY}" width="85" height="50" rx="${cardR}" fill="${card}" stroke="${text}15" stroke-width="1"/>
+    <rect x="100" y="${cardY}" width="85" height="28" rx="${cardR}" fill="${accent}22"/>
+    <rect x="105" y="${cardY+30}" width="40" height="5" rx="2" fill="${text}cc"/>
+    <rect x="105" y="${cardY+38}" width="25" height="5" rx="2" fill="${accent}"/>
+    <rect x="154" y="${cardY+36}" width="24" height="7" rx="${Math.min(parseInt(cardR),3)}" fill="${accent}"/>`;
+  const card3=`<rect x="192" y="${cardY}" width="100" height="50" rx="${cardR}" fill="${card}" stroke="${text}15" stroke-width="1"/>
+    <rect x="192" y="${cardY}" width="100" height="28" rx="${cardR}" fill="${text}18"/>
+    <rect x="197" y="${cardY+30}" width="50" height="5" rx="2" fill="${text}cc"/>
+    <rect x="197" y="${cardY+38}" width="30" height="5" rx="2" fill="${accent}"/>
+    <rect x="256" y="${cardY+36}" width="28" height="7" rx="${Math.min(parseInt(cardR),3)}" fill="${accent}"/>`;
+  // Section title
+  const secTitle=`<rect x="8" y="66" width="60" height="4" rx="2" fill="${text}44"/>`;
+  // Gradient def
+  const defs=`<defs><linearGradient id="${gid}" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${accent}"/><stop offset="100%" stop-color="${accent}" stop-opacity="0.4"/></linearGradient></defs>`;
+
+  return `<svg viewBox="0 0 300 130" xmlns="http://www.w3.org/2000/svg">
+    ${defs}
+    <rect width="300" height="130" fill="${bg}"/>
+    ${nav}${hero}${secTitle}${card1}${card2}${card3}
+  </svg>`;
+}
+
 function buildThemeGrid(){
   const curTheme=(V.store.apparence||{}).theme||'moderne';
   const grid=document.getElementById('theme-grid');
   if(!grid)return;
   grid.className='theme-grid';
   grid.innerHTML=Object.entries(SIMPL_THEMES_DASH).map(([id,t])=>{
-    // Mini preview bars
-    const bars=[
-      `<div class="theme-thumb-bar" style="width:8px;height:28px;background:${t.accent};"></div>`,
-      `<div class="theme-thumb-bar" style="width:8px;height:20px;background:${t.accent}88;"></div>`,
-      `<div class="theme-thumb-bar" style="width:8px;height:34px;background:${t.accent};"></div>`,
-      `<div class="theme-thumb-bar" style="width:8px;height:16px;background:${t.accent}66;"></div>`,
-    ].join('');
+    // cardR based on theme
+    const cardRMap={moderne:'18',bold:'16',artisanal:'14',elegant:'8',nature:'20',construction:'8',tech:'14',cafe:'16',mode:'22',sport:'12',medical:'12',resto:'14',vintage:'6',minimaliste:'4',sombre_pro:'16'};
+    const tWithR={...t,cardR:cardRMap[id]||'12'};
+    const svg=makeThemePreviewSVG(tWithR);
     return `<div class="theme-card${id===curTheme?' on':''}" onclick="setTheme('${id}',this)">
-      <div class="theme-thumb" style="background:${t.bg};">
-        <div class="theme-thumb-bars">${bars}</div>
-        <div class="theme-thumb-check">✓</div>
-        <div style="position:absolute;top:8px;left:10px;font-size:11px;font-weight:800;color:${t.text};font-family:'${t.font}',sans-serif;opacity:.9;">${t.label}</div>
-      </div>
+      <div class="theme-thumb">${svg}<div class="theme-thumb-check">✓</div></div>
       <div class="theme-info">
         <div class="theme-name">${t.label}</div>
         <div class="theme-desc">${t.desc}</div>
