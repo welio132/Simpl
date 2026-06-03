@@ -286,6 +286,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
   <div class="hero-badge"><div class="hero-badge-dot"></div><span id="t-badge">Nouvelle génération de boutiques en ligne</span></div>
   <h1><span class="line1" id="t-h1-1">Ta boutique en ligne,</span><span class="line2" id="t-h1-2">créée par l'IA en minutes</span></h1>
   <p class="hero-sub" id="t-sub">Décris ce que tu vends. L'IA comprend ton business, génère ta boutique complète, et tes clients peuvent acheter immédiatement.</p>
+  <div style="max-width:620px;margin:0 auto 0.625rem;text-align:left;"><span style="font-size:13px;font-weight:600;color:var(--text2);">Qu'est-ce que tu vends ?</span></div>
   <div class="hero-input-wrap">
     <input class="svc-in hero-svc-in" type="text" id="svc-in" placeholder="Ex: pergolas en bois, bougies artisanales, yoga..." autocomplete="off" oninput="checkSvc()">
     <button class="btn-primary hero-start-btn" id="btn-start" onclick="startChat()" disabled>✦ <span id="t-start-btn">Créer ma boutique</span></button>
@@ -406,134 +407,6 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
   <button class="btn-primary" onclick="scrollToStart()" style="margin:0 auto;display:inline-flex;">✦ <span id="t-cta-btn">Créer ma boutique maintenant</span></button>
 </div>
 
-<!-- START SECTION -->
-<div id="start" style="padding-top:2rem;">
-  <div style="text-align:center;padding:0 2rem 2rem;position:relative;z-index:1;">
-    <div class="section-label" id="t-start-label">Commencer</div>
-    <h2 class="section-title" id="t-start-title">Crée ta boutique</h2>
-  </div>
-
-  <div class="wrap">
-    <div class="steps-bar-wrap">
-      <div class="sn active" id="sn1">1</div>
-      <span class="sl active" id="sl1" data-fr="Ton business" data-en="Your business">Ton business</span>
-      <div class="sc"></div>
-      <div class="sn todo" id="sn2">2</div>
-      <span class="sl" id="sl2" data-fr="Configuration" data-en="Setup">Configuration</span>
-      <div class="sc"></div>
-      <div class="sn todo" id="sn3">3</div>
-      <span class="sl" id="sl3" data-fr="En ligne" data-en="Go live">En ligne</span>
-    </div>
-
-    <div class="notif" id="notif"></div>
-
-    <div class="screen active" id="sc1">
-      <div class="card">
-        <div class="card-title" id="t-s1">Qu'est-ce que tu vends ?</div>
-        <div class="svc-row">
-          <input class="svc-in" type="text" id="svc-in" placeholder="Ex: bougies artisanales, pergolas, cours de yoga..." autocomplete="off" oninput="checkSvc()">
-          <button class="btn-a" id="btn-start" onclick="startChat()" disabled style="width:auto;white-space:nowrap;padding:13px 20px;"><span id="t-start-btn">Créer →</span></button>
-        </div>
-      </div>
-    </div>
-
-    <div class="screen" id="sc2">
-      <div class="card">
-        <div class="card-title" id="t-s2">Configuration IA</div>
-        <div class="chat-box" id="chat-box"></div>
-        <div class="chat-row">
-          <textarea class="chat-ta" id="chat-in" rows="1" placeholder="Réponds ici..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}" oninput="ar(this)"></textarea>
-          <button class="btn-send" id="btn-send" onclick="sendMsg()">↑</button>
-        </div>
-      </div>
-      <div class="preview" id="preview">
-        <div class="preview-header">
-          <span class="preview-title" id="t-preview">Ta boutique générée</span>
-          <span class="preview-ready">✓ Prête</span>
-        </div>
-        <div id="preview-content"></div>
-        <div class="adj-wrap">
-          <div class="adj-label" id="t-adj">Tu veux changer quelque chose ? Dis-le en une phrase :</div>
-          <div class="chat-row">
-            <textarea class="chat-ta" id="adj-in" rows="1" placeholder='Ex: "Sépare les tailles en 3 produits" ou "Ajoute une option livraison"' onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdjust();}" oninput="ar(this)"></textarea>
-            <button class="btn-send" id="btn-adj" onclick="sendAdjust()">↑</button>
-          </div>
-          <div class="adj-status" id="adj-status"></div>
-        </div>
-        <div class="btn-row" style="margin-top:1.25rem;">
-          <button class="btn-ghost" onclick="goSc(1)" style="flex:1;" id="t-restart">↺ Recommencer</button>
-          <button class="btn-a" onclick="goSc(3)" style="flex:2;" id="t-next">Continuer →</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="screen" id="sc3">
-      <div class="mode-card">
-        <div class="card-title" id="t-mode">Comment tes clients achètent ?</div>
-        <div class="mode-opts">
-          <div class="mode-opt on" id="mode-1" onclick="selMode(1)">
-            <div class="mode-radio"></div>
-            <div class="mode-opt-icon">📋</div>
-            <div>
-              <div class="mode-opt-name" id="t-m1"><span id="t-m1-txt"></span> <span class="mode-badge mb-g" id="t-recommended"></span></div>
-              <div class="mode-opt-desc" id="t-m1d">Le client remplit le formulaire, tu le rappelles pour finaliser.</div>
-            </div>
-          </div>
-          <div class="mode-opt" id="mode-2" onclick="selMode(2)">
-            <div class="mode-radio"></div>
-            <div class="mode-opt-icon">🛍</div>
-            <div>
-              <div class="mode-opt-name" id="t-m2"><span id="t-m2-txt"></span> <span class="mode-badge mb-b" id="t-cart-payment"></span></div>
-              <div class="mode-opt-desc" id="t-m2d">Le client ajoute au panier et paie directement.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title" id="t-s3">Tes informations</div>
-        <div class="fr">
-          <div class="f"><label id="t-biz">Nom de l'entreprise</label><input type="text" id="biz-name" placeholder="Ex: Bougies Maison"></div>
-          <div class="f"><label id="t-email">Courriel</label><input type="email" id="biz-email" placeholder="toi@exemple.com"></div>
-        </div>
-        <div class="fr">
-          <div class="f"><label id="t-phone">Téléphone</label><input type="tel" id="biz-phone" placeholder="(418) 555-0100"></div>
-          <div class="f"><label id="t-city">Ville</label><input type="text" id="biz-city" placeholder="Québec, Montréal..."></div>
-        </div>
-        <div class="f"><label id="t-color">Couleur de ta boutique</label>
-          <div class="colors">
-            <div class="co on" style="background:#7c6dfa" data-c="#7c6dfa" onclick="pickC(this)"></div>
-            <div class="co" style="background:#10b981" data-c="#10b981" onclick="pickC(this)"></div>
-            <div class="co" style="background:#f59e0b" data-c="#f59e0b" onclick="pickC(this)"></div>
-            <div class="co" style="background:#ef4444" data-c="#ef4444" onclick="pickC(this)"></div>
-            <div class="co" style="background:#ec4899" data-c="#ec4899" onclick="pickC(this)"></div>
-            <div class="co" style="background:#3b82f6" data-c="#3b82f6" onclick="pickC(this)"></div>
-            <div class="co" style="background:#8b5cf6" data-c="#8b5cf6" onclick="pickC(this)"></div>
-            <div class="co" style="background:#14b8a6" data-c="#14b8a6" onclick="pickC(this)"></div>
-            <div class="co" style="background:#f97316" data-c="#f97316" onclick="pickC(this)"></div>
-            <div class="co" style="background:#e11d48" data-c="#e11d48" onclick="pickC(this)"></div>
-          </div>
-        </div>
-        <div class="btn-row">
-          <button class="btn-ghost" onclick="goSc(2)" style="flex:1;" id="t-back3">← Retour</button>
-          <button class="btn-a" onclick="launch()" style="flex:2;">🚀 <span id="t-launch">Lancer ma boutique</span></button>
-        </div>
-      </div>
-    </div>
-
-    <div class="screen" id="sc4">
-      <div class="success">
-        <div class="s-ic">✓</div>
-        <h2 id="t-s4h">Ta boutique est en ligne !</h2>
-        <p id="t-s4p">Partage ce lien avec tes clients. Ils peuvent parcourir, configurer et commander directement.</p>
-        <div class="url-box"><span class="url-txt" id="result-url"></span><button class="cp-btn" onclick="copyUrl()" id="t-copy">Copier</button></div>
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <button class="btn-a" onclick="openStore()" id="t-see">🛍 Voir ma boutique</button>
-          <button class="btn-ghost" onclick="openDash()" id="t-dash">📊 Tableau de bord</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <footer><p id="t-footer">© 2025 Simpl — Ta boutique en ligne, créée par l'IA · <a href="#" style="color:var(--a);text-decoration:none;">Confidentialité</a> · <a href="#" style="color:var(--a);text-decoration:none;">Conditions</a></p></footer>
 
