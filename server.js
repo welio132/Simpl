@@ -943,6 +943,25 @@ app.delete('/api/admin/store/:slug', async (req, res) => {
 });
 
 // ─── PAGE ROUTES ───
+app.post('/api/dashboard/:slug/upgrade-request', async (req, res) => {
+  const v = await authVendor(req, res); if (!v) return;
+  const { plan, email, businessName } = req.body;
+  // Envoie un email à l'admin pour notifier la demande d'upgrade
+  try {
+    if (resend) {
+      await resend.emails.send({
+        from: 'no-reply@simplcomerce.com',
+        to: 'wtalbot442@gmail.com',
+        subject: `⚡ Demande d'upgrade — ${businessName}`,
+        html: `<p><strong>${businessName}</strong> (${email}) veut passer au plan <strong>${plan}</strong>.</p><p>Slug: ${v.slug}</p>`
+      });
+    }
+    res.json({ success: true });
+  } catch(e) {
+    res.json({ success: true }); // On fail silencieusement
+  }
+});
+
 app.get('/creer', (req, res) => res.sendFile(path.join(__dirname, 'creer.html')));
 app.get('/s/:slug', (req, res) => res.sendFile(path.join(__dirname, 'store.html')));
 app.get('/dashboard/:slug/:token', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));

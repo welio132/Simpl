@@ -33,7 +33,23 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .page-title{font-size:1.25rem;font-weight:800;margin-bottom:1.5rem;}
 .card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
 .card-title{font-size:15px;font-weight:700;margin-bottom:1rem;}
-/* STATS AVANCÉES */
+/* UPGRADE MODAL */
+.upgrade-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:300;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+.upgrade-modal-overlay.on{display:flex;}
+.upgrade-modal{background:var(--surf);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.15);}
+.upgrade-ic{font-size:2.5rem;margin-bottom:1rem;}
+.upgrade-title{font-size:1.25rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.5rem;}
+.upgrade-sub{font-size:14px;color:var(--text2);line-height:1.65;margin-bottom:1.5rem;}
+.upgrade-features{text-align:left;background:var(--surf2);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:8px;}
+.upgrade-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);}
+.upgrade-feat-ic{color:var(--a);font-weight:800;font-size:14px;flex-shrink:0;}
+.upgrade-price{font-size:1.5rem;font-weight:900;color:var(--a);margin-bottom:1.25rem;letter-spacing:-.02em;}
+.upgrade-price span{font-size:14px;font-weight:500;color:var(--text3);}
+.upgrade-btns{display:flex;flex-direction:column;gap:8px;}
+.upgrade-btn-main{padding:13px;border-radius:11px;background:var(--a);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.upgrade-btn-main:hover{filter:brightness(1.1);}
+.upgrade-btn-ghost{padding:11px;border-radius:11px;background:transparent;border:1.5px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.upgrade-btn-ghost:hover{border-color:var(--text2);color:var(--text);}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.25rem;}
 .stat-card{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.25rem;}
 .stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:.5rem;}
@@ -532,7 +548,26 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
       <div id="pages-list"></div>
     </div>
 
-    <!-- MODAL PAGE BUILDER -->
+    <!-- UPGRADE MODAL -->
+  <div class="upgrade-modal-overlay" id="upgrade-modal">
+    <div class="upgrade-modal">
+      <div class="upgrade-ic">⚡</div>
+      <div class="upgrade-title">Fonctionnalité Boutique</div>
+      <div class="upgrade-sub" id="upgrade-sub">Cette fonctionnalité est disponible sur le plan Boutique.</div>
+      <div class="upgrade-features">
+        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Paiement en ligne (Stripe)</div>
+        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Jusqu'à 5 pages supplémentaires</div>
+        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Bannières promotionnelles</div>
+        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Badges & produits vedette</div>
+        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Stats avancées</div>
+      </div>
+      <div class="upgrade-price">69$ <span>/ mois</span></div>
+      <div class="upgrade-btns">
+        <button class="upgrade-btn-main" onclick="requestUpgrade()">🚀 Passer au plan Boutique</button>
+        <button class="upgrade-btn-ghost" onclick="closeUpgrade()">Pas maintenant</button>
+      </div>
+    </div>
+  </div>
     <div class="modal-overlay" id="pgmod">
       <div class="modal" style="max-width:680px;">
         <div class="modal-head">
@@ -1229,7 +1264,40 @@ async function sendAiMsg(){
   finally{document.getElementById('ai-send').disabled=false;isAiWaiting=false;}
 }
 
-// PAGES SUPPLÉMENTAIRES
+// UPGRADE PLAN
+function isBoutique(){return V.store.mode==='boutique';}
+
+function showUpgrade(feature){
+  const msgs={
+    pages:'Tu as atteint la limite de 2 pages sur le plan Soumission.',
+    stripe:'Le paiement en ligne est disponible sur le plan Boutique.',
+    banniere:'Les bannières promotionnelles sont disponibles sur le plan Boutique.',
+    stats:'Les stats avancées sont disponibles sur le plan Boutique.',
+    badge:'Les badges produits sont disponibles sur le plan Boutique.',
+  };
+  document.getElementById('upgrade-sub').textContent=msgs[feature]||'Cette fonctionnalité est disponible sur le plan Boutique.';
+  document.getElementById('upgrade-modal').classList.add('on');
+}
+
+function closeUpgrade(){document.getElementById('upgrade-modal').classList.remove('on');}
+
+async function requestUpgrade(){
+  // Pour l'instant envoie un email à l'admin - Stripe sera intégré plus tard
+  closeUpgrade();
+  toast('Demande envoyée ! On te contacte sous 24h pour finaliser l\'upgrade. 🚀');
+  try{
+    await ac2('POST',`/api/dashboard/${slug}/upgrade-request`,{plan:'boutique',email:V.email,businessName:V.businessName});
+  }catch(e){}
+}
+
+// GATE — vérifie le plan avant d'exécuter une action boutique
+function gate(feature, fn){
+  if(!isBoutique()){showUpgrade(feature);return false;}
+  if(fn)fn();return true;
+}
+
+// Override addPage pour checker la limite
+const _origAddPage = typeof addPage === 'function' ? addPage : null;
 const PAGE_LIMITS = { soumission: 2, boutique: 5 };
 let editPageId = null;
 let pageSections = [];
@@ -1441,6 +1509,13 @@ function moveSection(idx, dir) {
 }
 
 function addPage() {
+  const pages = V.store.pages || [];
+  const plan = V.plan || V.store.mode || 'soumission';
+  const limit = PAGE_LIMITS[plan] || 2;
+  if(pages.length >= limit){
+    showUpgrade('pages');
+    return;
+  }
   editPageId = null;
   pageSections = [];
   pageColor = 'accent';
