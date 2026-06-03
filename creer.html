@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crée ta boutique — Simpl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060608;
+  --surf:#0e0e12;
+  --surf2:#16161c;
+  --surf3:#1e1e26;
+  --border:rgba(255,255,255,0.06);
+  --border2:rgba(255,255,255,0.1);
+  --text:#ededf0;
+  --text2:#8888a0;
+  --text3:#444458;
+  --a:#7c6dfa;
+  --a2:#a594ff;
+  --ag:rgba(124,109,250,0.12);
+  --green:#10b981;
+  --red:#ef4444;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'Instrument Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+
+/* NOISE */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4;}
+
+/* LAYOUT */
+.app{display:flex;height:100vh;position:relative;z-index:1;}
+
+/* ── LEFT — CONVERSATION ── */
+.left{width:42%;min-width:360px;display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--bg);position:relative;}
+
+.left-top{padding:1.25rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Cabinet Grotesk',sans-serif;font-size:1.2rem;font-weight:900;letter-spacing:-.03em;}
+.logo span{color:var(--a);}
+.step-pill{display:flex;align-items:center;gap:6px;background:var(--surf2);border:1px solid var(--border2);border-radius:999px;padding:5px 14px;}
+.step-dot{width:7px;height:7px;border-radius:50%;background:var(--a);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
+.step-txt{font-size:12px;font-weight:600;color:var(--text2);}
+
+.chat-area{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:12px;scrollbar-width:thin;scrollbar-color:var(--surf3) transparent;}
+.chat-area::-webkit-scrollbar{width:4px;}
+.chat-area::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:2px;}
+
+/* Messages */
+.msg{max-width:88%;animation:msgIn .3s cubic-bezier(.34,1.56,.64,1) both;}
+@keyframes msgIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+.msg.ai{align-self:flex-start;}
+.msg.user{align-self:flex-end;}
+.msg.sys{align-self:center;max-width:100%;}
+
+.msg.ai .bubble{background:var(--surf2);border:1px solid var(--border);border-radius:4px 16px 16px 16px;padding:12px 16px;}
+.msg.user .bubble{background:var(--a);border-radius:16px 4px 16px 16px;padding:12px 16px;color:#fff;}
+.msg.sys .bubble{background:transparent;text-align:center;font-size:12px;color:var(--text3);padding:4px;}
+
+.ai-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--a);margin-bottom:5px;}
+.bubble-text{font-size:14px;line-height:1.65;color:var(--text);}
+.msg.user .bubble-text{color:#fff;}
+
+/* Typing */
+.typing-bubble{align-self:flex-start;}
+.typing-bubble .bubble{background:var(--surf2);border:1px solid var(--border);border-radius:4px 16px 16px 16px;padding:12px 16px;display:flex;gap:5px;align-items:center;}
+.typing-dot{width:7px;height:7px;border-radius:50%;background:var(--text3);animation:td .9s infinite;}
+.typing-dot:nth-child(2){animation-delay:.15s;}
+.typing-dot:nth-child(3){animation-delay:.3s;}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+/* Input */
+.left-bottom{padding:1.25rem 1.5rem;border-top:1px solid var(--border);flex-shrink:0;background:var(--bg);}
+.input-wrap{display:flex;gap:10px;align-items:flex-end;}
+.chat-input{flex:1;background:var(--surf2);border:1.5px solid var(--border2);border-radius:14px;padding:11px 14px;color:var(--text);font-size:14px;font-family:inherit;resize:none;outline:none;max-height:140px;line-height:1.5;transition:border-color .2s;}
+.chat-input:focus{border-color:var(--a);}
+.chat-input::placeholder{color:var(--text3);}
+.send-btn{width:42px;height:42px;border-radius:12px;background:var(--a);border:none;color:#fff;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s;}
+.send-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.send-btn:disabled{opacity:.4;transform:none;cursor:not-allowed;}
+
+/* Adjust area */
+.adj-area{padding:1rem 1.5rem;border-top:1px solid var(--border);background:var(--surf);display:none;flex-shrink:0;}
+.adj-label{font-size:12px;color:var(--text3);margin-bottom:8px;font-weight:500;}
+.adj-row{display:flex;gap:8px;align-items:flex-end;}
+.adj-input{flex:1;background:var(--surf2);border:1.5px solid var(--border2);border-radius:12px;padding:9px 13px;color:var(--text);font-size:13px;font-family:inherit;resize:none;outline:none;max-height:100px;transition:border-color .2s;}
+.adj-input:focus{border-color:var(--a);}
+.adj-input::placeholder{color:var(--text3);}
+.adj-btn{padding:9px 16px;border-radius:10px;background:var(--surf3);border:1px solid var(--border2);color:var(--text);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap;}
+.adj-btn:hover{border-color:var(--a);color:var(--a);}
+.adj-status{font-size:12px;color:var(--text3);margin-top:6px;min-height:18px;}
+
+/* ── RIGHT — PREVIEW ── */
+.right{flex:1;display:flex;flex-direction:column;background:var(--surf);overflow:hidden;position:relative;}
+
+.right-top{padding:1.25rem 1.75rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg);}
+.preview-label{font-size:13px;font-weight:700;color:var(--text2);display:flex;align-items:center;gap:8px;}
+.preview-status{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;}
+.status-dot{width:7px;height:7px;border-radius:50%;}
+.status-dot.waiting{background:var(--text3);}
+.status-dot.building{background:var(--a);animation:pulse 1.2s infinite;}
+.status-dot.ready{background:var(--green);}
+
+.continue-btn{padding:10px 22px;border-radius:10px;background:var(--a);border:none;color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;display:none;align-items:center;gap:7px;}
+.continue-btn:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.continue-btn.show{display:flex;}
+
+.preview-scroll{flex:1;overflow-y:auto;padding:2rem 2rem;scrollbar-width:thin;scrollbar-color:var(--surf3) transparent;}
+.preview-scroll::-webkit-scrollbar{width:4px;}
+.preview-scroll::-webkit-scrollbar-thumb{background:var(--surf3);border-radius:2px;}
+
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:1rem;opacity:.4;user-select:none;}
+.empty-ic{font-size:3rem;filter:grayscale(1);}
+.empty-txt{font-size:14px;color:var(--text3);text-align:center;line-height:1.6;max-width:260px;}
+
+/* Preview elements — appear one by one */
+.pv-elem{animation:pvIn .5s cubic-bezier(.34,1.2,.64,1) both;}
+@keyframes pvIn{from{opacity:0;transform:translateY(20px) scale(.97)}to{opacity:1;transform:none}}
+
+/* Browser chrome mockup */
+.browser-chrome{background:var(--surf2);border:1px solid var(--border2);border-radius:16px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.4);}
+.browser-bar{background:var(--surf3);padding:10px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.browser-dots{display:flex;gap:5px;}
+.browser-dot{width:10px;height:10px;border-radius:50%;}
+.browser-dot.r{background:#ef4444;}
+.browser-dot.y{background:#f59e0b;}
+.browser-dot.g{background:#10b981;}
+.browser-url{flex:1;background:var(--surf2);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--text3);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.browser-body{padding:1.5rem;}
+
+/* Store header in preview */
+.pv-store-header{border-radius:12px;padding:1.5rem;margin-bottom:1.25rem;position:relative;overflow:hidden;min-height:100px;}
+.pv-store-header-bg{position:absolute;inset:0;opacity:.9;}
+.pv-store-header-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6) 0%,transparent 60%);}
+.pv-store-header-content{position:relative;z-index:1;}
+.pv-store-name{font-family:'Cabinet Grotesk',sans-serif;font-size:1.4rem;font-weight:900;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.3);margin-bottom:4px;}
+.pv-store-slogan{font-size:13px;color:rgba(255,255,255,.8);}
+
+/* Product cards in preview */
+.pv-products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:1.25rem;}
+.pv-prod-card{background:var(--surf3);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:transform .2s;}
+.pv-prod-card:hover{transform:translateY(-2px);}
+.pv-prod-img{height:100px;display:flex;align-items:center;justify-content:center;background:var(--surf2);font-size:2.25rem;position:relative;}
+.pv-prod-img img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;}
+.pv-prod-body{padding:10px;}
+.pv-prod-name{font-size:13px;font-weight:700;margin-bottom:3px;line-height:1.3;}
+.pv-prod-price{font-size:14px;font-weight:900;color:var(--a);}
+.pv-prod-opts{font-size:11px;color:var(--text3);margin-top:4px;line-height:1.4;}
+
+/* Section label */
+.pv-sec-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);margin-bottom:10px;display:flex;align-items:center;gap:6px;}
+.pv-sec-label::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* Questions preview */
+.pv-question{background:var(--surf3);border:1px solid var(--border);border-radius:8px;padding:9px 13px;font-size:12px;color:var(--text2);margin-bottom:6px;}
+
+/* Theme badge */
+.pv-theme-badge{display:inline-flex;align-items:center;gap:5px;background:var(--ag);border:1px solid rgba(124,109,250,.2);border-radius:6px;padding:3px 10px;font-size:11px;font-weight:600;color:var(--a);margin-top:.75rem;}
+
+/* ── INFO PAGE (sc3) ── */
+.info-page{display:none;position:absolute;inset:0;z-index:50;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:2rem;}
+.info-page.show{display:flex;}
+.info-card{background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:2.5rem;max-width:520px;width:100%;}
+.info-card-title{font-family:'Cabinet Grotesk',sans-serif;font-size:1.6rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.375rem;}
+.info-card-sub{font-size:14px;color:var(--text3);margin-bottom:2rem;}
+.info-field{margin-bottom:1rem;}
+.info-field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.info-input{width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;}
+.info-input:focus{border-color:var(--a);}
+.info-input::placeholder{color:var(--text3);}
+.info-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.info-footer{display:flex;gap:10px;margin-top:1.75rem;}
+.info-back{flex:1;padding:12px;border-radius:10px;background:transparent;border:1.5px solid var(--border2);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.info-back:hover{border-color:var(--text2);color:var(--text);}
+.info-launch{flex:2;padding:12px;border-radius:10px;background:var(--a);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px;}
+.info-launch:hover{filter:brightness(1.15);}
+.info-launch:disabled{opacity:.5;cursor:not-allowed;}
+
+/* Mode select in info page */
+.mode-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;}
+.mode-opt{background:var(--surf2);border:1.5px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:6px;}
+.mode-opt:hover{border-color:var(--border2);}
+.mode-opt.on{border-color:var(--a);background:var(--ag);}
+.mode-opt-icon{font-size:1.25rem;}
+.mode-opt-name{font-size:13px;font-weight:700;}
+.mode-opt-desc{font-size:11px;color:var(--text3);line-height:1.4;}
+
+/* ── SUCCESS PAGE ── */
+.success-page{display:none;position:absolute;inset:0;z-index:50;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:2rem;}
+.success-page.show{display:flex;}
+.success-card{background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:2.5rem;max-width:480px;width:100%;text-align:center;}
+.success-ic{width:64px;height:64px;border-radius:50%;background:rgba(16,185,129,.15);border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:1.75rem;margin:0 auto 1.5rem;}
+.success-title{font-family:'Cabinet Grotesk',sans-serif;font-size:1.75rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.5rem;}
+.success-sub{font-size:14px;color:var(--text2);line-height:1.65;margin-bottom:1.75rem;}
+.url-box{background:var(--surf2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;text-align:left;}
+.url-txt{flex:1;font-size:13px;color:var(--text);font-family:monospace;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cp-btn{padding:6px 14px;border-radius:7px;background:var(--surf3);border:1px solid var(--border2);color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .15s;flex-shrink:0;}
+.cp-btn:hover{border-color:var(--a);color:var(--a);}
+.success-btns{display:flex;flex-direction:column;gap:10px;}
+.btn-success-primary{padding:13px;border-radius:11px;background:var(--a);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
+.btn-success-primary:hover{filter:brightness(1.15);}
+.btn-success-ghost{padding:13px;border-radius:11px;background:transparent;border:1.5px solid var(--border2);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.btn-success-ghost:hover{border-color:var(--text2);color:var(--text);}
+
+/* Notif */
+.notif{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--red);color:#fff;padding:10px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:200;display:none;animation:notifIn .3s ease;}
+@keyframes notifIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* Mobile */
+@media(max-width:768px){
+  .app{flex-direction:column;}
+  .left{width:100%;min-width:0;height:50vh;border-right:none;border-bottom:1px solid var(--border);}
+  .right{height:50vh;}
+  html,body{overflow:auto;}
+}
+</style>
+</head>
+<body>
+<div class="notif" id="notif"></div>
+
+<div class="app" id="app">
+  <!-- ── GAUCHE — CONVERSATION ── -->
+  <div class="left">
+    <div class="left-top">
+      <div class="logo">Simpl<span>.</span></div>
+      <div class="step-pill">
+        <div class="step-dot" id="step-dot"></div>
+        <span class="step-txt" id="step-txt">Configuration</span>
+      </div>
+    </div>
+
+    <div class="chat-area" id="chat-area"></div>
+
+    <div class="adj-area" id="adj-area">
+      <div class="adj-label">Tu veux changer quelque chose ?</div>
+      <div class="adj-row">
+        <textarea class="adj-input" id="adj-in" rows="1" placeholder='Ex: "Sépare les tailles en 3 produits"' onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAdjust();}" oninput="ar(this)"></textarea>
+        <button class="adj-btn" id="btn-adj" onclick="sendAdjust()">Modifier</button>
+      </div>
+      <div class="adj-status" id="adj-status"></div>
+    </div>
+
+    <div class="left-bottom" id="left-bottom">
+      <div class="input-wrap">
+        <textarea class="chat-input" id="chat-in" rows="1" placeholder="Réponds ici..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg();}" oninput="ar(this)" disabled></textarea>
+        <button class="send-btn" id="btn-send" onclick="sendMsg()" disabled>↑</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── DROITE — PREVIEW ── -->
+  <div class="right">
+    <div class="right-top">
+      <div class="preview-label">
+        <span>Aperçu en direct</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div class="preview-status" id="preview-status">
+          <div class="status-dot waiting" id="status-dot"></div>
+          <span id="status-txt">En attente</span>
+        </div>
+        <button class="continue-btn" id="continue-btn" onclick="showInfoPage()">
+          Continuer <span>→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="preview-scroll" id="preview-scroll">
+      <div class="empty-state" id="empty-state">
+        <div class="empty-ic">✦</div>
+        <div class="empty-txt">Ta boutique va apparaître ici pendant qu'on la construit ensemble.</div>
+      </div>
+      <div id="preview-content" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE INFOS ── -->
+<div class="info-page" id="info-page">
+  <div class="info-card">
+    <div class="info-card-title">Presque là ✦</div>
+    <div class="info-card-sub">Quelques infos pour créer ton compte.</div>
+
+    <div class="mode-row">
+      <div class="mode-opt on" id="mode-1" onclick="selMode(1)">
+        <div class="mode-opt-icon">📋</div>
+        <div class="mode-opt-name">Soumission</div>
+        <div class="mode-opt-desc">Le client soumet, tu le rappelles.</div>
+      </div>
+      <div class="mode-opt" id="mode-2" onclick="selMode(2)">
+        <div class="mode-opt-icon">🛍</div>
+        <div class="mode-opt-name">Boutique</div>
+        <div class="mode-opt-desc">Le client paie directement en ligne.</div>
+      </div>
+    </div>
+
+    <div class="info-row">
+      <div class="info-field">
+        <label>Nom de l'entreprise *</label>
+        <input type="text" class="info-input" id="biz-name" placeholder="Ex: Pergolas Talbot">
+      </div>
+      <div class="info-field">
+        <label>Courriel *</label>
+        <input type="email" class="info-input" id="biz-email" placeholder="toi@exemple.com">
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="info-field">
+        <label>Téléphone</label>
+        <input type="tel" class="info-input" id="biz-phone" placeholder="(418) 555-0100">
+      </div>
+      <div class="info-field">
+        <label>Ville</label>
+        <input type="text" class="info-input" id="biz-city" placeholder="Québec, Sherbrooke...">
+      </div>
+    </div>
+
+    <div class="info-footer">
+      <button class="info-back" onclick="hideInfoPage()">← Retour</button>
+      <button class="info-launch" id="btn-launch" onclick="launch()">🚀 Lancer ma boutique</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── PAGE SUCCÈS ── -->
+<div class="success-page" id="success-page">
+  <div class="success-card">
+    <div class="success-ic">🚀</div>
+    <div class="success-title">Ta boutique est en ligne !</div>
+    <div class="success-sub">Partage ce lien avec tes clients. Gère tout depuis ton dashboard.</div>
+    <div class="url-box">
+      <span class="url-txt" id="result-url"></span>
+      <button class="cp-btn" onclick="copyUrl()" id="cp-btn">Copier</button>
+    </div>
+    <div class="success-btns">
+      <button class="btn-success-primary" onclick="openStore()">🛍 Voir ma boutique</button>
+      <button class="btn-success-ghost" onclick="openDash()">📊 Tableau de bord</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── STATE ──
+let lang = 'fr';
+let service = '';
+let conversation = [];
+let currentStore = null;
+let accentColor = '#7c6dfa';
+let storeMode = 1;
+let resultSlug = '', resultToken = '';
+let isWaiting = false;
+let storeGenerated = false;
+
+// Get service from URL param
+const params = new URLSearchParams(location.search);
+service = params.get('service') || '';
+lang = params.get('lang') || 'fr';
+accentColor = params.get('color') || '#7c6dfa';
+
+// ── UTILS ──
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px';}
+function showNotif(msg){const el=document.getElementById('notif');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
+
+function setStatus(state){
+  const dot=document.getElementById('status-dot');
+  const txt=document.getElementById('status-txt');
+  const states={waiting:{dot:'waiting',txt:'En attente'},building:{dot:'building',txt:'En construction…'},ready:{dot:'ready',txt:'Prête'}};
+  const s=states[state]||states.waiting;
+  dot.className='status-dot '+s.dot;
+  txt.textContent=s.txt;
+}
+
+function setInput(enabled){
+  const inp=document.getElementById('chat-in');
+  const btn=document.getElementById('btn-send');
+  inp.disabled=!enabled;btn.disabled=!enabled;
+  if(enabled)setTimeout(()=>inp.focus(),100);
+  isWaiting=!enabled;
+}
+
+// ── CHAT ──
+function addMsg(role,content,delay=0){
+  return new Promise(resolve=>{
+    setTimeout(()=>{
+      const area=document.getElementById('chat-area');
+      const div=document.createElement('div');
+      div.className='msg '+role;
+      if(role==='ai'){
+        div.innerHTML=`<div class="ai-label">SIMPL IA</div><div class="bubble"><div class="bubble-text">${content}</div></div>`;
+      }else if(role==='sys'){
+        div.innerHTML=`<div class="bubble"><div class="bubble-text">${content}</div></div>`;
+      }else{
+        div.innerHTML=`<div class="bubble"><div class="bubble-text">${content}</div></div>`;
+      }
+      area.appendChild(div);
+      area.scrollTop=area.scrollHeight;
+      resolve(div);
+    },delay);
+  });
+}
+
+function showTyping(){
+  const area=document.getElementById('chat-area');
+  const div=document.createElement('div');
+  div.id='typing';div.className='typing-bubble';
+  div.innerHTML='<div class="bubble"><span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>';
+  area.appendChild(div);area.scrollTop=area.scrollHeight;
+}
+function hideTyping(){const el=document.getElementById('typing');if(el)el.remove();}
+
+function addStreamMsg(){
+  const area=document.getElementById('chat-area');
+  const div=document.createElement('div');
+  div.className='msg ai';
+  div.innerHTML='<div class="ai-label">SIMPL IA</div><div class="bubble"><div class="bubble-text stream-txt"></div></div>';
+  area.appendChild(div);area.scrollTop=area.scrollHeight;
+  return div;
+}
+function setStreamContent(el,text){const s=el.querySelector('.stream-txt');if(s)s.textContent=text;const a=document.getElementById('chat-area');a.scrollTop=a.scrollHeight;}
+function appendStreamContent(el,chunk){const s=el.querySelector('.stream-txt');if(s)s.textContent+=chunk;const a=document.getElementById('chat-area');a.scrollTop=a.scrollHeight;}
+
+// ── INIT ──
+async function init(){
+  if(!service){window.location.href='/';return;}
+  setInput(false);showTyping();
+  try{
+    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service,lang})});
+    const d=await r.json();
+    hideTyping();
+    if(d.error)throw new Error(d.error);
+    await addMsg('ai',d.message);
+    conversation.push({role:'assistant',content:d.message});
+    setInput(true);
+  }catch(e){hideTyping();showNotif('Erreur: '+e.message);setInput(true);}
+}
+
+async function sendMsg(){
+  if(isWaiting)return;
+  const input=document.getElementById('chat-in');
+  const msg=input.value.trim();
+  if(!msg)return;
+  addMsg('user',msg);
+  conversation.push({role:'user',content:msg});
+  input.value='';input.style.height='auto';
+  setInput(false);showTyping();setStatus('building');
+  try{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service,conversation,lang})});
+    if(!r.ok)throw new Error('Erreur '+r.status);
+    hideTyping();
+    const reader=r.body.getReader();const decoder=new TextDecoder();
+    let buffer='';let msgEl=null;
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buffer+=decoder.decode(value,{stream:true});
+      const lines=buffer.split('\n');buffer=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data:'))continue;
+        const data=line.slice(5).trim();
+        if(data==='[DONE]')continue;
+        try{
+          const parsed=JSON.parse(data);
+          if(parsed.type==='question'){
+            if(!msgEl)msgEl=addStreamMsg();
+            setStreamContent(msgEl,parsed.message);
+            conversation.push({role:'assistant',content:parsed.message});
+            setStatus('waiting');setInput(true);
+          }else if(parsed.type==='store'){
+            if(msgEl)setStreamContent(msgEl,'Ta boutique est prête ✓');
+            currentStore=parsed.store;
+            storeGenerated=true;
+            conversation.push({role:'assistant',content:'Ta boutique est prête ✓'});
+            await addMsg('sys','Boutique générée — ajuste ce que tu veux.');
+            renderPreviewAnimated(parsed.store);
+            showAdjArea();
+            setStatus('ready');setInput(false);
+            document.getElementById('continue-btn').classList.add('show');
+            document.getElementById('step-dot').style.background='var(--green)';
+            document.getElementById('step-txt').textContent='Boutique prête';
+          }else if(parsed.chunk){
+            if(!msgEl)msgEl=addStreamMsg();
+            appendStreamContent(msgEl,parsed.chunk);
+          }
+        }catch(e){}
+      }
+    }
+    if(!msgEl&&!storeGenerated)setInput(true);
+  }catch(e){hideTyping();addMsg('ai','Erreur: '+e.message);setInput(true);setStatus('waiting');}
+}
+
+// ── ADJUST ──
+function showAdjArea(){document.getElementById('adj-area').style.display='block';}
+
+async function sendAdjust(){
+  const input=document.getElementById('adj-in');
+  const instruction=input.value.trim();
+  if(!instruction||!currentStore)return;
+  const status=document.getElementById('adj-status');
+  const btn=document.getElementById('btn-adj');
+  status.textContent='Modification en cours…';btn.disabled=true;
+  input.value='';input.style.height='auto';
+  setStatus('building');
+  try{
+    const r=await fetch('/api/adjust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({store:currentStore,instruction,lang})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    currentStore=d;
+    renderPreviewAnimated(d);
+    status.textContent='✓ Modifié';
+    setTimeout(()=>status.textContent='',3000);
+    setStatus('ready');
+  }catch(e){status.textContent='Erreur: '+e.message;setStatus('ready');}
+  btn.disabled=false;
+}
+
+// ── RENDER PREVIEW ANIMATED ──
+async function renderPreviewAnimated(store){
+  const empty=document.getElementById('empty-state');
+  const content=document.getElementById('preview-content');
+  empty.style.display='none';
+  content.style.display='block';
+  content.innerHTML='';
+
+  const accent=store.apparence?.couleur_accent||accentColor||'#7c6dfa';
+
+  // Browser chrome mockup
+  const browser=document.createElement('div');
+  browser.className='browser-chrome pv-elem';
+  browser.style.animationDelay='0ms';
+
+  // Build browser bar
+  const barSlug=store.url_slug||'ma-boutique';
+  browser.innerHTML=`
+    <div class="browser-bar">
+      <div class="browser-dots">
+        <div class="browser-dot r"></div>
+        <div class="browser-dot y"></div>
+        <div class="browser-dot g"></div>
+      </div>
+      <div class="browser-url">simplcomerce.com/s/${barSlug}</div>
+    </div>
+    <div class="browser-body" id="browser-body"></div>`;
+  content.appendChild(browser);
+
+  const body=browser.querySelector('#browser-body');
+  let delay=100;
+
+  // Store header
+  const header=document.createElement('div');
+  header.className='pv-store-header pv-elem';
+  header.style.animationDelay=delay+'ms';
+  header.innerHTML=`
+    <div class="pv-store-header-bg" style="background:linear-gradient(135deg,${accent},${darken(accent,.5)});"></div>
+    <div class="pv-store-header-overlay"></div>
+    <div class="pv-store-header-content">
+      <div class="pv-store-name">${store.produits?.[0]?.image_emoji||'🛍'} ${(store.url_slug||'ma-boutique').replace(/-/g,' ')}</div>
+      ${store.slogan?`<div class="pv-store-slogan">${store.slogan}</div>`:''}
+    </div>`;
+  body.appendChild(header);
+  delay+=120;
+
+  // Products
+  if((store.produits||[]).length>0){
+    await sleep(80);
+    const secLabel=document.createElement('div');
+    secLabel.className='pv-sec-label pv-elem';
+    secLabel.style.animationDelay=delay+'ms';
+    secLabel.textContent=store.produits.length+' Produit'+(store.produits.length>1?'s':'');
+    body.appendChild(secLabel);
+    delay+=80;
+
+    const grid=document.createElement('div');
+    grid.className='pv-products-grid';
+    body.appendChild(grid);
+
+    for(const p of store.produits){
+      await sleep(60);
+      const card=document.createElement('div');
+      card.className='pv-prod-card pv-elem';
+      card.style.animationDelay=delay+'ms';
+      const opts=(p.options||[]).map(o=>`${o.nom}: ${(o.choix||[]).slice(0,3).map(c=>c.nom).join(', ')}`).join(' · ');
+      card.innerHTML=`
+        <div class="pv-prod-img">${p.image_emoji||'📦'}</div>
+        <div class="pv-prod-body">
+          <div class="pv-prod-name">${p.nom}</div>
+          <div class="pv-prod-price" style="color:${accent};">${p.prix_affiche||p.prix_base+'$'}</div>
+          ${opts?`<div class="pv-prod-opts">${opts}</div>`:''}
+        </div>`;
+      grid.appendChild(card);
+      delay+=80;
+    }
+  }
+
+  // Questions
+  if((store.questions_client||[]).length>0){
+    await sleep(60);
+    const qlabel=document.createElement('div');
+    qlabel.className='pv-sec-label pv-elem';
+    qlabel.style.animationDelay=delay+'ms';
+    qlabel.textContent='Questions au client';
+    body.appendChild(qlabel);
+    delay+=60;
+    for(const q of store.questions_client){
+      await sleep(50);
+      const qel=document.createElement('div');
+      qel.className='pv-question pv-elem';
+      qel.style.animationDelay=delay+'ms';
+      qel.textContent=q.question;
+      body.appendChild(qel);
+      delay+=60;
+    }
+  }
+
+  // Theme badge
+  if(store.apparence?.theme){
+    await sleep(40);
+    const badge=document.createElement('div');
+    badge.className='pv-theme-badge pv-elem';
+    badge.style.animationDelay=delay+'ms';
+    badge.textContent='✦ Thème: '+store.apparence.theme;
+    body.appendChild(badge);
+  }
+
+  // Scroll to top
+  document.getElementById('preview-scroll').scrollTop=0;
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function darken(hex,factor){
+  try{
+    let h=hex.replace('#','');
+    if(h.length===3)h=h.split('').map(x=>x+x).join('');
+    const r=Math.round(parseInt(h.slice(0,2),16)*factor);
+    const g=Math.round(parseInt(h.slice(2,4),16)*factor);
+    const b=Math.round(parseInt(h.slice(4,6),16)*factor);
+    return `rgb(${r},${g},${b})`;
+  }catch(e){return '#000';}
+}
+
+// ── INFO PAGE ──
+function showInfoPage(){
+  document.getElementById('info-page').classList.add('show');
+}
+function hideInfoPage(){
+  document.getElementById('info-page').classList.remove('show');
+}
+function selMode(n){
+  storeMode=n;
+  document.getElementById('mode-1').className='mode-opt'+(n===1?' on':'');
+  document.getElementById('mode-2').className='mode-opt'+(n===2?' on':'');
+}
+
+async function launch(){
+  const name=document.getElementById('biz-name').value.trim();
+  const email=document.getElementById('biz-email').value.trim();
+  if(!name||!email)return showNotif('Entre ton nom et ton courriel.');
+  if(!currentStore)return showNotif('Configure ta boutique d\'abord.');
+  const btn=document.getElementById('btn-launch');
+  btn.disabled=true;btn.textContent='Création...';
+  try{
+    const store={...currentStore,mode:storeMode===2?'boutique':'soumission'};
+    const r=await fetch('/api/store/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({businessName:name,email,phone:document.getElementById('biz-phone').value,city:document.getElementById('biz-city').value,accent:currentStore.apparence?.couleur_accent||accentColor,store,lang,plan:storeMode===2?'boutique':'soumission'})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    resultSlug=d.slug;resultToken=d.token;
+    document.getElementById('result-url').textContent='simpl-production.up.railway.app/s/'+d.slug;
+    document.getElementById('info-page').classList.remove('show');
+    document.getElementById('success-page').classList.add('show');
+  }catch(e){showNotif('Erreur: '+e.message);}
+  btn.disabled=false;btn.textContent='🚀 Lancer ma boutique';
+}
+
+function copyUrl(){
+  navigator.clipboard.writeText('https://simpl-production.up.railway.app/s/'+resultSlug);
+  const btn=document.getElementById('cp-btn');btn.textContent='Copié !';
+  setTimeout(()=>btn.textContent='Copier',2000);
+}
+function openStore(){window.open('/s/'+resultSlug,'_blank');}
+function openDash(){window.open('/dashboard/'+resultSlug+'/'+resultToken,'_blank');}
+
+// ── START ──
+init();
+</script>
+</body>
+</html>
