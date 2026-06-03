@@ -61,7 +61,12 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:fl
 .hero h1 .line1{display:block;color:var(--text);}
 .hero h1 .line2{display:block;background:linear-gradient(135deg,var(--a) 0%,var(--a2) 50%,#e879f9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .hero-sub{font-size:1.1rem;color:var(--text2);line-height:1.75;max-width:520px;margin:0 auto 2.5rem;}
-.hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;}
+.hero-input-wrap{display:flex;gap:10px;max-width:620px;margin:0 auto 2rem;background:var(--surf2);border:1.5px solid var(--border2);border-radius:16px;padding:6px 6px 6px 18px;transition:border-color .2s;}
+.hero-input-wrap:focus-within{border-color:var(--a);box-shadow:0 0 0 3px rgba(124,109,250,.12);}
+.hero-svc-in{flex:1;background:transparent;border:none;color:var(--text);font-size:15px;outline:none;font-family:inherit;padding:8px 0;-webkit-text-fill-color:var(--text);}
+.hero-svc-in::placeholder{color:var(--text3);}
+.hero-start-btn{padding:11px 22px;border-radius:11px;font-size:14px;white-space:nowrap;flex-shrink:0;}
+.hero-start-btn:disabled{opacity:.45;cursor:not-allowed;transform:none;filter:none;box-shadow:none;}
 .btn-primary{padding:14px 28px;border-radius:12px;background:var(--a);color:#fff;font-size:15px;font-weight:700;border:none;cursor:pointer;font-family:inherit;transition:all .2s;display:inline-flex;align-items:center;gap:8px;}
 .btn-primary:hover{filter:brightness(1.15);transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,109,250,0.35);}
 .btn-secondary{padding:14px 28px;border-radius:12px;background:transparent;color:var(--text);font-size:15px;font-weight:600;border:1.5px solid var(--border2);cursor:pointer;font-family:inherit;transition:all .2s;}
@@ -281,9 +286,9 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
   <div class="hero-badge"><div class="hero-badge-dot"></div><span id="t-badge">Nouvelle génération de boutiques en ligne</span></div>
   <h1><span class="line1" id="t-h1-1">Ta boutique en ligne,</span><span class="line2" id="t-h1-2">créée par l'IA en minutes</span></h1>
   <p class="hero-sub" id="t-sub">Décris ce que tu vends. L'IA comprend ton business, génère ta boutique complète, et tes clients peuvent acheter immédiatement.</p>
-  <div class="hero-btns">
-    <button class="btn-primary" onclick="scrollToStart()">✦ <span id="t-hero-cta">Créer ma boutique gratuite</span></button>
-    <button class="btn-secondary" onclick="document.getElementById('demo-section').scrollIntoView({behavior:'smooth'})" id="t-hero-demo">Voir la démo</button>
+  <div class="hero-input-wrap">
+    <input class="svc-in hero-svc-in" type="text" id="svc-in" placeholder="Ex: pergolas en bois, bougies artisanales, yoga..." autocomplete="off" oninput="checkSvc()">
+    <button class="btn-primary hero-start-btn" id="btn-start" onclick="startChat()" disabled>✦ <span id="t-start-btn">Créer ma boutique</span></button>
   </div>
   <div class="social-proof">
     <div class="avatars">
