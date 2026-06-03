@@ -270,7 +270,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
   <div class="nav-links">
     <a class="nav-link" href="#features" id="nl-feat">Fonctionnalités</a>
     <a class="nav-link" href="#pricing" id="nl-price">Tarifs</a>
-    <a class="nav-link" href="#start" id="nl-start">Commencer</a>
+    <a class="nav-link" href="#" onclick="scrollToStart();return false;" id="nl-start">Commencer</a>
   </div>
   <div style="display:flex;align-items:center;gap:10px;">
     <div class="lang-sw">
@@ -286,7 +286,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
   <div class="hero-badge"><div class="hero-badge-dot"></div><span id="t-badge">Nouvelle génération de boutiques en ligne</span></div>
   <h1><span class="line1" id="t-h1-1">Ta boutique en ligne,</span><span class="line2" id="t-h1-2">créée par l'IA en minutes</span></h1>
   <p class="hero-sub" id="t-sub">Décris ce que tu vends. L'IA comprend ton business, génère ta boutique complète, et tes clients peuvent acheter immédiatement.</p>
-  <div style="max-width:620px;margin:0 auto 0.625rem;text-align:left;"><span style="font-size:13px;font-weight:600;color:var(--text2);">Qu'est-ce que tu vends ?</span></div>
+  <div id="hero-input-anchor" style="max-width:620px;margin:0 auto 0.625rem;text-align:left;"><span style="font-size:14px;font-weight:700;color:var(--text);">Qu'est-ce que tu vends ?</span></div>
   <div class="hero-input-wrap">
     <input class="svc-in hero-svc-in" type="text" id="svc-in" placeholder="Ex: pergolas en bois, bougies artisanales, yoga..." autocomplete="off" oninput="checkSvc()">
     <button class="btn-primary hero-start-btn" id="btn-start" onclick="startChat()" disabled>✦ <span id="t-start-btn">Créer ma boutique</span></button>
@@ -581,7 +581,11 @@ function applyTX(){
   ['sl1','sl2','sl3'].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent=el.dataset[lang]||el.textContent;});
 }
 
-function scrollToStart(){document.getElementById('start').scrollIntoView({behavior:'smooth'});}
+function scrollToStart(){
+  const svc=document.getElementById('svc-in').value.trim();
+  if(svc){window.location.href='/creer?service='+encodeURIComponent(svc)+'&lang='+lang;}
+  else{document.getElementById('svc-in').focus();document.getElementById('hero-input-anchor').scrollIntoView({behavior:'smooth'});}
+}
 function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,160)+'px';}
 function checkSvc(){document.getElementById('btn-start').disabled=document.getElementById('svc-in').value.trim().length<3;}
 function showNotif(msg){const el=document.getElementById('notif');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
