@@ -584,7 +584,12 @@ function applyTX(){
 function scrollToStart(){
   const svc=document.getElementById('svc-in').value.trim();
   if(svc){window.location.href='/creer?service='+encodeURIComponent(svc)+'&lang='+lang;}
-  else{document.getElementById('svc-in').focus();document.getElementById('hero-input-anchor').scrollIntoView({behavior:'smooth'});}
+  else{
+    const el=document.getElementById('hero-input-anchor');
+    const offset=el.getBoundingClientRect().top+window.scrollY-80;
+    window.scrollTo({top:offset,behavior:'smooth'});
+    setTimeout(()=>document.getElementById('svc-in').focus(),500);
+  }
 }
 function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,160)+'px';}
 function checkSvc(){document.getElementById('btn-start').disabled=document.getElementById('svc-in').value.trim().length<3;}
