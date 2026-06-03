@@ -943,6 +943,7 @@ app.delete('/api/admin/store/:slug', async (req, res) => {
 });
 
 // ─── PAGE ROUTES ───
+app.get('/creer', (req, res) => res.sendFile(path.join(__dirname, 'creer.html')));
 app.get('/s/:slug', (req, res) => res.sendFile(path.join(__dirname, 'store.html')));
 app.get('/dashboard/:slug/:token', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
