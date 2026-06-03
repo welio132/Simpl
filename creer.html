@@ -188,7 +188,14 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
 .mode-opt-name{font-size:13px;font-weight:700;}
 .mode-opt-desc{font-size:11px;color:var(--text3);line-height:1.4;}
 
-/* ── SUCCESS PAGE ── */
+/* Continue bar at bottom */
+.continue-bar{display:none;padding:1.25rem 2rem;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0;}
+.continue-bar.show{display:block;}
+.continue-bar-inner{display:flex;align-items:center;justify-content:space-between;gap:1rem;}
+.continue-bar-txt{font-size:13px;color:var(--text2);}
+.continue-bar-txt strong{color:var(--text);font-weight:700;}
+.continue-btn-big{padding:14px 32px;border-radius:12px;background:var(--a);border:none;color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;display:flex;align-items:center;gap:10px;box-shadow:0 4px 20px rgba(124,109,250,.35);}
+.continue-btn-big:hover{filter:brightness(1.15);transform:translateY(-2px);box-shadow:0 8px 32px rgba(124,109,250,.45);}
 .success-page{display:none;position:absolute;inset:0;z-index:50;background:var(--bg);flex-direction:column;align-items:center;justify-content:center;padding:2rem;}
 .success-page.show{display:flex;}
 .success-card{background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:2.5rem;max-width:480px;width:100%;text-align:center;}
@@ -257,14 +264,9 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
       <div class="preview-label">
         <span>Aperçu en direct</span>
       </div>
-      <div style="display:flex;align-items:center;gap:14px;">
-        <div class="preview-status" id="preview-status">
-          <div class="status-dot waiting" id="status-dot"></div>
-          <span id="status-txt">En attente</span>
-        </div>
-        <button class="continue-btn" id="continue-btn" onclick="showInfoPage()">
-          Continuer <span>→</span>
-        </button>
+      <div class="preview-status" id="preview-status">
+        <div class="status-dot waiting" id="status-dot"></div>
+        <span id="status-txt">En attente</span>
       </div>
     </div>
 
@@ -274,6 +276,18 @@ body::before{content:'';position:fixed;inset:0;background-image:url("data:image/
         <div class="empty-txt">Ta boutique va apparaître ici pendant qu'on la construit ensemble.</div>
       </div>
       <div id="preview-content" style="display:none;"></div>
+    </div>
+
+    <div class="continue-bar" id="continue-bar">
+      <div class="continue-bar-inner">
+        <div class="continue-bar-txt">
+          <strong>Ta boutique est prête ✓</strong><br>
+          Ajuste si besoin, puis continue.
+        </div>
+        <button class="continue-btn-big" onclick="showInfoPage()">
+          Continuer <span>→</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -477,7 +491,7 @@ async function sendMsg(){
             renderPreviewAnimated(parsed.store);
             showAdjArea();
             setStatus('ready');setInput(false);
-            document.getElementById('continue-btn').classList.add('show');
+            document.getElementById('continue-bar').classList.add('show');
             document.getElementById('step-dot').style.background='var(--green)';
             document.getElementById('step-txt').textContent='Boutique prête';
           }else if(parsed.chunk){
