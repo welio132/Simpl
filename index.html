@@ -773,19 +773,7 @@ async function enrichWithPhotos(store){
 async function startChat(){
   service=document.getElementById('svc-in').value.trim();
   if(!service)return;
-  conversation=[];currentStore=null;
-  document.getElementById('chat-box').innerHTML='';
-  document.getElementById('preview').style.display='none';
-  goSc(2);setInput(false);showTyping();
-  try{
-    const r=await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service,lang})});
-    const d=await r.json();
-    hideTyping();
-    if(d.error)throw new Error(d.error);
-    addMsg('ai',d.message);
-    conversation.push({role:'assistant',content:d.message});
-    setInput(true);
-  }catch(e){hideTyping();showNotif('Erreur: '+e.message);setInput(true);}
+  window.location.href='/creer?service='+encodeURIComponent(service)+'&lang='+lang;
 }
 
 async function sendMsg(){
