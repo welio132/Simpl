@@ -303,6 +303,44 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
   </div>
 </div>
 
+<!-- PRICING — juste après le hero -->
+<div class="section" id="pricing">
+  <div class="section-label" id="t-price-label">Tarifs</div>
+  <h2 class="section-title" id="t-price-title">Simple et transparent</h2>
+  <p class="section-sub" id="t-price-sub">Aucune commission sur tes ventes. Annule en tout temps.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="price-name" id="pc1n">Soumission</div>
+      <div class="price-desc" id="pc1d">Tes clients soumettent une demande, tu les rappelles pour confirmer.</div>
+      <div class="price-amount">39$<span id="pc1s">/mois</span></div>
+      <div class="price-features">
+        <div class="pf"><span class="pf-check">✓</span><span id="pp1">Boutique complète créée par IA</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp2">Formulaire de soumission</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp3">2 pages supplémentaires</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp4">15 thèmes visuels</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp5">Dashboard + commandes illimitées</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp55">Assistant IA inclus</span></div>
+      </div>
+      <button class="price-cta price-cta-ghost" onclick="scrollToStart()" id="pc1b">Commencer →</button>
+    </div>
+    <div class="price-card featured">
+      <div class="price-badge" id="t-popular">⚡ Le plus populaire</div>
+      <div class="price-name" id="pc2n">Boutique</div>
+      <div class="price-desc" id="pc2d">Tes clients paient directement en ligne. Tu encaisses automatiquement.</div>
+      <div class="price-amount">69$<span id="pc2s">/mois</span></div>
+      <div class="price-features">
+        <div class="pf"><span class="pf-check">✓</span><span id="pp6">Tout du plan Soumission</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp7">Paiement en ligne (Stripe)</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp8">5 pages supplémentaires</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp9">Bannières promotionnelles</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp10">Badges & produits vedette</span></div>
+        <div class="pf"><span class="pf-check">✓</span><span id="pp11">Stats avancées</span></div>
+      </div>
+      <button class="price-cta price-cta-main" onclick="scrollToStart()" id="pc2b">Commencer →</button>
+    </div>
+  </div>
+</div>
+
 <!-- DEMO PREVIEW -->
 <div class="demo-wrap" id="demo-section">
   <div class="demo-frame">
@@ -312,7 +350,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
         <div class="demo-dot" style="background:#febc2e;"></div>
         <div class="demo-dot" style="background:#28c840;"></div>
       </div>
-      <div class="demo-url">simpl-production.up.railway.app — Simpl</div>
+      <div class="demo-url">simplcomerce.com — Simpl</div>
     </div>
     <div class="demo-content">
       <div class="demo-chat" id="demo-chat">
@@ -335,58 +373,10 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
   <div class="features-grid">
     <div class="feat"><span class="feat-ic">✦</span><div class="feat-title" id="f1t">IA qui comprend ton métier</div><p class="feat-desc" id="f1d">Une conversation naturelle. L'IA détecte ton secteur, déduit tes produits, et génère une boutique qui ressemble vraiment à ton business.</p></div>
     <div class="feat"><span class="feat-ic">🛍</span><div class="feat-title" id="f2t">Boutique ou soumission</div><p class="feat-desc" id="f2d">Choisis : tes clients paient directement en ligne, ou ils soumettent une demande que tu confirmes. Switche en un clic depuis ton dashboard.</p></div>
-    <div class="feat"><span class="feat-ic">📸</span><div class="feat-title" id="f3t">Photos automatiques</div><p class="feat-desc" id="f3d">L'IA cherche automatiquement des photos professionnelles pour tes produits. Tu peux toujours uploader tes propres photos depuis ton dashboard.</p></div>
-    <div class="feat"><span class="feat-ic">🎨</span><div class="feat-title" id="f4t">Personnalisation complète</div><p class="feat-desc" id="f4d">Logo, bannière, couleurs, slogan — tout se modifie en temps réel depuis ton dashboard. Aucune connaissance technique requise.</p></div>
+    <div class="feat"><span class="feat-ic">🎨</span><div class="feat-title" id="f4t">15 thèmes professionnels</div><p class="feat-desc" id="f4d">Moderne, artisanal, bold, élégant — 15 thèmes complets avec couleurs, polices et styles adaptés à ton secteur. Personnalise en temps réel.</p></div>
     <div class="feat"><span class="feat-ic">📊</span><div class="feat-title" id="f5t">Dashboard en temps réel</div><p class="feat-desc" id="f5d">Vois tes commandes arriver, change leur statut, gère tes produits. Tout au même endroit, accessible depuis n'importe quel appareil.</p></div>
-    <div class="feat"><span class="feat-ic">⚡</span><div class="feat-title" id="f6t">En ligne en 5 minutes</div><p class="feat-desc" id="f6d">Pas de serveur à configurer, pas de code à écrire, pas de domaine à acheter. Tu décris, l'IA génère, tu lances.</p></div>
-  </div>
-</div>
-
-<!-- HOW IT WORKS -->
-<div class="section">
-  <div class="section-label" id="t-how-label">Comment ça marche</div>
-  <h2 class="section-title" id="t-how-title">3 étapes, c'est tout</h2>
-  <p class="section-sub" id="t-how-sub">Moins de 5 minutes de ta première phrase à ta boutique en ligne.</p>
-  <div class="steps-grid">
-    <div class="step"><div class="step-num">1</div><div class="step-title" id="s1t">Tu décris ton business</div><p class="step-desc" id="s1d">En quelques phrases, tu expliques ce que tu vends. L'IA pose quelques questions ciblées pour comprendre tes produits et tes prix.</p></div>
-    <div class="step"><div class="step-num">2</div><div class="step-title" id="s2t">L'IA génère ta boutique</div><p class="step-desc" id="s2d">En quelques secondes, ta boutique complète est créée — produits, options, photos, slogan. Tu ajustes ce que tu veux en un mot.</p></div>
-    <div class="step"><div class="step-num">3</div><div class="step-title" id="s3t">Tu partages le lien</div><p class="step-desc" id="s3d">Tu reçois un lien unique. Tes clients arrivent, configurent, commandent. Toi tu vois tout arriver dans ton dashboard.</p></div>
-  </div>
-</div>
-
-<!-- PRICING -->
-<div class="section" id="pricing">
-  <div class="section-label" id="t-price-label">Tarifs</div>
-  <h2 class="section-title" id="t-price-title">Simple et transparent</h2>
-  <p class="section-sub" id="t-price-sub">Commence gratuitement. Upgrade quand tu es prêt.</p>
-  <div class="pricing-grid">
-    <div class="price-card">
-      <div class="price-name" id="pc1n">Soumission</div>
-      <div class="price-desc" id="pc1d">Parfait pour démarrer. Tes clients soumettent, tu les rappelles.</div>
-      <div class="price-amount">49$<span id="pc1s">/mois</span></div>
-      <div class="price-features">
-        <div class="pf"><span class="pf-check">✓</span><span id="pp1">Boutique complète par IA</span></div>
-        <div class="pf"><span class="pf-check">✓</span><span id="pp2">Photos automatiques</span></div>
-        <div class="pf"><span class="pf-check">✓</span><span id="pp3">Dashboard vendeur</span></div>
-        <div class="pf"><span class="pf-check">✓</span><span id="pp4">Commandes illimitées</span></div>
-        <div class="pf"><span class="pf-check">✓</span><span id="pp5">Support par email</span></div>
-      </div>
-      <button class="price-cta price-cta-ghost" onclick="scrollToStart()" id="pc1b">Commencer →</button>
-    </div>
-    <div class="price-card featured">
-      <div class="price-badge" id="t-popular">⚡ Le plus populaire</div>
-      <div class="price-name" id="pc2n">Boutique</div>
-      <div class="price-desc" id="pc2d">Paiement en ligne direct. Tes clients paient, toi tu encaisses.</div>
-      <div class="price-amount">99$<span id="pc2s">/mois</span></div>
-      <div class="price-features">
-        <div class="pf"><span class="pf-check">✓</span><span id="pp6">Tout du plan Soumission</span></div>
-        <div class="pf"><span class="pf-check">✓</span><span id="pp7">Panier + paiement en ligne</span></div>
-        <div class="pf"><span class="pf-check">✓</span><span id="pp8">Notifications email</span></div>
-        <div class="pf"><span class="pf-check">✓</span><span id="pp9">Personnalisation avancée</span></div>
-        <div class="pf"><span class="pf-check">✓</span><span id="pp10">Support prioritaire</span></div>
-      </div>
-      <button class="price-cta price-cta-main" onclick="scrollToStart()" id="pc2b">Commencer →</button>
-    </div>
+    <div class="feat"><span class="feat-ic">📧</span><div class="feat-title" id="f6t">Emails automatiques</div><p class="feat-desc" id="f6d">Confirmation de commande, changement de statut, notification admin — tout est automatique. Tes clients sont toujours informés.</p></div>
+    <div class="feat"><span class="feat-ic">⚡</span><div class="feat-title" id="f7t">En ligne en 5 minutes</div><p class="feat-desc" id="f7d">Pas de serveur à configurer, pas de code à écrire. Tu décris ton business, l'IA génère ta boutique, tu la partages.</p></div>
   </div>
 </div>
 
