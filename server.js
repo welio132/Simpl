@@ -706,7 +706,15 @@ app.post('/api/store/save', async (req, res) => {
 
 app.get('/api/store/:slug', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const v = await getVendor(req.params.slug);
+  let v = await getVendor(req.params.slug);
+  // Si pas trouvé par slug, chercher par domaine custom
+  if(!v){
+    const host = req.headers.host || '';
+    const cleanHost = host.split(':')[0].toLowerCase().replace(/^www\./, '');
+    if(cleanHost && !cleanHost.includes('simplcomerce') && !cleanHost.includes('railway')){
+      v = await db.collection('stores').findOne({ customDomain: cleanHost });
+    }
+  }
   if (!v) return res.status(404).json({ error: 'Not found' });
   const { token, email, _id, ...safe } = v;
   res.json(safe);
@@ -1173,7 +1181,44 @@ app.post('/api/dashboard/:slug/upgrade-request', async (req, res) => {
   }
 });
 
+app.put('/api/dashboard/:slug/custom-domain', async (req, res) => {
+  const v = await authVendor(req, res); if(!v) return;
+  const { domain } = req.body;
+  if(!domain){
+    v.customDomain = null;
+    await saveVendor(v);
+    return res.json({ success: true });
+  }
+  const cleanDomain = domain.toLowerCase().replace(/^www\./, '').replace(/[^a-z0-9.-]/g, '').trim();
+  if(!cleanDomain) return res.status(400).json({ error: 'Domaine invalide.' });
+  // Vérifier que ce domaine est pas déjà pris
+  const existing = await db.collection('stores').findOne({ customDomain: cleanDomain, slug: { $ne: req.params.slug } });
+  if(existing) return res.status(400).json({ error: 'Ce domaine est déjà utilisé par une autre boutique.' });
+  v.customDomain = cleanDomain;
+  await saveVendor(v);
+  res.json({ success: true, domain: cleanDomain });
+});
+
 app.get('/creer', (req, res) => res.sendFile(path.join(__dirname, 'creer.html')));
+// Custom domain — si quelqu'un accède via son propre domaine
+app.use(async (req, res, next) => {
+  const host = req.headers.host || '';
+  // Ignorer les domaines Simpl et localhost
+  const simplDomains = ['simplcomerce.com', 'www.simplcomerce.com', 'simpl-production.up.railway.app'];
+  const isSimpl = simplDomains.some(d => host.includes(d)) || host.includes('localhost') || host.includes('railway');
+  if(isSimpl) return next();
+  // Chercher la boutique avec ce domaine custom
+  const cleanHost = host.split(':')[0].toLowerCase().replace(/^www\./, '');
+  const vendor = await db.collection('stores').findOne({ customDomain: cleanHost });
+  if(!vendor) return next();
+  // Servir la boutique
+  if(req.path === '/' || req.path === '') {
+    return res.sendFile(path.join(__dirname, 'store.html'));
+  }
+  // Passer les requêtes API normalement
+  next();
+});
+
 app.get('/s/:slug', (req, res) => res.sendFile(path.join(__dirname, 'store.html')));
 app.get('/dashboard/:slug/:token', (req, res) => res.sendFile(path.join(__dirname, 'dashboard.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html')));
