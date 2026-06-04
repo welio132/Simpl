@@ -678,7 +678,8 @@ async function launch(){
   btn.disabled=true;btn.textContent='Création...';
   try{
     const store={...currentStore,mode:storeMode===2?'boutique':'soumission'};
-    const r=await fetch('/api/store/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({businessName:name,email,phone:document.getElementById('biz-phone').value,city:document.getElementById('biz-city').value,accent:currentStore.apparence?.couleur_accent||accentColor,store,lang,plan:storeMode===2?'boutique':'soumission'})});
+    const authToken = localStorage.getItem('simpl_token') || '';
+    const r=await fetch('/api/store/save',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':authToken},body:JSON.stringify({businessName:name,email,phone:document.getElementById('biz-phone').value,city:document.getElementById('biz-city').value,accent:currentStore.apparence?.couleur_accent||accentColor,store,lang,plan:storeMode===2?'boutique':'soumission'})});
     const d=await r.json();
     if(d.error)throw new Error(d.error);
     resultSlug=d.slug;resultToken=d.token;

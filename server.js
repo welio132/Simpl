@@ -171,6 +171,18 @@ async function saveVendor(vendor) {
 }
 
 // ─── MULTER ───
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+const ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+
+const fileFilter = (req, file, cb) => {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if(ALLOWED_MIME_TYPES.includes(file.mimetype) && ALLOWED_EXTENSIONS.includes(ext)){
+    cb(null, true);
+  } else {
+    cb(new Error('Seulement les images sont acceptées (JPG, PNG, WebP, GIF)'), false);
+  }
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const slug = req.params.slug || 'tmp';
@@ -183,7 +195,7 @@ const storage = multer.diskStorage({
     cb(null, crypto.randomBytes(8).toString('hex') + ext);
   }
 });
-const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+const upload = multer({ storage, fileFilter, limits: { fileSize: 5 * 1024 * 1024 } });
 
 // ─── HELPERS ───
 function extractJSON(text) {
@@ -655,12 +667,22 @@ app.post('/api/adjust', async (req, res) => {
 app.post('/api/store/save', async (req, res) => {
   const { businessName, email, phone, city, accent, store, lang } = req.body;
   if (!businessName || !email || !store) return res.status(400).json({ error: 'Données manquantes' });
+  if (!isValidEmail(email)) return res.status(400).json({ error: 'Courriel invalide' });
 
   const base = (store.url_slug || businessName).toLowerCase().replace(/[^a-z0-9]/g, '').substring(0, 24) || 'store';
   let slug = base; let n = 1;
   while (await getVendor(slug)) { slug = base + n; n++; }
 
   const token = crypto.randomBytes(16).toString('hex');
+
+  // Lier au compte user si connecté
+  let ownerId = null;
+  const authToken = req.headers['x-auth-token'];
+  if(authToken && authToken.length === 64){
+    const user = await db.collection('users').findOne({ token: authToken });
+    if(user) ownerId = user._id.toString();
+  }
+
   const vendor = {
     slug, businessName, email: email.toLowerCase(),
     phone: phone || '', city: city || '',
@@ -670,7 +692,8 @@ app.post('/api/store/save', async (req, res) => {
     paid: false,
     status: 'active',
     token, createdAt: new Date().toISOString(),
-    orders: []
+    orders: [],
+    ...(ownerId && { ownerId })
   };
   await saveVendor(vendor);
 
@@ -972,7 +995,8 @@ IMPORTANT: Pour type "update", inclus le store COMPLET avec TOUTES les modificat
 
 
 // ─── ADMIN ROUTES ───
-const ADMIN_PASSWORD = '14416';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '14416';
+
 
 app.post('/api/admin/login', (req, res) => {
   if (req.body.password === ADMIN_PASSWORD) {
@@ -1083,14 +1107,15 @@ app.post('/api/auth/register', loginLimiter, async (req, res) => {
   if(existing) return res.status(400).json({ error: 'Ce courriel est déjà utilisé.' });
   const token = genAuthToken();
   const hashedPwd = await hashPassword(password);
-  await db.collection('users').insertOne({
+  const result = await db.collection('users').insertOne({
     name: sanitize(name, 100),
     email: email.toLowerCase(),
     password: hashedPwd,
     token,
     createdAt: new Date().toISOString()
   });
-  res.json({ success: true, token });
+  const userId = result.insertedId.toString();
+  res.json({ success: true, token, userId });
 });
 
 app.post('/api/auth/login', loginLimiter, async (req, res) => {
@@ -1099,11 +1124,13 @@ app.post('/api/auth/login', loginLimiter, async (req, res) => {
   if(!isValidEmail(email)) return res.status(400).json({ error: 'Courriel invalide.' });
   const user = await db.collection('users').findOne({ email: email.toLowerCase() });
   if(!user || !(await verifyPassword(password, user.password))) {
-    // Délai pour éviter le timing attack
     await new Promise(r => setTimeout(r, 300));
     return res.status(401).json({ error: 'Courriel ou mot de passe incorrect.' });
   }
-  res.json({ success: true, token: user.token, name: user.name });
+  // Rotation du token à chaque login
+  const newToken = genAuthToken();
+  await db.collection('users').updateOne({ _id: user._id }, { $set: { token: newToken, lastLogin: new Date().toISOString() } });
+  res.json({ success: true, token: newToken, name: user.name });
 });
 
 app.get('/api/auth/boutiques', async (req, res) => {
@@ -1111,8 +1138,15 @@ app.get('/api/auth/boutiques', async (req, res) => {
   if(!token || token.length !== 64) return res.status(401).json({ error: 'Non connecté.' });
   const user = await db.collection('users').findOne({ token });
   if(!user) return res.status(401).json({ error: 'Session invalide.' });
-  const boutiques = await db.collection('stores').find({ email: user.email }).toArray();
-  const safe = boutiques.map(({ password, ...b }) => b);
+  const userId = user._id.toString();
+  // Chercher par ownerId OU email (pour les boutiques créées avant le système de compte)
+  const boutiques = await db.collection('stores').find({
+    $or: [{ ownerId: userId }, { email: user.email }]
+  }).toArray();
+  // Dédupliquer
+  const seen = new Set();
+  const unique = boutiques.filter(b => { const k = b.slug; if(seen.has(k)) return false; seen.add(k); return true; });
+  const safe = unique.map(({ password, ...b }) => b);
   res.json({ boutiques: safe, name: user.name });
 });
 
