@@ -698,6 +698,13 @@ function openStore(){window.open('/s/'+resultSlug,'_blank');}
 function openDash(){window.open('/dashboard/'+resultSlug+'/'+resultToken,'_blank');}
 
 // ── START ──
+// Pre-fill email if logged in
+const savedEmail = localStorage.getItem('simpl_email');
+if(savedEmail){
+  const emailInput = document.getElementById('biz-email');
+  if(emailInput) emailInput.value = savedEmail;
+}
+
 init();
 </script>
 </body>

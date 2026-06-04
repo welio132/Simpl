@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2780%27 font-family=%27serif%27 font-weight=%27bold%27%3ES%3C/text%3E%3Ccircle cx=%2782%27 cy=%2718%27 r=%2714%27 fill=%27%237c6dfa%27/%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connexion — Simpl</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@700;800;900&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060608;--surf:#0e0e12;--surf2:#16161c;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.1);--text:#ededf0;--text2:#8888a0;--text3:#444458;--a:#7c6dfa;--ag:rgba(124,109,250,0.12);--red:#ef4444;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Instrument Sans',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;-webkit-font-smoothing:antialiased;}
+.logo{font-family:'Cabinet Grotesk',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:-.03em;margin-bottom:2rem;text-align:center;}
+.logo span{color:var(--a);}
+.card{background:var(--surf);border:1px solid var(--border2);border-radius:20px;padding:2rem;width:100%;max-width:400px;}
+.card-title{font-family:'Cabinet Grotesk',sans-serif;font-size:1.4rem;font-weight:900;letter-spacing:-.03em;margin-bottom:.375rem;}
+.card-sub{font-size:13px;color:var(--text2);margin-bottom:1.75rem;}
+.field{margin-bottom:1rem;}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em;}
+.field input{width:100%;background:var(--surf2);border:1.5px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-size:14px;font-family:inherit;outline:none;transition:border-color .2s;}
+.field input:focus{border-color:var(--a);}
+.field input::placeholder{color:var(--text3);}
+.btn-main{width:100%;padding:13px;border-radius:11px;background:var(--a);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;margin-top:.5rem;}
+.btn-main:hover{filter:brightness(1.1);}
+.btn-main:disabled{opacity:.5;cursor:not-allowed;}
+.divider{display:flex;align-items:center;gap:12px;margin:1.25rem 0;color:var(--text3);font-size:12px;}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border);}
+.btn-ghost{width:100%;padding:12px;border-radius:11px;background:transparent;border:1.5px solid var(--border2);color:var(--text2);font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;text-decoration:none;display:block;text-align:center;}
+.btn-ghost:hover{border-color:var(--text2);color:var(--text);}
+.error{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);border-radius:9px;padding:10px 14px;font-size:13px;color:#fca5a5;margin-bottom:1rem;display:none;}
+.footer-link{text-align:center;margin-top:1.5rem;font-size:13px;color:var(--text3);}
+.footer-link a{color:var(--a);text-decoration:none;font-weight:600;}
+.tabs{display:flex;background:var(--surf2);border-radius:10px;padding:4px;margin-bottom:1.5rem;gap:4px;}
+.tab{flex:1;padding:8px;border-radius:7px;background:transparent;border:none;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
+.tab.on{background:var(--surf);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.2);}
+</style>
+</head>
+<body>
+<a href="/" class="logo">Simpl<span>.</span></a>
+
+<div class="card">
+  <div class="tabs">
+    <button class="tab on" id="tab-login" onclick="switchTab('login')">Se connecter</button>
+    <button class="tab" id="tab-register" onclick="switchTab('register')">Créer un compte</button>
+  </div>
+
+  <div id="error-msg" class="error"></div>
+
+  <!-- LOGIN -->
+  <div id="form-login">
+    <div class="field">
+      <label>Courriel</label>
+      <input type="email" id="l-email" placeholder="toi@exemple.com" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="l-pwd" placeholder="••••••••" onkeydown="if(event.key==='Enter')login()">
+    </div>
+    <button class="btn-main" id="btn-login" onclick="login()">Se connecter →</button>
+  </div>
+
+  <!-- REGISTER -->
+  <div id="form-register" style="display:none;">
+    <div class="field">
+      <label>Nom</label>
+      <input type="text" id="r-name" placeholder="Ton nom">
+    </div>
+    <div class="field">
+      <label>Courriel</label>
+      <input type="email" id="r-email" placeholder="toi@exemple.com">
+    </div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="r-pwd" placeholder="Min. 8 caractères" onkeydown="if(event.key==='Enter')register()">
+    </div>
+    <button class="btn-main" id="btn-register" onclick="register()">Créer mon compte →</button>
+  </div>
+</div>
+
+<div class="footer-link">
+  <a href="/">← Retour à l'accueil</a>
+</div>
+
+<script>
+function switchTab(t){
+  document.getElementById('tab-login').className='tab'+(t==='login'?' on':'');
+  document.getElementById('tab-register').className='tab'+(t==='register'?' on':'');
+  document.getElementById('form-login').style.display=t==='login'?'block':'none';
+  document.getElementById('form-register').style.display=t==='register'?'block':'none';
+  showError('');
+}
+
+function showError(msg){
+  const el=document.getElementById('error-msg');
+  el.textContent=msg;el.style.display=msg?'block':'none';
+}
+
+async function login(){
+  const email=document.getElementById('l-email').value.trim();
+  const pwd=document.getElementById('l-pwd').value;
+  if(!email||!pwd)return showError('Remplis tous les champs.');
+  const btn=document.getElementById('btn-login');
+  btn.disabled=true;btn.textContent='Connexion...';
+  try{
+    const r=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password:pwd})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    localStorage.setItem('simpl_token',d.token);
+    localStorage.setItem('simpl_email',email);
+    window.location.href='/compte';
+  }catch(e){showError(e.message||'Erreur de connexion.');}
+  btn.disabled=false;btn.textContent='Se connecter →';
+}
+
+async function register(){
+  const name=document.getElementById('r-name').value.trim();
+  const email=document.getElementById('r-email').value.trim();
+  const pwd=document.getElementById('r-pwd').value;
+  if(!name||!email||!pwd)return showError('Remplis tous les champs.');
+  if(pwd.length<8)return showError('Mot de passe : minimum 8 caractères.');
+  const btn=document.getElementById('btn-register');
+  btn.disabled=true;btn.textContent='Création...';
+  try{
+    const r=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password:pwd})});
+    const d=await r.json();
+    if(d.error)throw new Error(d.error);
+    localStorage.setItem('simpl_token',d.token);
+    localStorage.setItem('simpl_email',email);
+    window.location.href='/compte';
+  }catch(e){showError(e.message||'Erreur.');}
+  btn.disabled=false;btn.textContent='Créer mon compte →';
+}
+</script>
+</body>
+</html>

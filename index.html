@@ -50,7 +50,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:fl
 .lang-sw{display:flex;background:var(--surf2);border-radius:8px;padding:3px;gap:2px;}
 .lb{padding:5px 11px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--text3);transition:all .15s;font-family:inherit;}
 .lb.on{background:var(--a);color:#fff;}
-.nav-cta{padding:8px 18px;border-radius:9px;background:var(--a);color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .2s;}
+.nav-login{padding:8px 18px;border-radius:9px;background:transparent;border:1.5px solid #7c6dfa;color:#7c6dfa;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;white-space:nowrap;}
+.nav-login:hover{background:#7c6dfa;color:#fff;}border-radius:9px;background:var(--a);color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .2s;}
 .nav-cta:hover{filter:brightness(1.15);transform:translateY(-1px);}
 
 /* HERO */
@@ -278,6 +279,7 @@ footer{border-top:1px solid var(--border);padding:2rem;text-align:center;font-si
       <button class="lb on" id="lb-fr" onclick="setLang('fr')">FR</button>
       <button class="lb" id="lb-en" onclick="setLang('en')">EN</button>
     </div>
+    <a href="/login" class="nav-login">Se connecter</a>
     <button class="nav-cta" onclick="scrollToStart()" id="t-nav-cta">Créer ma boutique</button>
   </div>
 </nav>
@@ -585,233 +587,12 @@ function scrollToStart(){
 }
 function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,160)+'px';}
 function checkSvc(){document.getElementById('btn-start').disabled=document.getElementById('svc-in').value.trim().length<3;}
-function showNotif(msg){const el=document.getElementById('notif');el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}
-
-function goSc(n){
-  ['sc1','sc2','sc3','sc4'].forEach((id,i)=>{document.getElementById(id).className='screen'+(i+1===n?' active':'');});
-  ['sn1','sn2','sn3'].forEach((id,i)=>{
-    const el=document.getElementById(id);
-    el.className='sn '+(i+1<n?'done':i+1===n?'active':'todo');
-    el.textContent=i+1<n?'✓':(i+1);
-    document.getElementById('sl'+(i+1)).className='sl'+(i+1===n?' active':'');
-  });
-  const startEl=document.getElementById('start');
-  if(startEl)setTimeout(()=>startEl.scrollIntoView({behavior:'smooth',block:'start'}),50);
-}
-
-function addMsg(role,content){
-  const box=document.getElementById('chat-box');
-  const div=document.createElement('div');
-  div.className='msg '+role;
-  if(role==='ai')div.innerHTML=`<span class="ai-name">${t('aiName')}</span>${content}`;
-  else if(role==='sys')div.textContent=content;
-  else div.textContent=content;
-  box.appendChild(div);
-  box.scrollTop=box.scrollHeight;
-}
-
-function showTyping(){
-  const box=document.getElementById('chat-box');
-  const div=document.createElement('div');
-  div.id='typing';div.className='typing';
-  div.innerHTML='<span></span><span></span><span></span>';
-  box.appendChild(div);
-  box.scrollTop=box.scrollHeight;
-}
-
-function hideTyping(){const el=document.getElementById('typing');if(el)el.remove();}
-
-function setInput(enabled){
-  document.getElementById('chat-in').disabled=!enabled;
-  document.getElementById('btn-send').disabled=!enabled;
-  if(enabled)setTimeout(()=>document.getElementById('chat-in').focus(),100);
-  isWaiting=!enabled;
-}
-
-async function fetchUnsplashPhoto(query){
-  try{
-    const r=await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&orientation=squarish`,{headers:{'Authorization':'Client-ID '+UNSPLASH_KEY}});
-    const d=await r.json();
-    if(d.results&&d.results.length>0)return d.results[0].urls.small;
-  }catch(e){}
-  return '';
-}
-
-async function enrichWithPhotos(store){
-  if(!store.produits)return store;
-  const enriched={...store,produits:[...store.produits]};
-  await Promise.all(enriched.produits.map(async(p,i)=>{
-    if(!p.image_url){
-      const url=await fetchUnsplashPhoto(p.nom+' '+service);
-      if(url)enriched.produits[i]={...p,image_url:url};
-    }
-  }));
-  return enriched;
-}
-
+function showNotif(msg){const el=document.getElementById('notif');if(el){el.textContent=msg;el.style.display='block';setTimeout(()=>el.style.display='none',4000);}}
 async function startChat(){
-  service=document.getElementById('svc-in').value.trim();
+  const service=document.getElementById('svc-in').value.trim();
   if(!service)return;
   window.location.href='/creer?service='+encodeURIComponent(service)+'&lang='+lang;
 }
-
-async function sendMsg(){
-  if(isWaiting)return;
-  const input=document.getElementById('chat-in');
-  const msg=input.value.trim();
-  if(!msg)return;
-  addMsg('user',msg);
-  conversation.push({role:'user',content:msg});
-  input.value='';input.style.height='auto';
-  setInput(false);showTyping();
-  try{
-    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({service,conversation,lang})});
-    if(!r.ok)throw new Error('Erreur serveur '+r.status);
-    hideTyping();
-    const reader=r.body.getReader();const decoder=new TextDecoder();
-    let buffer='';let msgEl=null;
-    while(true){
-      const {done,value}=await reader.read();
-      if(done)break;
-      buffer+=decoder.decode(value,{stream:true});
-      const lines=buffer.split('\n');
-      buffer=lines.pop();
-      for(const line of lines){
-        if(!line.startsWith('data:'))continue;
-        const data=line.slice(5).trim();
-        if(data==='[DONE]')continue;
-        try{
-          const parsed=JSON.parse(data);
-          if(parsed.type==='question'){
-            if(!msgEl){msgEl=addStreamMsg('ai');}
-            setStreamContent(msgEl,parsed.message);
-            conversation.push({role:'assistant',content:parsed.message});
-            setInput(true);
-          }else if(parsed.type==='store'){
-            if(msgEl)setStreamContent(msgEl,lang==='fr'?'Voilà ta boutique ! Je cherche des photos...':'Here is your store! Finding photos...');
-            const enriched=await enrichWithPhotos(parsed.store);
-            currentStore=enriched;
-            addMsg('sys',t('sysGen'));
-            renderPreview(enriched);
-            setInput(true);
-          }else if(parsed.chunk){
-            if(!msgEl)msgEl=addStreamMsg('ai');
-            appendStreamContent(msgEl,parsed.chunk);
-          }
-        }catch(e){}
-      }
-    }
-    if(!msgEl)setInput(true);
-  }catch(e){hideTyping();addMsg('ai','Erreur: '+e.message);setInput(true);}
-}
-
-function addStreamMsg(role){
-  const box=document.getElementById('chat-box');
-  const div=document.createElement('div');
-  div.className='msg '+role;
-  div.innerHTML=`<span class="ai-name">${t('aiName')}</span><span class="stream-txt"></span>`;
-  box.appendChild(div);box.scrollTop=box.scrollHeight;
-  return div;
-}
-function setStreamContent(el,text){const s=el.querySelector('.stream-txt');if(s)s.textContent=text;const box=document.getElementById('chat-box');box.scrollTop=box.scrollHeight;}
-function appendStreamContent(el,chunk){const s=el.querySelector('.stream-txt');if(s)s.textContent+=chunk;const box=document.getElementById('chat-box');box.scrollTop=box.scrollHeight;}
-
-async function sendAdjust(){
-  const input=document.getElementById('adj-in');
-  const instruction=input.value.trim();
-  if(!instruction||!currentStore)return;
-  const status=document.getElementById('adj-status');
-  status.textContent=t('adjusting');
-  document.getElementById('btn-adj').disabled=true;
-  input.value='';input.style.height='auto';
-  try{
-    const r=await fetch('/api/adjust',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({store:currentStore,instruction,lang})});
-    const d=await r.json();
-    if(d.error)throw new Error(d.error);
-    const enriched=await enrichWithPhotos(d);
-    currentStore=enriched;
-    renderPreview(enriched);
-    status.textContent=t('adjustDone');
-    setTimeout(()=>status.textContent='',3000);
-  }catch(e){status.textContent='Erreur: '+e.message;}
-  document.getElementById('btn-adj').disabled=false;
-}
-
-function renderPreview(store){
-  let html='';
-
-  if(store.slogan){
-    html+=`<div style="background:var(--surf2);border-radius:10px;padding:12px 16px;margin-bottom:1rem;border-left:3px solid var(--a);">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--a);margin-bottom:4px;">Slogan</div>
-      <div style="font-size:15px;color:var(--text);font-style:italic;">"${store.slogan}"</div>
-    </div>`;
-  }
-
-  if((store.produits||[]).length>0){
-    html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--a);margin-bottom:10px;">${store.produits.length} Produit${store.produits.length>1?'s':''}</div>`;
-    html+=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:1rem;">`;
-    (store.produits||[]).forEach(p=>{
-      const varStr=(p.variantes||[]).map(v=>v.nom).join(', ');
-      const opts=(p.options||[]).map(o=>`<div style="margin-top:3px;font-size:11px;"><span style="color:var(--text3);">${o.nom}:</span> <span style="color:var(--text2);">${(o.choix||[]).slice(0,4).map(c=>c.nom).join(', ')}${(o.choix||[]).length>4?'...':''}</span></div>`).join('');
-      html+=`<div style="background:var(--surf2);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
-        <div style="height:80px;background:var(--surf3);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative;">
-          ${p.image_url?`<img src="${p.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<span style=font-size:2rem>${p.image_emoji||'📦'}</span>">`:
-          `<span style="font-size:2rem;">${p.image_emoji||'📦'}</span>`}
-        </div>
-        <div style="padding:10px;">
-          <div style="font-size:13px;font-weight:700;">${p.nom}</div>
-          <div style="font-size:14px;font-weight:800;color:var(--a);margin:4px 0;">${p.prix_affiche||p.prix_base+'$'}</div>
-          ${varStr?`<div style="font-size:11px;color:var(--text3);margin-bottom:2px;">📐 ${varStr}</div>`:''}
-          ${opts}
-        </div>
-      </div>`;
-    });
-    html+='</div>';
-  }
-
-  if((store.questions_client||[]).length>0){
-    html+=`<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--a);margin-bottom:8px;">Questions au client</div>`;
-    (store.questions_client||[]).forEach((q,i)=>{
-      html+=`<div style="background:var(--surf2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--text2);margin-bottom:6px;">${i+1}. ${q.question}</div>`;
-    });
-  }
-
-  document.getElementById('preview-content').innerHTML=html;
-  document.getElementById('preview').style.display='block';
-}
-
-function selMode(n){
-  storeMode=n;
-  document.getElementById('mode-1').className='mode-opt'+(n===1?' on':'');
-  document.getElementById('mode-2').className='mode-opt'+(n===2?' on':'');
-  if(currentStore)currentStore.mode=n===1?'soumission':'boutique';
-}
-
-function pickC(el){
-  document.querySelectorAll('.co').forEach(c=>c.classList.remove('on'));
-  el.classList.add('on');
-  accentColor=el.dataset.c;
-}
-
-async function launch(){
-  const name=document.getElementById('biz-name').value.trim();
-  const email=document.getElementById('biz-email').value.trim();
-  if(!name||!email)return showNotif(t('errFields'));
-  if(!currentStore)return showNotif(lang==='fr'?'Configure ta boutique d\'abord.':'Configure your store first.');
-  document.getElementById('t-launch').textContent=t('launching');
-  try{
-    const r=await fetch('/api/store/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({businessName:name,email,phone:document.getElementById('biz-phone').value,city:document.getElementById('biz-city').value,accent:accentColor,store:currentStore,lang,plan:storeMode===2?'boutique':'soumission'})});
-    const d=await r.json();
-    if(d.error)throw new Error(d.error);
-    resultSlug=d.slug;resultToken=d.token;
-    document.getElementById('result-url').textContent='https://simpl-production.up.railway.app/s/'+d.slug;
-    goSc(4);
-  }catch(e){showNotif('Erreur: '+e.message);document.getElementById('t-launch').textContent=t('launch');}
-}
-
-function copyUrl(){navigator.clipboard.writeText('https://simpl-production.up.railway.app/s/'+resultSlug);const btn=document.getElementById('t-copy');btn.textContent=t('copied');setTimeout(()=>btn.textContent=t('copy'),2000);}
-function openStore(){window.open('/s/'+resultSlug,'_blank');}
-function openDash(){window.open('/dashboard/'+resultSlug+'/'+resultToken,'_blank');}
 </script>
 </body>
 </html>

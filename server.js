@@ -533,7 +533,7 @@ app.post('/api/store/save', async (req, res) => {
 
   const token = crypto.randomBytes(16).toString('hex');
   const vendor = {
-    slug, businessName, email,
+    slug, businessName, email: email.toLowerCase(),
     phone: phone || '', city: city || '',
     accent: accent || '#10b981',
     store, lang: lang || 'fr',
@@ -942,7 +942,55 @@ app.delete('/api/admin/store/:slug', async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
-// ─── PAGE ROUTES ───
+// ─── AUTH ───────────────────────────────────────────────────────────────────
+
+function hashPassword(pwd) {
+  return crypto.createHash('sha256').update(pwd + 'simpl_salt_2024').digest('hex');
+}
+
+function genAuthToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+app.post('/api/auth/register', async (req, res) => {
+  const { name, email, password } = req.body;
+  if (!name || !email || !password) return res.status(400).json({ error: 'Champs manquants.' });
+  if (password.length < 8) return res.status(400).json({ error: 'Mot de passe trop court.' });
+  const existing = await db.collection('users').findOne({ email: email.toLowerCase() });
+  if (existing) return res.status(400).json({ error: 'Ce courriel est déjà utilisé.' });
+  const token = genAuthToken();
+  await db.collection('users').insertOne({
+    name, email: email.toLowerCase(),
+    password: hashPassword(password),
+    token, createdAt: new Date().toISOString()
+  });
+  res.json({ success: true, token });
+});
+
+app.post('/api/auth/login', async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) return res.status(400).json({ error: 'Champs manquants.' });
+  const user = await db.collection('users').findOne({ email: email.toLowerCase() });
+  if (!user || user.password !== hashPassword(password)) {
+    return res.status(401).json({ error: 'Courriel ou mot de passe incorrect.' });
+  }
+  res.json({ success: true, token: user.token, name: user.name });
+});
+
+app.get('/api/auth/boutiques', async (req, res) => {
+  const token = req.headers['x-auth-token'];
+  if (!token) return res.status(401).json({ error: 'Non connecté.' });
+  const user = await db.collection('users').findOne({ token });
+  if (!user) return res.status(401).json({ error: 'Session invalide.' });
+  const boutiques = await db.collection('stores').find({ email: user.email }).toArray();
+  const safe = boutiques.map(({ password, ...b }) => b);
+  res.json({ boutiques: safe, name: user.name });
+});
+
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+app.get('/compte', (req, res) => res.sendFile(path.join(__dirname, 'compte.html')));
+
+
 app.post('/api/dashboard/:slug/upgrade-request', async (req, res) => {
   const v = await authVendor(req, res); if (!v) return;
   const { plan, email, businessName } = req.body;
