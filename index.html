@@ -51,7 +51,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:1rem 2rem;display:fl
 .lb{padding:5px 11px;border-radius:6px;border:none;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:var(--text3);transition:all .15s;font-family:inherit;}
 .lb.on{background:var(--a);color:#fff;}
 .nav-login{padding:8px 18px;border-radius:9px;background:transparent;border:1.5px solid #7c6dfa;color:#7c6dfa;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;white-space:nowrap;}
-.nav-login:hover{background:#7c6dfa;color:#fff;}border-radius:9px;background:var(--a);color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .2s;}
+.nav-login:hover{background:#7c6dfa;color:#fff;}
+.nav-cta{padding:8px 18px;border-radius:9px;background:#7c6dfa;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;font-family:inherit;transition:all .2s;}
 .nav-cta:hover{filter:brightness(1.15);transform:translateY(-1px);}
 
 /* HERO */
@@ -562,7 +563,13 @@ function applyTX(){
     't-dash':'dash','t-footer':'footer',
     'nl-feat':'nl1','nl-price':'nl2','nl-start':'nl3',
   };
-  Object.entries(m).forEach(([id,key])=>{const el=document.getElementById(id);if(el)el.innerHTML=tx[key]||'';});
+  const btnIds=['t-nav-cta','pc1b','pc2b','t-start-btn','t-cta-btn'];
+  Object.entries(m).forEach(([id,key])=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(btnIds.includes(id)){el.textContent=tx[key]||'';}
+    else{el.innerHTML=tx[key]||'';}
+  });
   // Mode badges
   const m1txt=document.getElementById('t-m1-txt');if(m1txt)m1txt.textContent=tx.m1||'';
   const recEl=document.getElementById('t-recommended');if(recEl)recEl.textContent=tx.recommended||'';
