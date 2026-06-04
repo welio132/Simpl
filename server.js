@@ -9,14 +9,143 @@ const multer = require('multer');
 const { MongoClient } = require('mongodb');
 const { Resend } = require('resend');
 
+// Packages de sécurité — installer avec: npm install bcryptjs helmet express-rate-limit
+let bcrypt, helmet, rateLimit;
+try { bcrypt = require('bcryptjs'); } catch(e) { console.warn('⚠️ bcryptjs non installé — mots de passe moins sécurisés'); }
+try { helmet = require('helmet'); } catch(e) { console.warn('⚠️ helmet non installé'); }
+try { rateLimit = require('express-rate-limit'); } catch(e) { console.warn('⚠️ express-rate-limit non installé'); }
+
 const app = express();
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-app.use(cors());
+// ─── SÉCURITÉ ─────────────────────────────────────────────────────────────────
+
+// Headers de sécurité
+if(helmet) app.use(helmet({ contentSecurityPolicy: false }));
+
+// CORS — restreint aux domaines Simpl
+const allowedOrigins = [
+  'https://simplcomerce.com',
+  'https://www.simplcomerce.com',
+  'https://simpl-production.up.railway.app',
+  'http://localhost:3000',
+  'http://localhost:8080'
+];
+app.use(cors({
+  origin: (origin, cb) => {
+    if(!origin || allowedOrigins.includes(origin)) cb(null, true);
+    else cb(null, false);
+  }
+}));
+
+// Rate limiting — login/register : 10 tentatives par 15 min par IP
+const loginLimiter = rateLimit ? rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Trop de tentatives. Réessaie dans 15 minutes.' },
+  standardHeaders: true, legacyHeaders: false,
+}) : (req, res, next) => next();
+
+// Rate limiting général API — 200 req/min par IP
+const apiLimiter = rateLimit ? rateLimit({
+  windowMs: 60 * 1000,
+  max: 200,
+  message: { error: 'Trop de requêtes.' },
+}) : (req, res, next) => next();
+
+app.use('/api/', apiLimiter);
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static('.'));
 app.use('/uploads', express.static('uploads'));
+
+// ─── SANITISATION ─────────────────────────────────────────────────────────────
+
+// Nettoyer les strings pour éviter XSS et injection NoSQL
+function sanitize(str, maxLen = 500) {
+  if(typeof str !== 'string') return str;
+  return str
+    .slice(0, maxLen)
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<[^>]+>/g, '')
+    .replace(/\$where|\$gt|\$lt|\$ne|\$in|\$exists/gi, '')
+    .trim();
+}
+
+function sanitizeObj(obj, maxLen = 500) {
+  if(typeof obj === 'string') return sanitize(obj, maxLen);
+  if(typeof obj === 'number') return obj;
+  if(typeof obj === 'boolean') return obj;
+  if(Array.isArray(obj)) return obj.map(i => sanitizeObj(i, maxLen));
+  if(obj && typeof obj === 'object'){
+    const clean = {};
+    for(const [k, v] of Object.entries(obj)){
+      if(k.startsWith('$')) continue; // Bloquer les opérateurs MongoDB
+      clean[k] = sanitizeObj(v, maxLen);
+    }
+    return clean;
+  }
+  return obj;
+}
+
+// Middleware sanitisation automatique
+app.use((req, res, next) => {
+  if(req.body && typeof req.body === 'object'){
+    req.body = sanitizeObj(req.body);
+  }
+  next();
+});
+
+// ─── HASH MOT DE PASSE ────────────────────────────────────────────────────────
+
+async function hashPassword(pwd) {
+  if(bcrypt) return bcrypt.hash(pwd, 12);
+  // Fallback si bcrypt pas installé — PBKDF2 qui est quand même bien meilleur que SHA256
+  return new Promise((resolve, reject) => {
+    crypto.pbkdf2(pwd, 'simpl_salt_2024_secure', 100000, 64, 'sha256', (err, key) => {
+      if(err) reject(err);
+      else resolve(key.toString('hex'));
+    });
+  });
+}
+
+async function verifyPassword(pwd, hash) {
+  if(bcrypt){
+    // Support migration — si ancien hash SHA256 (64 chars hex sans $2b$)
+    if(!hash.startsWith('$2b$')){
+      const oldHash = crypto.createHash('sha256').update(pwd + 'simpl_salt_2024').digest('hex');
+      if(oldHash === hash) return true;
+    }
+    return bcrypt.compare(pwd, hash);
+  }
+  // Fallback PBKDF2
+  try {
+    const newHash = await hashPassword(pwd);
+    const a = Buffer.from(newHash);
+    const b = Buffer.from(hash);
+    if(a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch(e) {
+    return false;
+  }
+}
+
+function genAuthToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Valider email
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) && email.length <= 254;
+}
+
+// Valider slug
+function isValidSlug(slug) {
+  return /^[a-z0-9-]{2,50}$/.test(slug);
+}
+
+
 
 // ─── MONGODB ───
 const MONGO_URI = process.env.MONGODB_URI;
@@ -944,34 +1073,34 @@ app.delete('/api/admin/store/:slug', async (req, res) => {
 
 // ─── AUTH ───────────────────────────────────────────────────────────────────
 
-function hashPassword(pwd) {
-  return crypto.createHash('sha256').update(pwd + 'simpl_salt_2024').digest('hex');
-}
-
-function genAuthToken() {
-  return crypto.randomBytes(32).toString('hex');
-}
-
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', loginLimiter, async (req, res) => {
   const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ error: 'Champs manquants.' });
-  if (password.length < 8) return res.status(400).json({ error: 'Mot de passe trop court.' });
+  if(!name || !email || !password) return res.status(400).json({ error: 'Champs manquants.' });
+  if(!isValidEmail(email)) return res.status(400).json({ error: 'Courriel invalide.' });
+  if(password.length < 8) return res.status(400).json({ error: 'Mot de passe trop court (min. 8 caractères).' });
+  if(name.length > 100) return res.status(400).json({ error: 'Nom trop long.' });
   const existing = await db.collection('users').findOne({ email: email.toLowerCase() });
-  if (existing) return res.status(400).json({ error: 'Ce courriel est déjà utilisé.' });
+  if(existing) return res.status(400).json({ error: 'Ce courriel est déjà utilisé.' });
   const token = genAuthToken();
+  const hashedPwd = await hashPassword(password);
   await db.collection('users').insertOne({
-    name, email: email.toLowerCase(),
-    password: hashPassword(password),
-    token, createdAt: new Date().toISOString()
+    name: sanitize(name, 100),
+    email: email.toLowerCase(),
+    password: hashedPwd,
+    token,
+    createdAt: new Date().toISOString()
   });
   res.json({ success: true, token });
 });
 
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'Champs manquants.' });
+  if(!email || !password) return res.status(400).json({ error: 'Champs manquants.' });
+  if(!isValidEmail(email)) return res.status(400).json({ error: 'Courriel invalide.' });
   const user = await db.collection('users').findOne({ email: email.toLowerCase() });
-  if (!user || user.password !== hashPassword(password)) {
+  if(!user || !(await verifyPassword(password, user.password))) {
+    // Délai pour éviter le timing attack
+    await new Promise(r => setTimeout(r, 300));
     return res.status(401).json({ error: 'Courriel ou mot de passe incorrect.' });
   }
   res.json({ success: true, token: user.token, name: user.name });
@@ -979,9 +1108,9 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/auth/boutiques', async (req, res) => {
   const token = req.headers['x-auth-token'];
-  if (!token) return res.status(401).json({ error: 'Non connecté.' });
+  if(!token || token.length !== 64) return res.status(401).json({ error: 'Non connecté.' });
   const user = await db.collection('users').findOne({ token });
-  if (!user) return res.status(401).json({ error: 'Session invalide.' });
+  if(!user) return res.status(401).json({ error: 'Session invalide.' });
   const boutiques = await db.collection('stores').find({ email: user.email }).toArray();
   const safe = boutiques.map(({ password, ...b }) => b);
   res.json({ boutiques: safe, name: user.name });
