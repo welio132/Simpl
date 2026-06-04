@@ -34,22 +34,36 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
 .card-title{font-size:15px;font-weight:700;margin-bottom:1rem;}
 /* UPGRADE MODAL */
-.upgrade-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:300;display:none;align-items:center;justify-content:center;padding:1.5rem;}
+.upgrade-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:300;display:none;align-items:center;justify-content:center;padding:1.5rem;}
 .upgrade-modal-overlay.on{display:flex;}
-.upgrade-modal{background:var(--surf);border:1px solid var(--border);border-radius:20px;padding:2rem;max-width:420px;width:100%;text-align:center;box-shadow:0 24px 64px rgba(0,0,0,.15);}
-.upgrade-ic{font-size:2.5rem;margin-bottom:1rem;}
-.upgrade-title{font-size:1.25rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.5rem;}
-.upgrade-sub{font-size:14px;color:var(--text2);line-height:1.65;margin-bottom:1.5rem;}
-.upgrade-features{text-align:left;background:var(--surf2);border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;flex-direction:column;gap:8px;}
-.upgrade-feat{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2);}
-.upgrade-feat-ic{color:var(--a);font-weight:800;font-size:14px;flex-shrink:0;}
-.upgrade-price{font-size:1.5rem;font-weight:900;color:var(--a);margin-bottom:1.25rem;letter-spacing:-.02em;}
-.upgrade-price span{font-size:14px;font-weight:500;color:var(--text3);}
-.upgrade-btns{display:flex;flex-direction:column;gap:8px;}
-.upgrade-btn-main{padding:13px;border-radius:11px;background:var(--a);border:none;color:#fff;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;}
-.upgrade-btn-main:hover{filter:brightness(1.1);}
-.upgrade-btn-ghost{padding:11px;border-radius:11px;background:transparent;border:1.5px solid var(--border);color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;}
-.upgrade-btn-ghost:hover{border-color:var(--text2);color:var(--text);}
+.upgrade-modal{background:var(--surf);border:1px solid var(--border);border-radius:24px;padding:2rem;max-width:640px;width:100%;box-shadow:0 32px 80px rgba(0,0,0,.2);}
+.upgrade-modal-title{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;margin-bottom:.375rem;}
+.upgrade-modal-sub{font-size:13px;color:var(--text2);margin-bottom:1.5rem;}
+.plans-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:500px){.plans-compare{grid-template-columns:1fr;}}
+.plan-col{border:1.5px solid var(--border);border-radius:16px;padding:1.25rem;position:relative;}
+.plan-col.current{background:var(--surf2);}
+.plan-col.upgrade{border-color:var(--a);background:var(--ag);}
+.plan-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;border-radius:6px;padding:3px 9px;margin-bottom:.875rem;}
+.plan-badge.current-badge{background:var(--surf2);color:var(--text3);border:1px solid var(--border);}
+.plan-badge.upgrade-badge{background:var(--a);color:#fff;}
+.plan-col-name{font-size:1rem;font-weight:800;margin-bottom:.25rem;}
+.plan-col-price{font-size:1.6rem;font-weight:900;color:var(--a);letter-spacing:-.03em;margin-bottom:1rem;}
+.plan-col-price span{font-size:13px;font-weight:500;color:var(--text3);}
+.plan-feats{display:flex;flex-direction:column;gap:7px;margin-bottom:1.25rem;}
+.plan-feat{display:flex;align-items:center;gap:8px;font-size:13px;}
+.plan-feat.active{color:var(--text);}
+.plan-feat.locked{color:var(--text3);}
+.plan-feat-ic{font-size:12px;font-weight:800;width:16px;flex-shrink:0;}
+.plan-feat.active .plan-feat-ic{color:var(--a);}
+.plan-feat.locked .plan-feat-ic{color:var(--text3);}
+.plan-btn{width:100%;padding:11px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .2s;border:none;}
+.plan-btn.current-btn{background:var(--surf2);color:var(--text3);cursor:default;border:1.5px solid var(--border);}
+.plan-btn.upgrade-btn{background:var(--a);color:#fff;}
+.plan-btn.upgrade-btn:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.upgrade-close{display:flex;justify-content:center;margin-top:1rem;}
+.upgrade-close button{background:transparent;border:none;color:var(--text3);font-size:13px;cursor:pointer;font-family:inherit;padding:6px 16px;border-radius:8px;}
+.upgrade-close button:hover{color:var(--text);background:var(--surf2);}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:1.25rem;}
 .stat-card{background:var(--surf);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.25rem;}
 .stat-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin-bottom:.5rem;}
@@ -543,7 +557,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
         </div>
       </div>
       <div id="pages-limit-banner" style="display:none;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:.875rem 1rem;margin-bottom:1rem;font-size:13px;color:#92400e;">
-        ⚠️ <strong>Limite atteinte.</strong> Ton plan <span id="pages-plan-name"></span> inclut <span id="pages-limit-num"></span> pages supplémentaires. <a href="#" style="color:var(--a);font-weight:600;">Passer au plan Boutique →</a>
+        ⚠️ <strong>Limite atteinte.</strong> Ton plan <span id="pages-plan-name"></span> inclut <span id="pages-limit-num"></span> pages supplémentaires. <a href="#" onclick="showUpgrade('pages');return false;" style="color:var(--a);font-weight:600;">Passer au plan Boutique →</a>
       </div>
       <div id="pages-list"></div>
     </div>
@@ -551,20 +565,46 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- UPGRADE MODAL -->
   <div class="upgrade-modal-overlay" id="upgrade-modal">
     <div class="upgrade-modal">
-      <div class="upgrade-ic">⚡</div>
-      <div class="upgrade-title">Fonctionnalité Boutique</div>
-      <div class="upgrade-sub" id="upgrade-sub">Cette fonctionnalité est disponible sur le plan Boutique.</div>
-      <div class="upgrade-features">
-        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Paiement en ligne (Stripe)</div>
-        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Jusqu'à 5 pages supplémentaires</div>
-        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Bannières promotionnelles</div>
-        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Badges & produits vedette</div>
-        <div class="upgrade-feat"><span class="upgrade-feat-ic">✓</span>Stats avancées</div>
+      <div class="upgrade-modal-title">Passe à la vitesse supérieure ⚡</div>
+      <div class="upgrade-modal-sub" id="upgrade-sub">Cette fonctionnalité est disponible sur le plan Boutique.</div>
+      <div class="plans-compare">
+        <!-- Plan actuel -->
+        <div class="plan-col current">
+          <div class="plan-badge current-badge">✓ Plan actuel</div>
+          <div class="plan-col-name">Soumission</div>
+          <div class="plan-col-price">39$<span>/mois</span></div>
+          <div class="plan-feats">
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Boutique créée par IA</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Formulaire de soumission</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>2 pages supplémentaires</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>15 thèmes visuels</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Commandes illimitées</div>
+            <div class="plan-feat locked"><span class="plan-feat-ic">🔒</span>Paiement en ligne</div>
+            <div class="plan-feat locked"><span class="plan-feat-ic">🔒</span>5 pages supplémentaires</div>
+            <div class="plan-feat locked"><span class="plan-feat-ic">🔒</span>Bannières promotionnelles</div>
+            <div class="plan-feat locked"><span class="plan-feat-ic">🔒</span>Badges & produits vedette</div>
+          </div>
+          <button class="plan-btn current-btn">Plan actuel</button>
+        </div>
+        <!-- Plan boutique -->
+        <div class="plan-col upgrade">
+          <div class="plan-badge upgrade-badge">⚡ Recommandé</div>
+          <div class="plan-col-name">Boutique</div>
+          <div class="plan-col-price">69$<span>/mois</span></div>
+          <div class="plan-feats">
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Tout du plan Soumission</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Paiement en ligne (Stripe)</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>5 pages supplémentaires</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Bannières promotionnelles</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Badges & produits vedette</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Stats avancées</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Assistant IA inclus</div>
+          </div>
+          <button class="plan-btn upgrade-btn" onclick="requestUpgrade()">🚀 Passer au plan Boutique</button>
+        </div>
       </div>
-      <div class="upgrade-price">69$ <span>/ mois</span></div>
-      <div class="upgrade-btns">
-        <button class="upgrade-btn-main" onclick="requestUpgrade()">🚀 Passer au plan Boutique</button>
-        <button class="upgrade-btn-ghost" onclick="closeUpgrade()">Pas maintenant</button>
+      <div class="upgrade-close">
+        <button onclick="closeUpgrade()">Pas maintenant</button>
       </div>
     </div>
   </div>
