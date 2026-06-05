@@ -24,6 +24,7 @@ try { helmet = require('helmet'); } catch(e) { console.warn('⚠️ helmet non i
 try { rateLimit = require('express-rate-limit'); } catch(e) { console.warn('⚠️ express-rate-limit non installé'); }
 
 const app = express();
+app.set('trust proxy', 1); // Railway utilise un proxy
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 const resend = new Resend(process.env.RESEND_API_KEY);
 
