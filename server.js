@@ -120,6 +120,8 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
 
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
+app.use(express.static(path.join(__dirname)));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 // ─── SANITISATION ─────────────────────────────────────────────────────────────
 
