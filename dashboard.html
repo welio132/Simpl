@@ -516,6 +516,28 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- PARAMÈTRES -->
     <div class="panel" id="p-params">
       <div class="page-title">Paramètres</div>
+
+      <!-- Stripe Connect — seulement pour plan boutique -->
+      <div class="card" id="stripe-connect-card" style="display:none;">
+        <div class="card-title">Paiement en ligne (Stripe)</div>
+        <div id="stripe-status-wrap">
+          <div id="stripe-not-connected">
+            <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Connecte ton compte Stripe pour accepter les paiements directement sur ta boutique.</p>
+            <button class="btn btn-a" onclick="connectStripe()" style="display:flex;align-items:center;gap:8px;">
+              <svg width="16" height="16" viewBox="0 0 32 32" fill="white"><path d="M13.3 10.6c0-1 .8-1.4 2.2-1.4 2 0 4.5.6 6.5 1.7V5c-2.2-.9-4.3-1.2-6.5-1.2C10.6 3.8 7 6.2 7 11c0 7.3 10 6.1 10 9.3 0 1.2-1 1.6-2.5 1.6-2.2 0-5-.9-7.2-2.1v5.9c2.5 1.1 5 1.5 7.2 1.5 5.5 0 9.3-2.7 9.3-7.6-.1-7.9-10-6.5-10-9z"/></svg>
+              Connecter Stripe
+            </button>
+          </div>
+          <div id="stripe-connected" style="display:none;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#10b981;flex-shrink:0;"></div>
+              <span style="font-size:14px;font-weight:600;color:var(--text);">Stripe connecté</span>
+            </div>
+            <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Les paiements de tes clients vont directement dans ton compte Stripe.</p>
+            <button class="btn btn-d btn-sm" onclick="disconnectStripe()">Déconnecter Stripe</button>
+          </div>
+        </div>
+      </div>
       <div class="card">
         <div class="card-title">Formulaire de commande</div>
         <div class="sw-row">
@@ -795,6 +817,7 @@ function build(){
   document.getElementById('url-d').textContent='simpl-production.up.railway.app/s/'+slug;
   document.getElementById('vsb').href='/s/'+slug;
   document.getElementById('dash-url').textContent=window.location.href;
+  loadStripeSection();
   // Charger le domaine custom
   const cdi=document.getElementById('custom-domain-input');
   const cds=document.getElementById('custom-domain-status');
@@ -1332,7 +1355,50 @@ async function sendAiMsg(){
   finally{document.getElementById('ai-send').disabled=false;isAiWaiting=false;}
 }
 
-// DOMAINE CUSTOM
+// STRIPE CONNECT
+function loadStripeSection(){
+  const card=document.getElementById('stripe-connect-card');
+  const notConn=document.getElementById('stripe-not-connected');
+  const conn=document.getElementById('stripe-connected');
+  if(!card)return;
+  // Afficher seulement si plan boutique
+  if(V.store.mode==='boutique'||V.plan==='boutique'){
+    card.style.display='block';
+    if(V.stripeAccountId){
+      notConn.style.display='none';
+      conn.style.display='block';
+    }else{
+      notConn.style.display='block';
+      conn.style.display='none';
+    }
+  }
+  // Check si retour depuis Stripe OAuth
+  const params=new URLSearchParams(window.location.search);
+  if(params.get('stripe')==='connected'){
+    toast('Stripe connecté avec succès ! ✓');
+    window.history.replaceState({},document.title,window.location.pathname);
+    V.stripeAccountId='connected';
+    notConn.style.display='none';
+    conn.style.display='block';
+  }
+}
+async function connectStripe(){
+  try{
+    const r=await ac2('GET',`/api/dashboard/${slug}/stripe/connect`);
+    const d=await r.json();
+    if(d.url)window.location.href=d.url;
+  }catch(e){toast('Erreur','err');}
+}
+async function disconnectStripe(){
+  if(!confirm('Déconnecter Stripe ? Tes clients ne pourront plus payer en ligne.'))return;
+  try{
+    await ac2('DELETE',`/api/dashboard/${slug}/stripe/disconnect`);
+    V.stripeAccountId=null;
+    document.getElementById('stripe-not-connected').style.display='block';
+    document.getElementById('stripe-connected').style.display='none';
+    toast('Stripe déconnecté');
+  }catch(e){toast('Erreur','err');}
+}
 async function saveCustomDomain(){
   const domain=document.getElementById('custom-domain-input').value.trim();
   if(!domain)return toast('Entre un domaine','err');

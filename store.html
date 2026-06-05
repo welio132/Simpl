@@ -517,7 +517,20 @@ async function init(){
     const accent=vendor.accent||app.couleur_accent||'#7c6dfa';
     applyTheme(themeId,accent,app);
     setSEO();buildStore();
-    document.getElementById('loader').classList.add('fade');
+    // Gérer le retour depuis Stripe
+  const urlParams=new URLSearchParams(window.location.search);
+  if(urlParams.get('success')==='1'){
+    const orderId=urlParams.get('order')||'';
+    setTimeout(()=>{
+      document.getElementById('order-id-display').textContent='#'+orderId.toUpperCase();
+      document.getElementById('success-page').classList.add('open');
+      window.history.replaceState({},document.title,window.location.pathname);
+    },500);
+  }
+  if(urlParams.get('cancelled')==='1'){
+    setTimeout(()=>showNotif('Paiement annulé.'),500);
+    window.history.replaceState({},document.title,window.location.pathname);
+  }
     setTimeout(()=>{document.getElementById('loader').style.display='none';document.getElementById('app').style.display='block';},400);
   }catch(e){document.getElementById('loader').style.display='none';document.getElementById('not-found').style.display='block';}
 }
@@ -807,14 +820,38 @@ function showPage(id, btn){
 }
 
 async function submitOrder(){
-  const name=document.getElementById('c-name').value.trim(),email=document.getElementById('c-email').value.trim();
+  const name=document.getElementById('c-name').value.trim();
+  const email=document.getElementById('c-email').value.trim();
   const isFr=(vendor.lang||'fr')==='fr';
   if(!name||!email)return showNotif(isFr?'Entre ton nom et ton courriel.':'Please enter your name and email.');
+  // Validation email basique
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return showNotif(isFr?'Courriel invalide.':'Invalid email.');
   const btn=document.getElementById('submit-btn');btn.disabled=true;
   const total=cart.reduce((a,i)=>a+i.total,0);
+
+  // Plan boutique → Stripe Checkout
+  if(isBoutique){
+    try{
+      const r=await fetch('/api/store/'+slug+'/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+        clientName:name,clientEmail:email,
+        clientPhone:document.getElementById('c-phone').value,
+        notes:document.getElementById('c-notes').value,
+        address:document.getElementById('c-address')?.value||'',
+        items:cart,total:fmt(total)
+      })});
+      const d=await r.json();
+      if(d.error)throw new Error(d.error);
+      // Rediriger vers Stripe
+      window.location.href=d.url;
+    }catch(e){showNotif(e.message||'Erreur de paiement.');btn.disabled=false;}
+    return;
+  }
+
+  // Plan soumission → envoi direct
   try{
-    const r=await fetch('/api/store/'+slug+'/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,phone:document.getElementById('c-phone').value,notes:document.getElementById('c-notes').value,items:cart,total:fmt(total),mode:store.mode||'soumission'})});
+    const r=await fetch('/api/store/'+slug+'/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,phone:document.getElementById('c-phone').value,notes:document.getElementById('c-notes').value,items:cart,total:fmt(total),mode:'soumission'})});
     const data=await r.json();
+    if(data.error)throw new Error(data.error);
     document.getElementById('order-id-display').textContent='#'+(data.orderId||'—').toUpperCase();
     document.getElementById('checkout-page').classList.remove('open');
     document.getElementById('success-page').classList.add('open');

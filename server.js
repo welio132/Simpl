@@ -9,6 +9,14 @@ const multer = require('multer');
 const { MongoClient } = require('mongodb');
 const { Resend } = require('resend');
 
+// Stripe — installer avec: npm install stripe
+let stripe;
+try {
+  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+} catch(e) {
+  console.warn('⚠️ stripe non installé — npm install stripe');
+}
+
 // Packages de sécurité — installer avec: npm install bcryptjs helmet express-rate-limit
 let bcrypt, helmet, rateLimit;
 try { bcrypt = require('bcryptjs'); } catch(e) { console.warn('⚠️ bcryptjs non installé — mots de passe moins sécurisés'); }
@@ -56,8 +64,61 @@ const apiLimiter = rateLimit ? rateLimit({
 
 app.use('/api/', apiLimiter);
 
+// ─── STRIPE WEBHOOK — doit être avant express.json() ────────────────────────
+app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+  const sig = req.headers['stripe-signature'];
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if(!webhookSecret) {
+    console.warn('⚠️ STRIPE_WEBHOOK_SECRET non défini — webhook non sécurisé');
+    return res.status(500).json({ error: 'Webhook secret manquant' });
+  }
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+  } catch(e) {
+    console.error('Webhook signature invalide:', e.message);
+    return res.status(400).json({ error: 'Webhook invalide' });
+  }
+  if(event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    const { slug, orderId } = session.metadata;
+    try {
+      const v = await getVendor(slug);
+      if(v) {
+        // Trouver la commande pending et la confirmer
+        const order = (v.orders || []).find(o => o.id === orderId);
+        if(order && order.paymentStatus === 'pending') {
+          order.paymentStatus = 'paid';
+          order.status = 'nouveau';
+          order.stripeSessionId = session.id;
+          await saveVendor(v);
+          emailNouvelleCommande(v, order);
+          emailConfirmationClient(order, v);
+        }
+      }
+    } catch(e) { console.error('Webhook order error:', e.message); }
+  }
+  // Rembourser — marquer comme remboursé
+  if(event.type === 'charge.refunded') {
+    const charge = event.data.object;
+    const slug = charge.metadata?.slug;
+    const orderId = charge.metadata?.orderId;
+    if(slug && orderId) {
+      try {
+        const v = await getVendor(slug);
+        if(v) {
+          const order = (v.orders || []).find(o => o.id === orderId);
+          if(order) { order.paymentStatus = 'refunded'; order.status = 'annulé'; await saveVendor(v); }
+        }
+      } catch(e) {}
+    }
+  }
+  res.json({ received: true });
+});
+
+
 app.use(express.json({ limit: '10mb' }));
-app.use(express.static('.'));
 app.use('/uploads', express.static('uploads'));
 
 // ─── SANITISATION ─────────────────────────────────────────────────────────────
@@ -1158,7 +1219,130 @@ app.get('/api/auth/boutiques', async (req, res) => {
   res.json({ boutiques: safe, name: user.name });
 });
 
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+// ─── STRIPE CONNECT ──────────────────────────────────────────────────────────
+
+// URL pour connecter le compte Stripe du vendeur
+app.get('/api/dashboard/:slug/stripe/connect', async (req, res) => {
+  const v = await authVendor(req, res); if(!v) return;
+  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+  const url = `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${process.env.STRIPE_CLIENT_ID}&scope=read_write&redirect_uri=${baseUrl}/api/stripe/callback&state=${v.slug}`;
+  res.json({ url });
+});
+
+// Callback OAuth Stripe après connexion du vendeur
+app.get('/api/stripe/callback', async (req, res) => {
+  const { code, state: slug } = req.query;
+  if(!code || !slug) return res.status(400).send('Paramètres manquants');
+  try {
+    const response = await stripe.oauth.token({ grant_type: 'authorization_code', code });
+    const stripeAccountId = response.stripe_user_id;
+    const v = await getVendor(slug);
+    if(!v) return res.status(404).send('Boutique introuvable');
+    v.stripeAccountId = stripeAccountId;
+    await saveVendor(v);
+    const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+    res.redirect(`${baseUrl}/dashboard/${slug}/${v.token}?stripe=connected`);
+  } catch(e) {
+    res.redirect(`/dashboard/${slug}?stripe=error`);
+  }
+});
+
+// Déconnecter Stripe
+app.delete('/api/dashboard/:slug/stripe/disconnect', async (req, res) => {
+  const v = await authVendor(req, res); if(!v) return;
+  if(v.stripeAccountId && stripe) {
+    try { await stripe.oauth.deauthorize({ client_id: process.env.STRIPE_CLIENT_ID, stripe_user_id: v.stripeAccountId }); } catch(e) {}
+  }
+  v.stripeAccountId = null;
+  await saveVendor(v);
+  res.json({ success: true });
+});
+
+// ─── STRIPE CHECKOUT ─────────────────────────────────────────────────────────
+
+app.post('/api/store/:slug/checkout', async (req, res) => {
+  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+  const v = await getVendor(req.params.slug);
+  if(!v) return res.status(404).json({ error: 'Boutique introuvable' });
+  if(v.store.mode !== 'boutique') return res.status(400).json({ error: 'Paiement non disponible sur ce plan' });
+  if(!v.stripeAccountId) return res.status(400).json({ error: 'Le vendeur n\'a pas connecté son compte Stripe' });
+
+  const { items, clientName, clientEmail, clientPhone, notes, address } = req.body;
+  if(!items || !items.length) return res.status(400).json({ error: 'Panier vide' });
+  if(!clientName || !clientEmail) return res.status(400).json({ error: 'Nom et courriel requis' });
+
+  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+
+  // Construire les line items — prix depuis MongoDB, PAS depuis le client
+  const produits = v.store.produits || [];
+  const lineItems = [];
+  for(const item of items){
+    const prod = produits.find(p => p.id === item.prodId || p.nom === item.nom);
+    if(!prod) continue;
+    // Prix de base depuis MongoDB
+    let prix = prod.prix_base || 0;
+    // Ajouter les extras de variantes/options depuis MongoDB
+    if(item.varianteId && prod.variantes){
+      const variante = prod.variantes.find(v => v.id === item.varianteId);
+      if(variante) prix += variante.prix_extra || 0;
+    }
+    if(item.options && prod.options){
+      for(const [optId, choixId] of Object.entries(item.options || {})){
+        const opt = prod.options.find(o => o.id === optId);
+        const choix = opt?.choix?.find(c => c.id === choixId);
+        if(choix) prix += choix.prix_extra || 0;
+      }
+    }
+    if(prix <= 0) continue;
+    lineItems.push({
+      price_data: {
+        currency: 'cad',
+        product_data: { name: prod.nom, description: prod.description || undefined },
+        unit_amount: Math.round(prix * 100),
+      },
+      quantity: Math.max(1, Math.min(parseInt(item.qty) || 1, 100)),
+    });
+  }
+
+  if(!lineItems.length) return res.status(400).json({ error: 'Prix invalides' });
+
+  const orderId = genId();
+  const order = {
+    id: orderId,
+    clientName: sanitize(clientName, 200),
+    clientEmail: clientEmail.toLowerCase(),
+    clientPhone: sanitize(clientPhone || '', 50),
+    clientAddress: sanitize(address || '', 500),
+    notes: sanitize(notes || '', 1000),
+    items,
+    total: (lineItems.reduce((s, i) => s + (i.price_data.unit_amount * i.quantity), 0) / 100).toFixed(2) + '$',
+    createdAt: new Date().toISOString(),
+    paymentStatus: 'pending',
+    status: 'en_attente_paiement',
+  };
+
+  // Sauvegarder la commande en attente AVANT Stripe
+  v.orders = v.orders || [];
+  v.orders.push(order);
+  await saveVendor(v);
+
+  const session = await stripe.checkout.sessions.create({
+    payment_method_types: ['card'],
+    line_items: lineItems,
+    mode: 'payment',
+    customer_email: clientEmail,
+    success_url: `${baseUrl}/s/${v.slug}?order=${orderId}&success=1`,
+    cancel_url: `${baseUrl}/s/${v.slug}?cancelled=1`,
+    // Seulement orderId et slug dans metadata — pas de données volumineuses
+    metadata: { slug: v.slug, orderId },
+    stripe_account: v.stripeAccountId,
+  });
+
+  res.json({ sessionId: session.id, url: session.url });
+});
+
+
 app.get('/compte', (req, res) => res.sendFile(path.join(__dirname, 'compte.html')));
 
 
