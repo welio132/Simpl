@@ -1225,39 +1225,83 @@ app.get('/api/auth/boutiques', async (req, res) => {
 // ─── STRIPE CONNECT ──────────────────────────────────────────────────────────
 
 // URL pour connecter le compte Stripe du vendeur
+// Stripe Connect — AccountLinks (Standard OAuth désactivé par Stripe pour les nouveaux comptes)
 app.get('/api/dashboard/:slug/stripe/connect', async (req, res) => {
   const v = await authVendor(req, res); if(!v) return;
   if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
   const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
-  const url = `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${process.env.STRIPE_CLIENT_ID}&scope=read_write&redirect_uri=${baseUrl}/api/stripe/callback&state=${v.slug}`;
-  res.json({ url });
+  try {
+    let accountId = v.stripeAccountId;
+    if(!accountId) {
+      const account = await stripe.accounts.create({
+        type: 'express',
+        email: v.email,
+        capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
+        business_profile: { name: v.businessName },
+      });
+      accountId = account.id;
+      v.stripeAccountId = accountId;
+      v.stripeOnboarded = false;
+      await saveVendor(v);
+    }
+    const accountLink = await stripe.accountLinks.create({
+      account: accountId,
+      refresh_url: `${baseUrl}/api/stripe/callback/refresh?slug=${v.slug}&token=${v.token}`,
+      return_url:  `${baseUrl}/api/stripe/callback/return?slug=${v.slug}&token=${v.token}`,
+      type: 'account_onboarding',
+    });
+    res.json({ url: accountLink.url });
+  } catch(e) {
+    console.error('Stripe connect error:', e.message);
+    res.status(500).json({ error: 'Erreur Stripe: ' + e.message });
+  }
 });
 
-// Callback OAuth Stripe après connexion du vendeur
-app.get('/api/stripe/callback', async (req, res) => {
-  const { code, state: slug } = req.query;
-  if(!code || !slug) return res.status(400).send('Paramètres manquants');
+// Retour après onboarding réussi
+app.get('/api/stripe/callback/return', async (req, res) => {
+  const { slug, token } = req.query;
+  if(!slug || !token) return res.status(400).send('Paramètres manquants');
+  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
   try {
-    const response = await stripe.oauth.token({ grant_type: 'authorization_code', code });
-    const stripeAccountId = response.stripe_user_id;
     const v = await getVendor(slug);
-    if(!v) return res.status(404).send('Boutique introuvable');
-    v.stripeAccountId = stripeAccountId;
-    await saveVendor(v);
-    const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
-    res.redirect(`${baseUrl}/dashboard/${slug}/${v.token}?stripe=connected`);
+    if(!v || v.token !== token) return res.status(403).send('Accès refusé');
+    if(v.stripeAccountId) {
+      const account = await stripe.accounts.retrieve(v.stripeAccountId);
+      v.stripeOnboarded = account.details_submitted;
+      await saveVendor(v);
+    }
+    res.redirect(`${baseUrl}/dashboard/${slug}/${token}?stripe=connected`);
   } catch(e) {
-    res.redirect(`/dashboard/${slug}?stripe=error`);
+    res.redirect(`${baseUrl}/dashboard/${slug}/${token}?stripe=error`);
+  }
+});
+
+// Refresh — lien expiré, générer un nouveau
+app.get('/api/stripe/callback/refresh', async (req, res) => {
+  const { slug, token } = req.query;
+  if(!slug || !token) return res.status(400).send('Paramètres manquants');
+  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+  try {
+    const v = await getVendor(slug);
+    if(!v || v.token !== token) return res.status(403).send('Accès refusé');
+    if(!v.stripeAccountId) return res.redirect(`${baseUrl}/dashboard/${slug}/${token}?stripe=error`);
+    const accountLink = await stripe.accountLinks.create({
+      account: v.stripeAccountId,
+      refresh_url: `${baseUrl}/api/stripe/callback/refresh?slug=${slug}&token=${token}`,
+      return_url:  `${baseUrl}/api/stripe/callback/return?slug=${slug}&token=${token}`,
+      type: 'account_onboarding',
+    });
+    res.redirect(accountLink.url);
+  } catch(e) {
+    res.redirect(`${baseUrl}/dashboard/${slug}/${token}?stripe=error`);
   }
 });
 
 // Déconnecter Stripe
 app.delete('/api/dashboard/:slug/stripe/disconnect', async (req, res) => {
   const v = await authVendor(req, res); if(!v) return;
-  if(v.stripeAccountId && stripe) {
-    try { await stripe.oauth.deauthorize({ client_id: process.env.STRIPE_CLIENT_ID, stripe_user_id: v.stripeAccountId }); } catch(e) {}
-  }
   v.stripeAccountId = null;
+  v.stripeOnboarded = false;
   await saveVendor(v);
   res.json({ success: true });
 });
