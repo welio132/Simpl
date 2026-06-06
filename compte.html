@@ -132,9 +132,8 @@ if(!token){window.location.href='/login';}
 document.getElementById('user-name').textContent=email||'';
 
 async function subscribe(plan){
-  const slugs = document.querySelectorAll('.boutique-card');
-  // Prend le slug de la première boutique si dispo
-  const firstSlug = slugs.length > 0 ? slugs[0]?.dataset?.slug || '' : '';
+  // Priorité au slug de la boutique qui vient d'être créée
+  const firstSlug = window._pendingSlug || '';
   try{
     const r=await fetch('/api/billing/subscribe',{method:'POST',headers:{'Content-Type':'application/json','x-auth-token':token},body:JSON.stringify({plan,slug:firstSlug})});
     const d=await r.json();
@@ -178,6 +177,24 @@ function updateBillingUI(user){
   if(params.get('billing')==='success'){
     window.history.replaceState({},document.title,window.location.pathname);
     setTimeout(()=>alert('✓ Abonnement activé ! Profite de tes 30 jours gratuits.'),300);
+  }
+  // Ouverture automatique billing après création boutique
+  if(params.get('subscribe')==='true'){
+    const slug=params.get('slug')||'';
+    const token=params.get('token')||'';
+    window.history.replaceState({},document.title,window.location.pathname);
+    // Stocker le slug pour l'abonnement
+    window._pendingSlug=slug;
+    window._pendingToken=token;
+    setTimeout(()=>{
+      document.getElementById('billing-section').scrollIntoView({behavior:'smooth'});
+      // Highlight la section
+      const section=document.getElementById('billing-section');
+      section.style.transition='all .3s';
+      section.style.boxShadow='0 0 0 2px var(--a)';
+      section.style.borderRadius='18px';
+      setTimeout(()=>section.style.boxShadow='',2000);
+    },400);
   }
 }
 

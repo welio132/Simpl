@@ -684,8 +684,8 @@ async function launch(){
     if(d.error)throw new Error(d.error);
     resultSlug=d.slug;resultToken=d.token;
     document.getElementById('result-url').textContent='simpl-production.up.railway.app/s/'+d.slug;
-    document.getElementById('info-page').classList.remove('show');
-    document.getElementById('success-page').classList.add('show');
+    // Rediriger vers /compte pour choisir un plan
+    window.location.href='/compte?subscribe=true&slug='+d.slug+'&token='+d.token;
   }catch(e){showNotif('Erreur: '+e.message);}
   btn.disabled=false;btn.textContent='🚀 Lancer ma boutique';
 }
