@@ -1384,10 +1384,11 @@ function loadStripeSection(){
 }
 async function connectStripe(){
   try{
-    const r=await ac2('GET',`/api/dashboard/${slug}/stripe/connect`);
+    const r=await fetch(`/api/dashboard/${slug}/stripe/connect`,{method:'GET',headers:{'Content-Type':'application/json','x-token':token}});
     const d=await r.json();
-    if(d.url)window.location.href=d.url;
-  }catch(e){toast('Erreur','err');}
+    if(d.url){window.location.href=d.url;}
+    else{toast(d.error||'Erreur Stripe','err');}
+  }catch(e){toast('Erreur: '+e.message,'err');}
 }
 async function disconnectStripe(){
   if(!confirm('Déconnecter Stripe ? Tes clients ne pourront plus payer en ligne.'))return;
