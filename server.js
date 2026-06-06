@@ -1390,6 +1390,7 @@ app.post('/api/store/:slug/checkout', async (req, res) => {
 });
 
 
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/compte', (req, res) => res.sendFile(path.join(__dirname, 'compte.html')));
 
 
