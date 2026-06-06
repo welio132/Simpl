@@ -17,6 +17,12 @@ try {
   console.warn('⚠️ stripe non installé — npm install stripe');
 }
 
+// Plans Simpl
+const STRIPE_PRICES = {
+  soumission: process.env.STRIPE_PRICE_SOUMISSION || 'price_1TfBNXPOFpFVzIWVY8BMqQC1',
+  boutique:   process.env.STRIPE_PRICE_BOUTIQUE   || 'price_1TfBPDPOFpFVzIWVlCzZIQZe',
+};
+
 // Packages de sécurité — installer avec: npm install bcryptjs helmet express-rate-limit
 let bcrypt, helmet, rateLimit;
 try { bcrypt = require('bcryptjs'); } catch(e) { console.warn('⚠️ bcryptjs non installé — mots de passe moins sécurisés'); }
@@ -115,6 +121,56 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
       } catch(e) {}
     }
   }
+  // Abonnement créé ou activé (après trial ou paiement)
+  if(event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
+    const sub = event.data.object;
+    const userId = sub.metadata?.userId;
+    const slug = sub.metadata?.slug;
+    const status = sub.status; // active, trialing, past_due, canceled
+    const priceId = sub.items?.data?.[0]?.price?.id;
+    const plan = priceId === STRIPE_PRICES.boutique ? 'boutique' : 'soumission';
+    const paid = (status === 'active' || status === 'trialing');
+    try {
+      if(slug) {
+        const v = await getVendor(slug);
+        if(v) {
+          v.plan = plan;
+          v.paid = paid;
+          v.subscriptionId = sub.id;
+          v.subscriptionStatus = status;
+          v.store = v.store || {};
+          v.store.mode = plan;
+          await saveVendor(v);
+        }
+      }
+      if(userId) {
+        await db.collection('users').updateOne(
+          { _id: require('mongodb').ObjectId.createFromHexString(userId) },
+          { $set: { plan, paid, subscriptionId: sub.id, subscriptionStatus: status } }
+        );
+      }
+    } catch(e) { console.error('Webhook billing error:', e.message); }
+  }
+
+  // Abonnement annulé ou expiré
+  if(event.type === 'customer.subscription.deleted') {
+    const sub = event.data.object;
+    const slug = sub.metadata?.slug;
+    const userId = sub.metadata?.userId;
+    try {
+      if(slug) {
+        const v = await getVendor(slug);
+        if(v) { v.paid = false; v.subscriptionStatus = 'canceled'; await saveVendor(v); }
+      }
+      if(userId) {
+        await db.collection('users').updateOne(
+          { _id: require('mongodb').ObjectId.createFromHexString(userId) },
+          { $set: { paid: false, subscriptionStatus: 'canceled' } }
+        );
+      }
+    } catch(e) {}
+  }
+
   res.json({ received: true });
 });
 
@@ -1219,7 +1275,7 @@ app.get('/api/auth/boutiques', async (req, res) => {
   const seen = new Set();
   const unique = boutiques.filter(b => { const k = b.slug; if(seen.has(k)) return false; seen.add(k); return true; });
   const safe = unique.map(({ password, ...b }) => b);
-  res.json({ boutiques: safe, name: user.name });
+  res.json({ boutiques: safe, name: user.name, paid: user.paid||false, plan: user.plan||null, subscriptionStatus: user.subscriptionStatus||null });
 });
 
 // ─── STRIPE CONNECT ──────────────────────────────────────────────────────────
@@ -1390,6 +1446,69 @@ app.post('/api/store/:slug/checkout', async (req, res) => {
 
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/compte', (req, res) => res.sendFile(path.join(__dirname, 'compte.html')));
+
+// ─── STRIPE BILLING ──────────────────────────────────────────────────────────
+
+// Créer une session d'abonnement Simpl
+app.post('/api/billing/subscribe', async (req, res) => {
+  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+  const authToken = req.headers['x-auth-token'];
+  if(!authToken) return res.status(401).json({ error: 'Non connecté' });
+  const user = await db.collection('users').findOne({ token: authToken });
+  if(!user) return res.status(401).json({ error: 'Session invalide' });
+  const { plan, slug } = req.body;
+  if(!plan || !STRIPE_PRICES[plan]) return res.status(400).json({ error: 'Plan invalide' });
+  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+  try {
+    // Créer ou récupérer le customer Stripe
+    let customerId = user.stripeCustomerId;
+    if(!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.name,
+        metadata: { userId: user._id.toString() }
+      });
+      customerId = customer.id;
+      await db.collection('users').updateOne({ _id: user._id }, { $set: { stripeCustomerId: customerId } });
+    }
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [{ price: STRIPE_PRICES[plan], quantity: 1 }],
+      mode: 'subscription',
+      subscription_data: {
+        trial_period_days: 30,
+        metadata: { userId: user._id.toString(), slug: slug || '' }
+      },
+      success_url: `${baseUrl}/compte?billing=success`,
+      cancel_url: `${baseUrl}/compte?billing=cancelled`,
+      metadata: { userId: user._id.toString(), slug: slug || '', plan }
+    });
+    res.json({ url: session.url });
+  } catch(e) {
+    console.error('Billing error:', e.message);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// Portail client Stripe — gérer/annuler abonnement
+app.post('/api/billing/portal', async (req, res) => {
+  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+  const authToken = req.headers['x-auth-token'];
+  if(!authToken) return res.status(401).json({ error: 'Non connecté' });
+  const user = await db.collection('users').findOne({ token: authToken });
+  if(!user || !user.stripeCustomerId) return res.status(400).json({ error: 'Aucun abonnement actif' });
+  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+  try {
+    const session = await stripe.billingPortal.sessions.create({
+      customer: user.stripeCustomerId,
+      return_url: `${baseUrl}/compte`
+    });
+    res.json({ url: session.url });
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
 
 
 app.post('/api/dashboard/:slug/upgrade-request', async (req, res) => {
