@@ -207,6 +207,15 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ai-sug{font-size:12px;padding:5px 12px;border-radius:8px;background:var(--ag);color:var(--a);border:1px solid rgba(124,109,250,.2);cursor:pointer;font-family:inherit;transition:all .15s;}
 .ai-sug:hover{background:var(--a);color:#fff;}
 
+.stripe-banner{display:none;background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;align-items:center;gap:12px;}
+.stripe-banner.show{display:flex;}
+.stripe-banner.show{display:flex;}
+.stripe-banner-ic{font-size:1.4rem;flex-shrink:0;}
+.stripe-banner-body{flex:1;}
+.stripe-banner-title{font-size:14px;font-weight:700;color:#92400e;margin-bottom:3px;}
+.stripe-banner-desc{font-size:13px;color:#b45309;line-height:1.5;}
+.stripe-banner-btn{background:#f59e0b;color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;}
+.stripe-banner-btn:hover{filter:brightness(1.08);}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:.875rem 1.25rem;font-size:13px;font-weight:600;display:none;align-items:center;gap:8px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,.12);}
 .toast.on{display:flex;animation:ti .2s ease;}
 .toast.ok{border-color:#bbf7d0;color:#16a34a;}
@@ -284,6 +293,16 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- OVERVIEW -->
     <div class="panel on" id="p-overview">
       <div class="page-title">Vue d'ensemble</div>
+
+      <!-- Bandeau Stripe non connecté -->
+      <div class="stripe-banner" id="stripe-banner">
+        <div class="stripe-banner-ic">⚠️</div>
+        <div class="stripe-banner-body">
+          <div class="stripe-banner-title">Paiements désactivés — Stripe n'est pas connecté</div>
+          <div class="stripe-banner-desc">Tes clients ne peuvent pas payer en ligne. Connecte ton compte Stripe pour activer les paiements sur ta boutique.</div>
+        </div>
+        <button class="stripe-banner-btn" onclick="sp('params',null);setTimeout(()=>document.getElementById('stripe-connect-card')?.scrollIntoView({behavior:'smooth'}),100)">Connecter Stripe →</button>
+      </div>
 
       <!-- Métriques clés -->
       <div class="stats-grid" id="stats-grid"></div>
@@ -552,6 +571,14 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
               <span style="font-size:14px;font-weight:600;color:var(--text);">Stripe connecté</span>
             </div>
             <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Les paiements de tes clients vont directement dans ton compte Stripe.</p>
+            <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:.875rem 1rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px;">
+              <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:3px;">Action requise — Confirme ton identité</div>
+                <div style="font-size:12px;color:#b45309;line-height:1.5;">Pour éviter la suspension de tes paiements en ligne, tu dois absolument compléter la vérification de ton identité sur Stripe. Ça prend environ 5 minutes.</div>
+                <a href="https://dashboard.stripe.com" target="_blank" style="display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:#92400e;text-decoration:underline;">Compléter sur dashboard.stripe.com →</a>
+              </div>
+            </div>
             <button class="btn btn-d btn-sm" onclick="disconnectStripe()">Déconnecter Stripe</button>
           </div>
         </div>
@@ -869,6 +896,8 @@ function build(){
   // AI welcome
   addAiMsg('ai','Bonjour ! Je suis ton assistant Simpl. Je connais ta boutique sur le bout des doigts — dis-moi ce que tu veux changer et je m\'en occupe.');
   rm();rp();ro();rro();rpa();
+  // Bandeau Stripe
+  updateStripeBanner();
 }
 
 function sp(id,el){
@@ -1394,6 +1423,17 @@ async function setMode(mode){
   }catch(e){toast('Erreur','err');}
 }
 // STRIPE CONNECT
+function updateStripeBanner(){
+  const banner=document.getElementById('stripe-banner');
+  if(!banner)return;
+  const isBoutique=V.store.mode==='boutique'||V.plan==='boutique';
+  const stripeConnected=!!V.stripeAccountId;
+  if(isBoutique&&!stripeConnected){
+    banner.classList.add('show');
+  }else{
+    banner.classList.remove('show');
+  }
+}
 function loadStripeSection(){
   const card=document.getElementById('stripe-connect-card');
   const notConn=document.getElementById('stripe-not-connected');
@@ -1418,6 +1458,7 @@ function loadStripeSection(){
     V.stripeAccountId='connected';
     notConn.style.display='none';
     conn.style.display='block';
+    updateStripeBanner();
   }
 }
 async function connectStripe(){
@@ -1435,6 +1476,7 @@ async function disconnectStripe(){
     V.stripeAccountId=null;
     document.getElementById('stripe-not-connected').style.display='block';
     document.getElementById('stripe-connected').style.display='none';
+    updateStripeBanner();
     toast('Stripe déconnecté');
   }catch(e){toast('Erreur','err');}
 }
