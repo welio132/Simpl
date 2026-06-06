@@ -795,7 +795,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 <div class="toast" id="toast"></div>
 
 <script>
-const pts=window.location.pathname.split('/');
+const pts=window.location.pathname.split('/').filter(Boolean);
 const slug=pts[pts.length-2],token=pts[pts.length-1];
 let V=null,eid=null,pif=null,aiConv=[];
 let isAiWaiting=false;
