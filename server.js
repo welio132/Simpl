@@ -1381,10 +1381,8 @@ app.post('/api/store/:slug/checkout', async (req, res) => {
     customer_email: clientEmail,
     success_url: `${baseUrl}/s/${v.slug}?order=${orderId}&success=1`,
     cancel_url: `${baseUrl}/s/${v.slug}?cancelled=1`,
-    // Seulement orderId et slug dans metadata — pas de données volumineuses
     metadata: { slug: v.slug, orderId },
-    stripe_account: v.stripeAccountId,
-  });
+  }, { stripeAccount: v.stripeAccountId });
 
   res.json({ sessionId: session.id, url: session.url });
 });
