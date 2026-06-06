@@ -517,6 +517,24 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="panel" id="p-params">
       <div class="page-title">Paramètres</div>
 
+      <!-- Mode boutique -->
+      <div class="card">
+        <div class="card-title">Mode de la boutique</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Choisis comment tes clients commandent.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;">
+          <div id="mode-soumission" onclick="setMode('soumission')" style="border:2px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .2s;">
+            <div style="font-size:1.25rem;margin-bottom:.4rem;">📋</div>
+            <div style="font-size:13px;font-weight:700;">Soumission</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px;">Le client envoie une demande, tu confirmes manuellement.</div>
+          </div>
+          <div id="mode-boutique" onclick="setMode('boutique')" style="border:2px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .2s;">
+            <div style="font-size:1.25rem;margin-bottom:.4rem;">🛍</div>
+            <div style="font-size:13px;font-weight:700;">Boutique</div>
+            <div style="font-size:11px;color:var(--text3);margin-top:3px;">Le client paie directement en ligne via Stripe.</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Stripe Connect — seulement pour plan boutique -->
       <div class="card" id="stripe-connect-card" style="display:none;">
         <div class="card-title">Paiement en ligne (Stripe)</div>
@@ -818,6 +836,7 @@ function build(){
   document.getElementById('vsb').href='/s/'+slug;
   document.getElementById('dash-url').textContent=window.location.href;
   loadStripeSection();
+  highlightMode(V.store.mode||'soumission');
   // Charger le domaine custom
   const cdi=document.getElementById('custom-domain-input');
   const cds=document.getElementById('custom-domain-status');
@@ -1355,6 +1374,25 @@ async function sendAiMsg(){
   finally{document.getElementById('ai-send').disabled=false;isAiWaiting=false;}
 }
 
+function highlightMode(mode){
+  const sm=document.getElementById('mode-soumission');
+  const bm=document.getElementById('mode-boutique');
+  if(!sm||!bm)return;
+  sm.style.borderColor=mode==='soumission'?'var(--a)':'var(--border)';
+  sm.style.background=mode==='soumission'?'var(--ag)':'';
+  bm.style.borderColor=mode==='boutique'?'var(--a)':'var(--border)';
+  bm.style.background=mode==='boutique'?'var(--ag)':'';
+}
+async function setMode(mode){
+  if(V.store.mode===mode)return;
+  try{
+    await ac2('PUT',`/api/dashboard/${slug}/store`,{mode});
+    V.store.mode=mode;
+    highlightMode(mode);
+    loadStripeSection();
+    toast(mode==='boutique'?'Mode Boutique activé ✓':'Mode Soumission activé ✓');
+  }catch(e){toast('Erreur','err');}
+}
 // STRIPE CONNECT
 function loadStripeSection(){
   const card=document.getElementById('stripe-connect-card');
@@ -1442,12 +1480,12 @@ function showUpgrade(feature){
 function closeUpgrade(){document.getElementById('upgrade-modal').classList.remove('on');}
 
 async function requestUpgrade(){
-  // Pour l'instant envoie un email à l'admin - Stripe sera intégré plus tard
   closeUpgrade();
-  toast('Demande envoyée ! On te contacte sous 24h pour finaliser l\'upgrade. 🚀');
-  try{
-    await ac2('POST',`/api/dashboard/${slug}/upgrade-request`,{plan:'boutique',email:V.email,businessName:V.businessName});
-  }catch(e){}
+  // Passer en mode boutique directement
+  await setMode('boutique');
+  // Naviguer vers Paramètres pour connecter Stripe
+  sp('params', null);
+  toast('Mode Boutique activé ! Connecte Stripe pour accepter les paiements. 🚀');
 }
 
 // GATE — vérifie le plan avant d'exécuter une action boutique
