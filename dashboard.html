@@ -28,19 +28,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .nav-badge{margin-left:auto;background:var(--a);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;display:none;}
 .nav-badge.show{display:block;}
 .main{flex:1;padding:1.5rem 2rem;overflow-y:auto;}
-@media(max-width:768px){.sidebar{display:none;}.main{padding:1rem;}}
-.mob-menu-btn{display:none;position:fixed;bottom:24px;right:24px;z-index:300;width:52px;height:52px;border-radius:50%;background:var(--a);border:none;color:#fff;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 20px rgba(124,109,250,.4);transition:all .2s;}
-.mob-menu-btn:hover{transform:scale(1.05);}
-.mob-drawer{display:none;position:fixed;inset:0;z-index:400;}
-.mob-drawer-bg{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);}
-.mob-drawer-panel{position:absolute;left:0;top:0;bottom:0;width:260px;background:var(--surf);border-right:1px solid var(--border2);padding:1.5rem 0;overflow-y:auto;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);}
-.mob-drawer.open .mob-drawer-panel{transform:translateX(0);}
-.mob-drawer-close{position:absolute;top:12px;right:12px;background:var(--surf2);border:none;color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
-.mob-nav-item{display:flex;align-items:center;gap:12px;padding:.75rem 1.25rem;font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;}
-.mob-nav-item:hover{background:var(--surf2);color:var(--text);}
-.mob-nav-item.on{background:var(--ag);color:var(--a);font-weight:600;}
-.mob-nav-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:.75rem 1.25rem .25rem;}
-@media(max-width:768px){.mob-menu-btn{display:flex;align-items:center;justify-content:center;}.mob-drawer{display:block;}}
+@media(max-width:768px){.sidebar{display:none;}.main{padding:1rem;}.card,.stat-box,.section-title{animation:none !important;transform:none !important;will-change:auto !important;} * {-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}}
 .panel{display:none;}.panel.on{display:block;}
 .page-title{font-size:1.25rem;font-weight:800;margin-bottom:1.5rem;}
 .card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
@@ -864,8 +852,7 @@ function build(){
   rm();rp();ro();rro();rpa();
 }
 
-function sp(id,el,loadApparence=false){
-  if(loadApparence)setTimeout(()=>loadApparencePanel(),50);
+function sp(id,el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+id).classList.add('on');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
@@ -1754,54 +1741,6 @@ async function ac2(m,u,b=null){const o={method:m,headers:{'Content-Type':'applic
 function toast(msg,type='ok'){const el=document.getElementById('toast');el.textContent=(type==='ok'?'✓ ':'✕ ')+msg;el.className='toast on '+type;clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),3000);}
 init();
 setInterval(async()=>{if(!V)return;try{const r=await fetch(`/api/dashboard/${slug}/${token}`);if(r.ok){const d=await r.json();V.orders=d.orders;rm();rro();}}catch(e){}},30000);
-</script>
-  <!-- Menu mobile -->
-  <button class="mob-menu-btn" onclick="openMobMenu()">☰</button>
-  <div class="mob-drawer" id="mob-drawer">
-    <div class="mob-drawer-bg" onclick="closeMobMenu()"></div>
-    <div class="mob-drawer-panel">
-      <button class="mob-drawer-close" onclick="closeMobMenu()">✕</button>
-      <div style="padding:.75rem 1.25rem 1.25rem;border-bottom:1px solid var(--border);margin-bottom:.5rem;">
-        <div style="font-size:13px;font-weight:700;" id="mob-biz-name"></div>
-        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Dashboard</div>
-      </div>
-      <div class="mob-nav-section">Boutique</div>
-      <div class="mob-nav-item" onclick="mobNav('overview')"><span>📊</span>Vue d'ensemble</div>
-      <div class="mob-nav-item" onclick="mobNav('commandes')"><span>📦</span>Commandes</div>
-      <div class="mob-nav-section">Catalogue</div>
-      <div class="mob-nav-item" onclick="mobNav('produits')"><span>🛍</span>Produits</div>
-      <div class="mob-nav-section">Personnalisation</div>
-      <div class="mob-nav-item" onclick="mobNav('theme')"><span>🎨</span>Thème & couleurs</div>
-      <div class="mob-nav-item" onclick="mobNav('apparence')"><span>✨</span>Design & apparence</div>
-      <div class="mob-nav-item" onclick="mobNav('infos')"><span>⚙️</span>Informations</div>
-      <div class="mob-nav-item" onclick="mobNav('params')"><span>🔧</span>Paramètres</div>
-      <div class="mob-nav-section">Pages</div>
-      <div class="mob-nav-item" onclick="mobNav('pages')"><span>📄</span>Pages supplémentaires</div>
-      <div class="mob-nav-section">Assistant IA</div>
-      <div class="mob-nav-item" onclick="mobNav('ai')"><span>✦</span>Assistant Simpl</div>
-    </div>
-  </div>
-
-<script>
-function openMobMenu(){
-  const d=document.getElementById('mob-drawer');
-  d.classList.add('open');
-  const biz=document.getElementById('mob-biz-name');
-  if(biz&&V)biz.textContent=V.businessName||'';
-  // Sync active item
-  document.querySelectorAll('.mob-nav-item').forEach(i=>i.classList.remove('on'));
-}
-function closeMobMenu(){document.getElementById('mob-drawer').classList.remove('open');}
-function mobNav(id){
-  closeMobMenu();
-  if(id==='apparence')sp(id,null,true);
-  else sp(id,null);
-  // Sync highlight
-  document.querySelectorAll('.mob-nav-item').forEach(i=>{
-    if(i.getAttribute('onclick')&&i.getAttribute('onclick').includes("'"+id+"'"))i.classList.add('on');
-    else i.classList.remove('on');
-  });
-}
 </script>
 </body>
 </html>
