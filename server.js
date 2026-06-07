@@ -6,6 +6,16 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const multer = require('multer');
+// Cloudinary — npm install cloudinary
+let cloudinary;
+try {
+  cloudinary = require('cloudinary').v2;
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+} catch(e) { console.warn('⚠️ cloudinary non installé — npm install cloudinary'); }
 const { MongoClient } = require('mongodb');
 const { Resend } = require('resend');
 
@@ -303,7 +313,9 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const storage = multer.diskStorage({
+// memoryStorage pour Cloudinary
+const storage = multer.memoryStorage();
+const _diskStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     const slug = req.params.slug || 'tmp';
     const dir = 'uploads/' + slug;
@@ -930,7 +942,26 @@ app.post('/api/dashboard/:slug/upload/:prodId', async (req, res) => {
   upload.single('image')(req, res, async (err) => {
     if (err) return res.status(400).json({ error: err.message });
     if (!req.file) return res.status(400).json({ error: 'No file' });
-    const url = '/uploads/' + req.params.slug + '/' + req.file.filename;
+    let url;
+    try {
+      if (cloudinary && process.env.CLOUDINARY_CLOUD_NAME) {
+        // Upload vers Cloudinary
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: 'simpl/' + req.params.slug, resource_type: 'image', transformation: [{ quality: 'auto', fetch_format: 'auto' }] },
+            (error, result) => error ? reject(error) : resolve(result)
+          );
+          stream.end(req.file.buffer);
+        });
+        url = result.secure_url;
+      } else {
+        // Fallback local si Cloudinary pas configuré
+        url = '/uploads/' + req.params.slug + '/' + req.file.originalname;
+      }
+    } catch(e) {
+      console.error('Cloudinary upload error:', e.message);
+      return res.status(500).json({ error: 'Erreur upload image' });
+    }
     if (req.params.prodId === 'logo') { v.store.apparence = v.store.apparence || {}; v.store.apparence.logo_url = url; }
     else if (req.params.prodId === 'banniere') { v.store.apparence = v.store.apparence || {}; v.store.apparence.banniere_url = url; }
     else {
