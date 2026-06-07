@@ -557,8 +557,10 @@ function buildStore(){
   // Hero hauteur + parallax (DOM dispo ici)
   const prods=store.produits||[];
   const heroEl=document.getElementById('store-hero');
-  const heroH={small:'200px',medium:'320px',large:'460px',fullscreen:'100vh'};
-  heroEl.style.minHeight=heroH[app.heroHeight]||'320px';
+  const isMobile = window.innerWidth <= 600;
+  const heroH={small:'180px',medium:'280px',large:'380px',fullscreen: isMobile ? '300px' : '100vh'};
+  heroEl.style.minHeight=heroH[app.heroHeight]||'280px';
+  if(isMobile) heroEl.style.maxHeight='300px';
   if(app.heroFixed){heroEl.style.backgroundAttachment='fixed';}
 
   // Style boutons — forcer le re-apply ici aussi au cas où
@@ -680,11 +682,10 @@ function renderPage(){
   const prods = allProds;
   const isFr = currentIsFr;
   const inner=document.getElementById('store-inner');
-  const n=prods.length;
 
-  if(n===0){inner.innerHTML=`<div style="text-align:center;padding:4rem;color:var(--text3);">Aucun produit pour l'instant.</div>`;return;}
+  if(prods.length===0){inner.innerHTML=`<div style="text-align:center;padding:4rem;color:var(--text3);">Aucun produit pour l'instant.</div>`;return;}
 
-  if(n===1){
+  if(prods.length===1){
     // Layout héro solo
     const p=prods[0];
     const imgH=`<div class="hero-solo-img">${p.image_url?`<img src="${p.image_url}" alt="${p.nom}">`:`<span style="font-size:5rem;">${p.image_emoji||'📦'}</span>`}</div>`;

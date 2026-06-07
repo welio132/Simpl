@@ -29,6 +29,18 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .nav-badge.show{display:block;}
 .main{flex:1;padding:1.5rem 2rem;overflow-y:auto;}
 @media(max-width:768px){.sidebar{display:none;}.main{padding:1rem;}}
+.mob-menu-btn{display:none;position:fixed;bottom:24px;right:24px;z-index:300;width:52px;height:52px;border-radius:50%;background:var(--a);border:none;color:#fff;font-size:1.4rem;cursor:pointer;box-shadow:0 4px 20px rgba(124,109,250,.4);transition:all .2s;}
+.mob-menu-btn:hover{transform:scale(1.05);}
+.mob-drawer{display:none;position:fixed;inset:0;z-index:400;}
+.mob-drawer-bg{position:absolute;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);}
+.mob-drawer-panel{position:absolute;left:0;top:0;bottom:0;width:260px;background:var(--surf);border-right:1px solid var(--border2);padding:1.5rem 0;overflow-y:auto;transform:translateX(-100%);transition:transform .25s cubic-bezier(.4,0,.2,1);}
+.mob-drawer.open .mob-drawer-panel{transform:translateX(0);}
+.mob-drawer-close{position:absolute;top:12px;right:12px;background:var(--surf2);border:none;color:var(--text2);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+.mob-nav-item{display:flex;align-items:center;gap:12px;padding:.75rem 1.25rem;font-size:14px;font-weight:500;color:var(--text2);cursor:pointer;transition:all .15s;}
+.mob-nav-item:hover{background:var(--surf2);color:var(--text);}
+.mob-nav-item.on{background:var(--ag);color:var(--a);font-weight:600;}
+.mob-nav-section{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);padding:.75rem 1.25rem .25rem;}
+@media(max-width:768px){.mob-menu-btn{display:flex;align-items:center;justify-content:center;}.mob-drawer{display:block;}}
 .panel{display:none;}.panel.on{display:block;}
 .page-title{font-size:1.25rem;font-weight:800;margin-bottom:1.5rem;}
 .card{background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:1.25rem;margin-bottom:1rem;}
@@ -207,15 +219,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 .ai-sug{font-size:12px;padding:5px 12px;border-radius:8px;background:var(--ag);color:var(--a);border:1px solid rgba(124,109,250,.2);cursor:pointer;font-family:inherit;transition:all .15s;}
 .ai-sug:hover{background:var(--a);color:#fff;}
 
-.stripe-banner{display:none;background:#fffbeb;border:1.5px solid #f59e0b;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.25rem;align-items:center;gap:12px;}
-.stripe-banner.show{display:flex;}
-.stripe-banner.show{display:flex;}
-.stripe-banner-ic{font-size:1.4rem;flex-shrink:0;}
-.stripe-banner-body{flex:1;}
-.stripe-banner-title{font-size:14px;font-weight:700;color:#92400e;margin-bottom:3px;}
-.stripe-banner-desc{font-size:13px;color:#b45309;line-height:1.5;}
-.stripe-banner-btn{background:#f59e0b;color:#fff;border:none;border-radius:9px;padding:9px 18px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;}
-.stripe-banner-btn:hover{filter:brightness(1.08);}
 .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--surf);border:1px solid var(--border);border-radius:12px;padding:.875rem 1.25rem;font-size:13px;font-weight:600;display:none;align-items:center;gap:8px;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,.12);}
 .toast.on{display:flex;animation:ti .2s ease;}
 .toast.ok{border-color:#bbf7d0;color:#16a34a;}
@@ -293,16 +296,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <!-- OVERVIEW -->
     <div class="panel on" id="p-overview">
       <div class="page-title">Vue d'ensemble</div>
-
-      <!-- Bandeau Stripe non connecté -->
-      <div class="stripe-banner" id="stripe-banner">
-        <div class="stripe-banner-ic">⚠️</div>
-        <div class="stripe-banner-body">
-          <div class="stripe-banner-title">Paiements désactivés — Stripe n'est pas connecté</div>
-          <div class="stripe-banner-desc">Tes clients ne peuvent pas payer en ligne. Connecte ton compte Stripe pour activer les paiements sur ta boutique.</div>
-        </div>
-        <button class="stripe-banner-btn" onclick="sp('params',null);setTimeout(()=>document.getElementById('stripe-connect-card')?.scrollIntoView({behavior:'smooth'}),100)">Connecter Stripe →</button>
-      </div>
 
       <!-- Métriques clés -->
       <div class="stats-grid" id="stats-grid"></div>
@@ -536,24 +529,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="panel" id="p-params">
       <div class="page-title">Paramètres</div>
 
-      <!-- Mode boutique -->
-      <div class="card">
-        <div class="card-title">Mode de la boutique</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Choisis comment tes clients commandent.</p>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem;">
-          <div id="mode-soumission" onclick="setMode('soumission')" style="border:2px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .2s;">
-            <div style="font-size:1.25rem;margin-bottom:.4rem;">📋</div>
-            <div style="font-size:13px;font-weight:700;">Soumission</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:3px;">Le client envoie une demande, tu confirmes manuellement.</div>
-          </div>
-          <div id="mode-boutique" onclick="setMode('boutique')" style="border:2px solid var(--border);border-radius:12px;padding:1rem;cursor:pointer;transition:all .2s;">
-            <div style="font-size:1.25rem;margin-bottom:.4rem;">🛍</div>
-            <div style="font-size:13px;font-weight:700;">Boutique</div>
-            <div style="font-size:11px;color:var(--text3);margin-top:3px;">Le client paie directement en ligne via Stripe.</div>
-          </div>
-        </div>
-      </div>
-
       <!-- Stripe Connect — seulement pour plan boutique -->
       <div class="card" id="stripe-connect-card" style="display:none;">
         <div class="card-title">Paiement en ligne (Stripe)</div>
@@ -571,14 +546,6 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
               <span style="font-size:14px;font-weight:600;color:var(--text);">Stripe connecté</span>
             </div>
             <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Les paiements de tes clients vont directement dans ton compte Stripe.</p>
-            <div style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:10px;padding:.875rem 1rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px;">
-              <span style="font-size:1.1rem;flex-shrink:0;">⚠️</span>
-              <div>
-                <div style="font-size:13px;font-weight:700;color:#92400e;margin-bottom:3px;">Action requise — Confirme ton identité</div>
-                <div style="font-size:12px;color:#b45309;line-height:1.5;">Pour éviter la suspension de tes paiements en ligne, tu dois absolument compléter la vérification de ton identité sur Stripe. Ça prend environ 5 minutes.</div>
-                <a href="https://dashboard.stripe.com" target="_blank" style="display:inline-block;margin-top:8px;font-size:12px;font-weight:700;color:#92400e;text-decoration:underline;">Compléter sur dashboard.stripe.com →</a>
-              </div>
-            </div>
             <button class="btn btn-d btn-sm" onclick="disconnectStripe()">Déconnecter Stripe</button>
           </div>
         </div>
@@ -863,7 +830,6 @@ function build(){
   document.getElementById('vsb').href='/s/'+slug;
   document.getElementById('dash-url').textContent=window.location.href;
   loadStripeSection();
-  highlightMode(V.store.mode||'soumission');
   // Charger le domaine custom
   const cdi=document.getElementById('custom-domain-input');
   const cds=document.getElementById('custom-domain-status');
@@ -896,11 +862,10 @@ function build(){
   // AI welcome
   addAiMsg('ai','Bonjour ! Je suis ton assistant Simpl. Je connais ta boutique sur le bout des doigts — dis-moi ce que tu veux changer et je m\'en occupe.');
   rm();rp();ro();rro();rpa();
-  // Bandeau Stripe
-  updateStripeBanner();
 }
 
-function sp(id,el){
+function sp(id,el,loadApparence=false){
+  if(loadApparence)setTimeout(()=>loadApparencePanel(),50);
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+id).classList.add('on');
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('on'));
@@ -1403,37 +1368,7 @@ async function sendAiMsg(){
   finally{document.getElementById('ai-send').disabled=false;isAiWaiting=false;}
 }
 
-function highlightMode(mode){
-  const sm=document.getElementById('mode-soumission');
-  const bm=document.getElementById('mode-boutique');
-  if(!sm||!bm)return;
-  sm.style.borderColor=mode==='soumission'?'var(--a)':'var(--border)';
-  sm.style.background=mode==='soumission'?'var(--ag)':'';
-  bm.style.borderColor=mode==='boutique'?'var(--a)':'var(--border)';
-  bm.style.background=mode==='boutique'?'var(--ag)':'';
-}
-async function setMode(mode){
-  if(V.store.mode===mode)return;
-  try{
-    await ac2('PUT',`/api/dashboard/${slug}/store`,{mode});
-    V.store.mode=mode;
-    highlightMode(mode);
-    loadStripeSection();
-    toast(mode==='boutique'?'Mode Boutique activé ✓':'Mode Soumission activé ✓');
-  }catch(e){toast('Erreur','err');}
-}
 // STRIPE CONNECT
-function updateStripeBanner(){
-  const banner=document.getElementById('stripe-banner');
-  if(!banner)return;
-  const isBoutique=V.store.mode==='boutique'||V.plan==='boutique';
-  const stripeConnected=!!V.stripeAccountId;
-  if(isBoutique&&!stripeConnected){
-    banner.classList.add('show');
-  }else{
-    banner.classList.remove('show');
-  }
-}
 function loadStripeSection(){
   const card=document.getElementById('stripe-connect-card');
   const notConn=document.getElementById('stripe-not-connected');
@@ -1458,7 +1393,6 @@ function loadStripeSection(){
     V.stripeAccountId='connected';
     notConn.style.display='none';
     conn.style.display='block';
-    updateStripeBanner();
   }
 }
 async function connectStripe(){
@@ -1476,7 +1410,6 @@ async function disconnectStripe(){
     V.stripeAccountId=null;
     document.getElementById('stripe-not-connected').style.display='block';
     document.getElementById('stripe-connected').style.display='none';
-    updateStripeBanner();
     toast('Stripe déconnecté');
   }catch(e){toast('Erreur','err');}
 }
@@ -1522,12 +1455,12 @@ function showUpgrade(feature){
 function closeUpgrade(){document.getElementById('upgrade-modal').classList.remove('on');}
 
 async function requestUpgrade(){
+  // Pour l'instant envoie un email à l'admin - Stripe sera intégré plus tard
   closeUpgrade();
-  // Passer en mode boutique directement
-  await setMode('boutique');
-  // Naviguer vers Paramètres pour connecter Stripe
-  sp('params', null);
-  toast('Mode Boutique activé ! Connecte Stripe pour accepter les paiements. 🚀');
+  toast('Demande envoyée ! On te contacte sous 24h pour finaliser l\'upgrade. 🚀');
+  try{
+    await ac2('POST',`/api/dashboard/${slug}/upgrade-request`,{plan:'boutique',email:V.email,businessName:V.businessName});
+  }catch(e){}
 }
 
 // GATE — vérifie le plan avant d'exécuter une action boutique
@@ -1821,6 +1754,54 @@ async function ac2(m,u,b=null){const o={method:m,headers:{'Content-Type':'applic
 function toast(msg,type='ok'){const el=document.getElementById('toast');el.textContent=(type==='ok'?'✓ ':'✕ ')+msg;el.className='toast on '+type;clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('on'),3000);}
 init();
 setInterval(async()=>{if(!V)return;try{const r=await fetch(`/api/dashboard/${slug}/${token}`);if(r.ok){const d=await r.json();V.orders=d.orders;rm();rro();}}catch(e){}},30000);
+</script>
+  <!-- Menu mobile -->
+  <button class="mob-menu-btn" onclick="openMobMenu()">☰</button>
+  <div class="mob-drawer" id="mob-drawer">
+    <div class="mob-drawer-bg" onclick="closeMobMenu()"></div>
+    <div class="mob-drawer-panel">
+      <button class="mob-drawer-close" onclick="closeMobMenu()">✕</button>
+      <div style="padding:.75rem 1.25rem 1.25rem;border-bottom:1px solid var(--border);margin-bottom:.5rem;">
+        <div style="font-size:13px;font-weight:700;" id="mob-biz-name"></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px;">Dashboard</div>
+      </div>
+      <div class="mob-nav-section">Boutique</div>
+      <div class="mob-nav-item" onclick="mobNav('overview')"><span>📊</span>Vue d'ensemble</div>
+      <div class="mob-nav-item" onclick="mobNav('commandes')"><span>📦</span>Commandes</div>
+      <div class="mob-nav-section">Catalogue</div>
+      <div class="mob-nav-item" onclick="mobNav('produits')"><span>🛍</span>Produits</div>
+      <div class="mob-nav-section">Personnalisation</div>
+      <div class="mob-nav-item" onclick="mobNav('theme')"><span>🎨</span>Thème & couleurs</div>
+      <div class="mob-nav-item" onclick="mobNav('apparence')"><span>✨</span>Design & apparence</div>
+      <div class="mob-nav-item" onclick="mobNav('infos')"><span>⚙️</span>Informations</div>
+      <div class="mob-nav-item" onclick="mobNav('params')"><span>🔧</span>Paramètres</div>
+      <div class="mob-nav-section">Pages</div>
+      <div class="mob-nav-item" onclick="mobNav('pages')"><span>📄</span>Pages supplémentaires</div>
+      <div class="mob-nav-section">Assistant IA</div>
+      <div class="mob-nav-item" onclick="mobNav('ai')"><span>✦</span>Assistant Simpl</div>
+    </div>
+  </div>
+
+<script>
+function openMobMenu(){
+  const d=document.getElementById('mob-drawer');
+  d.classList.add('open');
+  const biz=document.getElementById('mob-biz-name');
+  if(biz&&V)biz.textContent=V.businessName||'';
+  // Sync active item
+  document.querySelectorAll('.mob-nav-item').forEach(i=>i.classList.remove('on'));
+}
+function closeMobMenu(){document.getElementById('mob-drawer').classList.remove('open');}
+function mobNav(id){
+  closeMobMenu();
+  if(id==='apparence')sp(id,null,true);
+  else sp(id,null);
+  // Sync highlight
+  document.querySelectorAll('.mob-nav-item').forEach(i=>{
+    if(i.getAttribute('onclick')&&i.getAttribute('onclick').includes("'"+id+"'"))i.classList.add('on');
+    else i.classList.remove('on');
+  });
+}
 </script>
 </body>
 </html>
