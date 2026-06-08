@@ -530,24 +530,27 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
     <div class="panel" id="p-params">
       <div class="page-title">Paramètres</div>
 
-      <!-- Stripe Connect — seulement pour plan boutique -->
-      <div class="card" id="stripe-connect-card" style="display:none;">
-        <div class="card-title">Paiement en ligne (Stripe)</div>
-        <div id="stripe-status-wrap">
-          <div id="stripe-not-connected">
-            <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Connecte ton compte Stripe pour accepter les paiements directement sur ta boutique.</p>
-            <button class="btn btn-a" onclick="connectStripe()" style="display:flex;align-items:center;gap:8px;">
-              <svg width="16" height="16" viewBox="0 0 32 32" fill="white"><path d="M13.3 10.6c0-1 .8-1.4 2.2-1.4 2 0 4.5.6 6.5 1.7V5c-2.2-.9-4.3-1.2-6.5-1.2C10.6 3.8 7 6.2 7 11c0 7.3 10 6.1 10 9.3 0 1.2-1 1.6-2.5 1.6-2.2 0-5-.9-7.2-2.1v5.9c2.5 1.1 5 1.5 7.2 1.5 5.5 0 9.3-2.7 9.3-7.6-.1-7.9-10-6.5-10-9z"/></svg>
-              Connecter Stripe
-            </button>
-          </div>
-          <div id="stripe-connected" style="display:none;">
-            <div style="display:flex;align-items:center;gap:10px;margin-bottom:1rem;">
-              <div style="width:10px;height:10px;border-radius:50%;background:#10b981;flex-shrink:0;"></div>
-              <span style="font-size:14px;font-weight:600;color:var(--text);">Stripe connecté</span>
+      <!-- PayPal — seulement pour plan boutique -->
+      <div class="card" id="paypal-connect-card" style="display:none;">
+        <div class="card-title">💳 Paiement en ligne (PayPal)</div>
+        <div id="paypal-status-wrap">
+          <div id="paypal-not-connected">
+            <p style="font-size:13px;color:var(--text2);margin-bottom:.5rem;">Entre ton adresse courriel PayPal. Tes clients pourront payer directement sur ta boutique, et l'argent va dans ton compte PayPal.</p>
+            <p style="font-size:12px;color:var(--text3);margin-bottom:1rem;">Pas de compte PayPal ? Crée-en un gratuit sur <a href="https://paypal.com" target="_blank" style="color:var(--a);">paypal.com</a> en 2 minutes.</p>
+            <div class="field" style="margin-bottom:.75rem;">
+              <label>Ton courriel PayPal</label>
+              <input type="email" id="paypal-email-input" placeholder="ex: tonemail@gmail.com">
             </div>
-            <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Les paiements de tes clients vont directement dans ton compte Stripe.</p>
-            <button class="btn btn-d btn-sm" onclick="disconnectStripe()">Déconnecter Stripe</button>
+            <button class="btn btn-a" onclick="savePaypal()">💾 Sauvegarder</button>
+          </div>
+          <div id="paypal-connected" style="display:none;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:.75rem;">
+              <div style="width:10px;height:10px;border-radius:50%;background:#10b981;flex-shrink:0;"></div>
+              <span style="font-size:14px;font-weight:600;color:var(--text);">PayPal configuré</span>
+            </div>
+            <p style="font-size:13px;color:var(--text2);margin-bottom:.5rem;">Courriel : <strong id="paypal-email-display"></strong></p>
+            <p style="font-size:13px;color:var(--text2);margin-bottom:1rem;">Les paiements de tes clients vont directement dans ton compte PayPal.</p>
+            <button class="btn btn-d btn-sm" onclick="disconnectPaypal()">Retirer PayPal</button>
           </div>
         </div>
       </div>
@@ -649,7 +652,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
           <div class="plan-col-price">69$<span>/mois</span></div>
           <div class="plan-feats">
             <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Tout du plan Soumission</div>
-            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Paiement en ligne (Stripe)</div>
+            <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Paiement en ligne (PayPal)</div>
             <div class="plan-feat active"><span class="plan-feat-ic">✓</span>5 pages supplémentaires</div>
             <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Bannières promotionnelles</div>
             <div class="plan-feat active"><span class="plan-feat-ic">✓</span>Badges & produits vedette</div>
@@ -830,7 +833,7 @@ function build(){
   document.getElementById('url-d').textContent='simpl-production.up.railway.app/s/'+slug;
   document.getElementById('vsb').href='/s/'+slug;
   document.getElementById('dash-url').textContent=window.location.href;
-  loadStripeSection();
+  loadPaypalSection();
   // Charger le domaine custom
   const cdi=document.getElementById('custom-domain-input');
   const cds=document.getElementById('custom-domain-status');
@@ -1368,49 +1371,45 @@ async function sendAiMsg(){
   finally{document.getElementById('ai-send').disabled=false;isAiWaiting=false;}
 }
 
-// STRIPE CONNECT
-function loadStripeSection(){
-  const card=document.getElementById('stripe-connect-card');
-  const notConn=document.getElementById('stripe-not-connected');
-  const conn=document.getElementById('stripe-connected');
+// PAYPAL CONNECT
+function loadPaypalSection(){
+  const card=document.getElementById('paypal-connect-card');
   if(!card)return;
-  // Afficher seulement si plan boutique
   if(V.store.mode==='boutique'||V.plan==='boutique'){
     card.style.display='block';
-    if(V.stripeAccountId){
-      notConn.style.display='none';
-      conn.style.display='block';
+    if(V.paypalEmail){
+      document.getElementById('paypal-not-connected').style.display='none';
+      document.getElementById('paypal-connected').style.display='block';
+      document.getElementById('paypal-email-display').textContent=V.paypalEmail;
+      document.getElementById('paypal-email-input').value=V.paypalEmail;
     }else{
-      notConn.style.display='block';
-      conn.style.display='none';
+      document.getElementById('paypal-not-connected').style.display='block';
+      document.getElementById('paypal-connected').style.display='none';
     }
   }
-  // Check si retour depuis Stripe OAuth
-  const params=new URLSearchParams(window.location.search);
-  if(params.get('stripe')==='connected'){
-    toast('Stripe connecté avec succès ! ✓');
-    window.history.replaceState({},document.title,window.location.pathname);
-    V.stripeAccountId='connected';
-    notConn.style.display='none';
-    conn.style.display='block';
-  }
 }
-async function connectStripe(){
+async function savePaypal(){
+  const email=document.getElementById('paypal-email-input').value.trim();
+  if(!email)return toast('Entre ton courriel PayPal','err');
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Courriel invalide','err');
   try{
-    const r=await fetch(`/api/dashboard/${slug}/stripe/connect`,{method:'GET',headers:{'Content-Type':'application/json','x-token':token}});
-    const d=await r.json();
-    if(d.url){window.location.href=d.url;}
-    else{toast(d.error||'Erreur Stripe','err');}
+    await ac2('PUT',`/api/dashboard/${slug}/paypal`,{paypalEmail:email});
+    V.paypalEmail=email;
+    document.getElementById('paypal-email-display').textContent=email;
+    document.getElementById('paypal-not-connected').style.display='none';
+    document.getElementById('paypal-connected').style.display='block';
+    toast('PayPal sauvegardé ✓');
   }catch(e){toast('Erreur: '+e.message,'err');}
 }
-async function disconnectStripe(){
-  if(!confirm('Déconnecter Stripe ? Tes clients ne pourront plus payer en ligne.'))return;
+async function disconnectPaypal(){
+  if(!confirm('Retirer PayPal ? Tes clients ne pourront plus payer en ligne.'))return;
   try{
-    await ac2('DELETE',`/api/dashboard/${slug}/stripe/disconnect`);
-    V.stripeAccountId=null;
-    document.getElementById('stripe-not-connected').style.display='block';
-    document.getElementById('stripe-connected').style.display='none';
-    toast('Stripe déconnecté');
+    await ac2('DELETE',`/api/dashboard/${slug}/paypal`);
+    V.paypalEmail=null;
+    document.getElementById('paypal-email-input').value='';
+    document.getElementById('paypal-not-connected').style.display='block';
+    document.getElementById('paypal-connected').style.display='none';
+    toast('PayPal retiré');
   }catch(e){toast('Erreur','err');}
 }
 async function saveCustomDomain(){
@@ -1443,7 +1442,7 @@ function isBoutique(){return V.store.mode==='boutique';}
 function showUpgrade(feature){
   const msgs={
     pages:'Tu as atteint la limite de 2 pages sur le plan Soumission.',
-    stripe:'Le paiement en ligne est disponible sur le plan Boutique.',
+    stripe:'Le paiement en ligne (PayPal) est disponible sur le plan Boutique.',
     banniere:'Les bannières promotionnelles sont disponibles sur le plan Boutique.',
     stats:'Les stats avancées sont disponibles sur le plan Boutique.',
     badge:'Les badges produits sont disponibles sur le plan Boutique.',

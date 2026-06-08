@@ -97,40 +97,6 @@ app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async
     console.error('Webhook signature invalide:', e.message);
     return res.status(400).json({ error: 'Webhook invalide' });
   }
-  if(event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    const { slug, orderId } = session.metadata;
-    try {
-      const v = await getVendor(slug);
-      if(v) {
-        // Trouver la commande pending et la confirmer
-        const order = (v.orders || []).find(o => o.id === orderId);
-        if(order && order.paymentStatus === 'pending') {
-          order.paymentStatus = 'paid';
-          order.status = 'nouveau';
-          order.stripeSessionId = session.id;
-          await saveVendor(v);
-          emailNouvelleCommande(v, order);
-          emailConfirmationClient(order, v);
-        }
-      }
-    } catch(e) { console.error('Webhook order error:', e.message); }
-  }
-  // Rembourser — marquer comme remboursé
-  if(event.type === 'charge.refunded') {
-    const charge = event.data.object;
-    const slug = charge.metadata?.slug;
-    const orderId = charge.metadata?.orderId;
-    if(slug && orderId) {
-      try {
-        const v = await getVendor(slug);
-        if(v) {
-          const order = (v.orders || []).find(o => o.id === orderId);
-          if(order) { order.paymentStatus = 'refunded'; order.status = 'annulé'; await saveVendor(v); }
-        }
-      } catch(e) {}
-    }
-  }
   // Abonnement créé ou activé (après trial ou paiement)
   if(event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
     const sub = event.data.object;
@@ -1309,116 +1275,69 @@ app.get('/api/auth/boutiques', async (req, res) => {
   res.json({ boutiques: safe, name: user.name, paid: user.paid||false, plan: user.plan||null, subscriptionStatus: user.subscriptionStatus||null });
 });
 
-// ─── STRIPE CONNECT ──────────────────────────────────────────────────────────
+// ─── PAYPAL CONFIG ───────────────────────────────────────────────────────────
 
-// URL pour connecter le compte Stripe du vendeur
-// Stripe Connect — AccountLinks (Standard OAuth désactivé par Stripe pour les nouveaux comptes)
-app.get('/api/dashboard/:slug/stripe/connect', async (req, res) => {
+const PAYPAL_BASE = process.env.PAYPAL_ENV === 'live'
+  ? 'https://api-m.paypal.com'
+  : 'https://api-m.sandbox.paypal.com';
+
+async function getPayPalToken() {
+  const creds = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
+  const r = await fetch(`${PAYPAL_BASE}/v1/oauth2/token`, {
+    method: 'POST',
+    headers: { Authorization: `Basic ${creds}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'grant_type=client_credentials'
+  });
+  const d = await r.json();
+  if(!d.access_token) throw new Error('PayPal auth failed');
+  return d.access_token;
+}
+
+// ─── PAYPAL CONNECT ───────────────────────────────────────────────────────────
+
+// Sauvegarder l'email PayPal du vendeur
+app.put('/api/dashboard/:slug/paypal', async (req, res) => {
   const v = await authVendor(req, res); if(!v) return;
-  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
-  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
-  try {
-    let accountId = v.stripeAccountId;
-    if(!accountId) {
-      const account = await stripe.accounts.create({
-        type: 'express',
-        email: v.email,
-        capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
-        business_profile: { name: v.businessName },
-      });
-      accountId = account.id;
-      v.stripeAccountId = accountId;
-      v.stripeOnboarded = false;
-      await saveVendor(v);
-    }
-    const accountLink = await stripe.accountLinks.create({
-      account: accountId,
-      refresh_url: `${baseUrl}/api/stripe/callback/refresh?slug=${v.slug}&token=${v.token}`,
-      return_url:  `${baseUrl}/api/stripe/callback/return?slug=${v.slug}&token=${v.token}`,
-      type: 'account_onboarding',
-    });
-    res.json({ url: accountLink.url });
-  } catch(e) {
-    console.error('Stripe connect error:', e.message);
-    res.status(500).json({ error: 'Erreur Stripe: ' + e.message });
-  }
-});
-
-// Retour après onboarding réussi
-app.get('/api/stripe/callback/return', async (req, res) => {
-  const { slug, token } = req.query;
-  if(!slug || !token) return res.status(400).send('Paramètres manquants');
-  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
-  try {
-    const v = await getVendor(slug);
-    if(!v || v.token !== token) return res.status(403).send('Accès refusé');
-    if(v.stripeAccountId) {
-      const account = await stripe.accounts.retrieve(v.stripeAccountId);
-      v.stripeOnboarded = account.details_submitted;
-      await saveVendor(v);
-    }
-    res.redirect(`${baseUrl}/dashboard/${slug}/${token}?stripe=connected`);
-  } catch(e) {
-    res.redirect(`${baseUrl}/dashboard/${slug}/${token}?stripe=error`);
-  }
-});
-
-// Refresh — lien expiré, générer un nouveau
-app.get('/api/stripe/callback/refresh', async (req, res) => {
-  const { slug, token } = req.query;
-  if(!slug || !token) return res.status(400).send('Paramètres manquants');
-  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
-  try {
-    const v = await getVendor(slug);
-    if(!v || v.token !== token) return res.status(403).send('Accès refusé');
-    if(!v.stripeAccountId) return res.redirect(`${baseUrl}/dashboard/${slug}/${token}?stripe=error`);
-    const accountLink = await stripe.accountLinks.create({
-      account: v.stripeAccountId,
-      refresh_url: `${baseUrl}/api/stripe/callback/refresh?slug=${slug}&token=${token}`,
-      return_url:  `${baseUrl}/api/stripe/callback/return?slug=${slug}&token=${token}`,
-      type: 'account_onboarding',
-    });
-    res.redirect(accountLink.url);
-  } catch(e) {
-    res.redirect(`${baseUrl}/dashboard/${slug}/${token}?stripe=error`);
-  }
-});
-
-// Déconnecter Stripe
-app.delete('/api/dashboard/:slug/stripe/disconnect', async (req, res) => {
-  const v = await authVendor(req, res); if(!v) return;
-  v.stripeAccountId = null;
-  v.stripeOnboarded = false;
+  const { paypalEmail } = req.body;
+  if(!paypalEmail || !isValidEmail(paypalEmail)) return res.status(400).json({ error: 'Courriel PayPal invalide' });
+  v.paypalEmail = paypalEmail.toLowerCase();
   await saveVendor(v);
   res.json({ success: true });
 });
 
-// ─── STRIPE CHECKOUT ─────────────────────────────────────────────────────────
+// Retirer l'email PayPal du vendeur
+app.delete('/api/dashboard/:slug/paypal', async (req, res) => {
+  const v = await authVendor(req, res); if(!v) return;
+  v.paypalEmail = null;
+  await saveVendor(v);
+  res.json({ success: true });
+});
+
+// ─── PAYPAL CHECKOUT ──────────────────────────────────────────────────────────
 
 app.post('/api/store/:slug/checkout', async (req, res) => {
-  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
   const v = await getVendor(req.params.slug);
   if(!v) return res.status(404).json({ error: 'Boutique introuvable' });
   if(v.store.mode !== 'boutique') return res.status(400).json({ error: 'Paiement non disponible sur ce plan' });
-  if(!v.stripeAccountId) return res.status(400).json({ error: 'Le vendeur n\'a pas connecté son compte Stripe' });
+  if(!v.paypalEmail) return res.status(400).json({ error: 'Le vendeur n\'a pas configuré son compte PayPal' });
+  if(!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) return res.status(500).json({ error: 'PayPal non configuré' });
 
   const { items, clientName, clientEmail, clientPhone, notes, address } = req.body;
   if(!items || !items.length) return res.status(400).json({ error: 'Panier vide' });
   if(!clientName || !clientEmail) return res.status(400).json({ error: 'Nom et courriel requis' });
 
   const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
-
-  // Construire les line items — prix depuis MongoDB, PAS depuis le client
   const produits = v.store.produits || [];
-  const lineItems = [];
+
+  // Calculer les items — prix depuis MongoDB, jamais depuis le client
+  const orderItems = [];
+  let totalCAD = 0;
   for(const item of items){
     const prod = produits.find(p => p.id === item.prodId || p.nom === item.nom);
     if(!prod) continue;
-    // Prix de base depuis MongoDB
     let prix = prod.prix_base || 0;
-    // Ajouter les extras de variantes/options depuis MongoDB
     if(item.varianteId && prod.variantes){
-      const variante = prod.variantes.find(v => v.id === item.varianteId);
+      const variante = prod.variantes.find(vr => vr.id === item.varianteId);
       if(variante) prix += variante.prix_extra || 0;
     }
     if(item.options && prod.options){
@@ -1429,17 +1348,12 @@ app.post('/api/store/:slug/checkout', async (req, res) => {
       }
     }
     if(prix <= 0) continue;
-    lineItems.push({
-      price_data: {
-        currency: 'cad',
-        product_data: { name: prod.nom, description: prod.description || undefined },
-        unit_amount: Math.round(prix * 100),
-      },
-      quantity: Math.max(1, Math.min(parseInt(item.qty) || 1, 100)),
-    });
+    const qty = Math.max(1, Math.min(parseInt(item.qty) || 1, 100));
+    orderItems.push({ name: prod.nom.slice(0, 127), unit_amount: { currency_code: 'CAD', value: prix.toFixed(2) }, quantity: String(qty) });
+    totalCAD += prix * qty;
   }
 
-  if(!lineItems.length) return res.status(400).json({ error: 'Prix invalides' });
+  if(!orderItems.length) return res.status(400).json({ error: 'Prix invalides' });
 
   const orderId = genId();
   const order = {
@@ -1450,28 +1364,89 @@ app.post('/api/store/:slug/checkout', async (req, res) => {
     clientAddress: sanitize(address || '', 500),
     notes: sanitize(notes || '', 1000),
     items,
-    total: (lineItems.reduce((s, i) => s + (i.price_data.unit_amount * i.quantity), 0) / 100).toFixed(2) + '$',
+    total: totalCAD.toFixed(2) + '$',
     createdAt: new Date().toISOString(),
     paymentStatus: 'pending',
     status: 'en_attente_paiement',
   };
 
-  // Sauvegarder la commande en attente AVANT Stripe
+  // Sauvegarder la commande en attente AVANT de créer l'ordre PayPal
   v.orders = v.orders || [];
   v.orders.push(order);
   await saveVendor(v);
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    line_items: lineItems,
-    mode: 'payment',
-    customer_email: clientEmail,
-    success_url: `${baseUrl}/s/${v.slug}?order=${orderId}&success=1`,
-    cancel_url: `${baseUrl}/s/${v.slug}?cancelled=1`,
-    metadata: { slug: v.slug, orderId },
-  }, { stripeAccount: v.stripeAccountId });
+  try {
+    const accessToken = await getPayPalToken();
+    const paypalOrder = await fetch(`${PAYPAL_BASE}/v2/checkout/orders`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        intent: 'CAPTURE',
+        purchase_units: [{
+          reference_id: orderId,
+          description: `Commande ${v.businessName}`.slice(0, 127),
+          payee: { email_address: v.paypalEmail },
+          items: orderItems,
+          amount: {
+            currency_code: 'CAD',
+            value: totalCAD.toFixed(2),
+            breakdown: { item_total: { currency_code: 'CAD', value: totalCAD.toFixed(2) } }
+          }
+        }],
+        application_context: {
+          brand_name: v.businessName.slice(0, 127),
+          locale: 'fr-CA',
+          landing_page: 'LOGIN',
+          user_action: 'PAY_NOW',
+          return_url: `${baseUrl}/api/paypal/capture?slug=${v.slug}&orderId=${orderId}`,
+          cancel_url: `${baseUrl}/s/${v.slug}?cancelled=1`
+        }
+      })
+    });
+    const paypalData = await paypalOrder.json();
+    if(!paypalData.id) throw new Error(paypalData.message || 'Erreur PayPal');
+    const approveLink = paypalData.links.find(l => l.rel === 'approve');
+    if(!approveLink) throw new Error('Lien PayPal introuvable');
+    res.json({ url: approveLink.href });
+  } catch(e) {
+    console.error('PayPal checkout error:', e.message);
+    res.status(500).json({ error: 'Erreur PayPal: ' + e.message });
+  }
+});
 
-  res.json({ sessionId: session.id, url: session.url });
+// Capture du paiement après retour PayPal
+app.get('/api/paypal/capture', async (req, res) => {
+  const { slug, orderId, token: paypalToken } = req.query;
+  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+  if(!slug || !orderId || !paypalToken) return res.redirect(`${baseUrl}/s/${slug || ''}?cancelled=1`);
+  try {
+    const accessToken = await getPayPalToken();
+    const capture = await fetch(`${PAYPAL_BASE}/v2/checkout/orders/${paypalToken}/capture`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' }
+    });
+    const captureData = await capture.json();
+    if(captureData.status === 'COMPLETED') {
+      const v = await getVendor(slug);
+      if(v) {
+        const order = (v.orders || []).find(o => o.id === orderId);
+        if(order && order.paymentStatus === 'pending') {
+          order.paymentStatus = 'paid';
+          order.status = 'nouveau';
+          order.paypalOrderId = paypalToken;
+          await saveVendor(v);
+          emailNouvelleCommande(v, order);
+          emailConfirmationClient(order, v);
+        }
+      }
+      res.redirect(`${baseUrl}/s/${slug}?order=${orderId}&success=1`);
+    } else {
+      res.redirect(`${baseUrl}/s/${slug}?cancelled=1`);
+    }
+  } catch(e) {
+    console.error('PayPal capture error:', e.message);
+    res.redirect(`${baseUrl}/s/${slug}?cancelled=1`);
+  }
 });
 
 

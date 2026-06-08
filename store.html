@@ -522,7 +522,7 @@ async function init(){
     const accent=vendor.accent||app.couleur_accent||'#7c6dfa';
     applyTheme(themeId,accent,app);
     setSEO();buildStore();
-    // Gérer le retour depuis Stripe
+    // Gérer le retour depuis PayPal
   const urlParams=new URLSearchParams(window.location.search);
   if(urlParams.get('success')==='1'){
     const orderId=urlParams.get('order')||'';
@@ -865,7 +865,7 @@ async function submitOrder(){
   const btn=document.getElementById('submit-btn');btn.disabled=true;
   const total=cart.reduce((a,i)=>a+i.total,0);
 
-  // Plan boutique → Stripe Checkout
+  // Plan boutique → PayPal Checkout
   if(isBoutique){
     try{
       const r=await fetch('/api/store/'+slug+'/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
@@ -877,7 +877,7 @@ async function submitOrder(){
       })});
       const d=await r.json();
       if(d.error)throw new Error(d.error);
-      // Rediriger vers Stripe
+      // Rediriger vers PayPal
       window.location.href=d.url;
     }catch(e){showNotif(e.message||'Erreur de paiement.');btn.disabled=false;}
     return;
