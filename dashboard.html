@@ -1375,7 +1375,7 @@ async function sendAiMsg(){
 function loadPaypalSection(){
   const card=document.getElementById('paypal-connect-card');
   if(!card)return;
-  if(V.store.mode==='boutique'||V.plan==='boutique'){
+  if(V.store.mode==='boutique'||V.plan==='boutique'||V.paid===true){
     card.style.display='block';
     if(V.paypalEmail){
       document.getElementById('paypal-not-connected').style.display='none';
