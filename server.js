@@ -1650,6 +1650,14 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html'))
 const PORT = process.env.PORT || 3000;
 connectDB().then(async () => {
   await ensurePayPalPlans();
+  // Migration — boutiques sans plan reçoivent soumission/paid par défaut
+  try {
+    const migrated = await db.collection('stores').updateMany(
+      { plan: { $in: [null, undefined, ''] } },
+      { $set: { plan: 'soumission', paid: true, subscriptionStatus: 'trialing' } }
+    );
+    if(migrated.modifiedCount > 0) console.log('✓ Migration: ' + migrated.modifiedCount + ' boutiques mises à jour');
+  } catch(e) { console.error('Migration error:', e.message); }
   app.listen(PORT, () => console.log(`Simpl running on port ${PORT}`));
 }).catch(err => {
   console.error('❌ MongoDB connection failed:', err);
