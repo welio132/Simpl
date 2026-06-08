@@ -19,19 +19,8 @@ try {
 const { MongoClient } = require('mongodb');
 const { Resend } = require('resend');
 
-// Stripe — installer avec: npm install stripe
-let stripe;
-try {
-  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-} catch(e) {
-  console.warn('⚠️ stripe non installé — npm install stripe');
-}
-
-// Plans Simpl
-const STRIPE_PRICES = {
-  soumission: process.env.STRIPE_PRICE_SOUMISSION || 'price_1TfBNXPOFpFVzIWVY8BMqQC1',
-  boutique:   process.env.STRIPE_PRICE_BOUTIQUE   || 'price_1TfBPDPOFpFVzIWVlCzZIQZe',
-};
+// Plans Simpl — IDs PayPal créés automatiquement au démarrage
+const PAYPAL_PLAN_IDS = { soumission: null, boutique: null };
 
 // Packages de sécurité — installer avec: npm install bcryptjs helmet express-rate-limit
 let bcrypt, helmet, rateLimit;
@@ -80,76 +69,6 @@ const apiLimiter = rateLimit ? rateLimit({
 }) : (req, res, next) => next();
 
 app.use('/api/', apiLimiter);
-
-// ─── STRIPE WEBHOOK — doit être avant express.json() ────────────────────────
-app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  if(!webhookSecret) {
-    console.warn('⚠️ STRIPE_WEBHOOK_SECRET non défini — webhook non sécurisé');
-    return res.status(500).json({ error: 'Webhook secret manquant' });
-  }
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch(e) {
-    console.error('Webhook signature invalide:', e.message);
-    return res.status(400).json({ error: 'Webhook invalide' });
-  }
-  // Abonnement créé ou activé (après trial ou paiement)
-  if(event.type === 'customer.subscription.created' || event.type === 'customer.subscription.updated') {
-    const sub = event.data.object;
-    const userId = sub.metadata?.userId;
-    const slug = sub.metadata?.slug;
-    const status = sub.status; // active, trialing, past_due, canceled
-    const priceId = sub.items?.data?.[0]?.price?.id;
-    const plan = priceId === STRIPE_PRICES.boutique ? 'boutique' : 'soumission';
-    const paid = (status === 'active' || status === 'trialing');
-    try {
-      if(slug) {
-        const v = await getVendor(slug);
-        if(v) {
-          v.plan = plan;
-          v.paid = paid;
-          v.subscriptionId = sub.id;
-          v.subscriptionStatus = status;
-          v.store = v.store || {};
-          v.store.mode = plan;
-          await saveVendor(v);
-        }
-      }
-      if(userId) {
-        await db.collection('users').updateOne(
-          { _id: require('mongodb').ObjectId.createFromHexString(userId) },
-          { $set: { plan, paid, subscriptionId: sub.id, subscriptionStatus: status } }
-        );
-      }
-    } catch(e) { console.error('Webhook billing error:', e.message); }
-  }
-
-  // Abonnement annulé ou expiré
-  if(event.type === 'customer.subscription.deleted') {
-    const sub = event.data.object;
-    const slug = sub.metadata?.slug;
-    const userId = sub.metadata?.userId;
-    try {
-      if(slug) {
-        const v = await getVendor(slug);
-        if(v) { v.paid = false; v.subscriptionStatus = 'canceled'; await saveVendor(v); }
-      }
-      if(userId) {
-        await db.collection('users').updateOne(
-          { _id: require('mongodb').ObjectId.createFromHexString(userId) },
-          { $set: { paid: false, subscriptionStatus: 'canceled' } }
-        );
-      }
-    } catch(e) {}
-  }
-
-  res.json({ received: true });
-});
-
 
 app.use(express.json({ limit: '10mb' }));
 app.use('/uploads', express.static('uploads'));
@@ -1453,64 +1372,213 @@ app.get('/api/paypal/capture', async (req, res) => {
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 app.get('/compte', (req, res) => res.sendFile(path.join(__dirname, 'compte.html')));
 
-// ─── STRIPE BILLING ──────────────────────────────────────────────────────────
+// ─── PAYPAL BILLING ──────────────────────────────────────────────────────────
 
-// Créer une session d'abonnement Simpl
+// Créer les plans PayPal au démarrage si pas encore fait
+async function ensurePayPalPlans() {
+  if(!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) return;
+  try {
+    const token = await getPayPalToken();
+    const plans = [
+      { key: 'soumission', name: 'Simpl Soumission', price: '39.00' },
+      { key: 'boutique',   name: 'Simpl Boutique',   price: '69.00' },
+    ];
+    for(const p of plans) {
+      // Chercher si le plan existe déjà en DB
+      const existing = await db.collection('config').findOne({ key: 'paypal_plan_' + p.key });
+      if(existing?.planId) { PAYPAL_PLAN_IDS[p.key] = existing.planId; continue; }
+      // Créer le produit PayPal
+      const prodRes = await fetch(`${PAYPAL_BASE}/v1/catalogs/products`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: p.name, type: 'SERVICE', category: 'SOFTWARE' })
+      });
+      const prod = await prodRes.json();
+      if(!prod.id) throw new Error('Produit PayPal non créé: ' + JSON.stringify(prod));
+      // Créer le plan avec trial 30 jours
+      const planRes = await fetch(`${PAYPAL_BASE}/v1/billing/plans`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product_id: prod.id,
+          name: p.name,
+          status: 'ACTIVE',
+          billing_cycles: [
+            {
+              frequency: { interval_unit: 'DAY', interval_count: 30 },
+              tenure_type: 'TRIAL',
+              sequence: 1,
+              total_cycles: 1,
+              pricing_scheme: { fixed_price: { value: '0', currency_code: 'CAD' } }
+            },
+            {
+              frequency: { interval_unit: 'MONTH', interval_count: 1 },
+              tenure_type: 'REGULAR',
+              sequence: 2,
+              total_cycles: 0,
+              pricing_scheme: { fixed_price: { value: p.price, currency_code: 'CAD' } }
+            }
+          ],
+          payment_preferences: {
+            auto_bill_outstanding: true,
+            setup_fee: { value: '0', currency_code: 'CAD' },
+            setup_fee_failure_action: 'CONTINUE',
+            payment_failure_threshold: 3
+          }
+        })
+      });
+      const plan = await planRes.json();
+      if(!plan.id) throw new Error('Plan PayPal non créé: ' + JSON.stringify(plan));
+      PAYPAL_PLAN_IDS[p.key] = plan.id;
+      await db.collection('config').updateOne(
+        { key: 'paypal_plan_' + p.key },
+        { $set: { key: 'paypal_plan_' + p.key, planId: plan.id } },
+        { upsert: true }
+      );
+      console.log(`✓ Plan PayPal ${p.key}: ${plan.id}`);
+    }
+  } catch(e) {
+    console.error('❌ PayPal plans setup error:', e.message);
+  }
+}
+
+// Créer une souscription PayPal
 app.post('/api/billing/subscribe', async (req, res) => {
-  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
   const authToken = req.headers['x-auth-token'];
   if(!authToken) return res.status(401).json({ error: 'Non connecté' });
   const user = await db.collection('users').findOne({ token: authToken });
   if(!user) return res.status(401).json({ error: 'Session invalide' });
   const { plan, slug } = req.body;
-  if(!plan || !STRIPE_PRICES[plan]) return res.status(400).json({ error: 'Plan invalide' });
+  if(!plan || !['soumission','boutique'].includes(plan)) return res.status(400).json({ error: 'Plan invalide' });
+  const planId = PAYPAL_PLAN_IDS[plan];
+  if(!planId) return res.status(500).json({ error: 'Plans PayPal pas encore initialisés. Réessaie dans 30 secondes.' });
   const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
   try {
-    // Créer ou récupérer le customer Stripe
-    let customerId = user.stripeCustomerId;
-    if(!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.name,
-        metadata: { userId: user._id.toString() }
-      });
-      customerId = customer.id;
-      await db.collection('users').updateOne({ _id: user._id }, { $set: { stripeCustomerId: customerId } });
-    }
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [{ price: STRIPE_PRICES[plan], quantity: 1 }],
-      mode: 'subscription',
-      subscription_data: {
-        trial_period_days: 30,
-        metadata: { userId: user._id.toString(), slug: slug || '' }
-      },
-      success_url: `${baseUrl}/compte?billing=success`,
-      cancel_url: `${baseUrl}/compte?billing=cancelled`,
-      metadata: { userId: user._id.toString(), slug: slug || '', plan }
+    const token = await getPayPalToken();
+    const subRes = await fetch(`${PAYPAL_BASE}/v1/billing/subscriptions`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        plan_id: planId,
+        subscriber: { email_address: user.email, name: { given_name: user.name || user.email } },
+        custom_id: JSON.stringify({ userId: user._id.toString(), slug: slug || '', plan }),
+        application_context: {
+          brand_name: 'Simpl',
+          locale: 'fr-CA',
+          shipping_preference: 'NO_SHIPPING',
+          user_action: 'SUBSCRIBE_NOW',
+          return_url: `${baseUrl}/api/billing/paypal/return`,
+          cancel_url: `${baseUrl}/compte?billing=cancelled`
+        }
+      })
     });
-    res.json({ url: session.url });
+    const sub = await subRes.json();
+    if(!sub.id) throw new Error(sub.message || 'Erreur PayPal');
+    const approveLink = sub.links.find(l => l.rel === 'approve');
+    if(!approveLink) throw new Error('Lien approbation introuvable');
+    res.json({ url: approveLink.href });
   } catch(e) {
-    console.error('Billing error:', e.message);
+    console.error('Billing subscribe error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });
 
-// Portail client Stripe — gérer/annuler abonnement
-app.post('/api/billing/portal', async (req, res) => {
-  if(!stripe) return res.status(500).json({ error: 'Stripe non configuré' });
+// Retour PayPal après approbation de l'abonnement
+app.get('/api/billing/paypal/return', async (req, res) => {
+  const { subscription_id, ba_token } = req.query;
+  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+  if(!subscription_id) return res.redirect(`${baseUrl}/compte?billing=cancelled`);
+  try {
+    const token = await getPayPalToken();
+    const subRes = await fetch(`${PAYPAL_BASE}/v1/billing/subscriptions/${subscription_id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const sub = await subRes.json();
+    if(!sub.id) throw new Error('Abonnement introuvable');
+    const customData = JSON.parse(sub.custom_id || '{}');
+    const { userId, slug, plan } = customData;
+    const status = sub.status; // ACTIVE, APPROVAL_PENDING, APPROVED, etc.
+    const paid = (status === 'ACTIVE' || status === 'APPROVAL_PENDING' || status === 'APPROVED');
+    const { ObjectId } = require('mongodb');
+    if(userId) {
+      await db.collection('users').updateOne(
+        { _id: ObjectId.createFromHexString(userId) },
+        { $set: { plan, paid, paypalSubscriptionId: sub.id, subscriptionStatus: status === 'ACTIVE' ? 'active' : 'trialing' } }
+      );
+    }
+    if(slug) {
+      const v = await getVendor(slug);
+      if(v) {
+        v.plan = plan; v.paid = paid;
+        v.paypalSubscriptionId = sub.id;
+        v.subscriptionStatus = status === 'ACTIVE' ? 'active' : 'trialing';
+        v.store = v.store || {}; v.store.mode = plan;
+        await saveVendor(v);
+      }
+    }
+    res.redirect(`${baseUrl}/compte?billing=success`);
+  } catch(e) {
+    console.error('PayPal return error:', e.message);
+    res.redirect(`${baseUrl}/compte?billing=success`); // On redirige quand même — PayPal confirme par webhook
+  }
+});
+
+// Webhook PayPal — confirmer/annuler abonnements
+app.post('/api/billing/paypal/webhook', express.json(), async (req, res) => {
+  const event = req.body;
+  const { ObjectId } = require('mongodb');
+  try {
+    if(event.event_type === 'BILLING.SUBSCRIPTION.ACTIVATED' || event.event_type === 'BILLING.SUBSCRIPTION.UPDATED') {
+      const sub = event.resource;
+      const customData = JSON.parse(sub.custom_id || '{}');
+      const { userId, slug, plan } = customData;
+      const paid = true;
+      const status = sub.status === 'ACTIVE' ? 'active' : 'trialing';
+      if(userId) {
+        await db.collection('users').updateOne(
+          { _id: ObjectId.createFromHexString(userId) },
+          { $set: { plan, paid, paypalSubscriptionId: sub.id, subscriptionStatus: status } }
+        );
+      }
+      if(slug) {
+        const v = await getVendor(slug);
+        if(v) { v.plan = plan; v.paid = paid; v.subscriptionStatus = status; v.store = v.store || {}; v.store.mode = plan; await saveVendor(v); }
+      }
+    }
+    if(event.event_type === 'BILLING.SUBSCRIPTION.CANCELLED' || event.event_type === 'BILLING.SUBSCRIPTION.EXPIRED' || event.event_type === 'BILLING.SUBSCRIPTION.SUSPENDED') {
+      const sub = event.resource;
+      const customData = JSON.parse(sub.custom_id || '{}');
+      const { userId, slug } = customData;
+      if(userId) {
+        await db.collection('users').updateOne(
+          { _id: ObjectId.createFromHexString(userId) },
+          { $set: { paid: false, subscriptionStatus: 'canceled' } }
+        );
+      }
+      if(slug) {
+        const v = await getVendor(slug);
+        if(v) { v.paid = false; v.subscriptionStatus = 'canceled'; await saveVendor(v); }
+      }
+    }
+  } catch(e) { console.error('PayPal billing webhook error:', e.message); }
+  res.json({ received: true });
+});
+
+// Annuler son abonnement (remplace le portail Stripe)
+app.post('/api/billing/cancel', async (req, res) => {
   const authToken = req.headers['x-auth-token'];
   if(!authToken) return res.status(401).json({ error: 'Non connecté' });
   const user = await db.collection('users').findOne({ token: authToken });
-  if(!user || !user.stripeCustomerId) return res.status(400).json({ error: 'Aucun abonnement actif' });
-  const baseUrl = process.env.BASE_URL || 'https://simpl-production.up.railway.app';
+  if(!user?.paypalSubscriptionId) return res.status(400).json({ error: 'Aucun abonnement actif' });
   try {
-    const session = await stripe.billingPortal.sessions.create({
-      customer: user.stripeCustomerId,
-      return_url: `${baseUrl}/compte`
+    const token = await getPayPalToken();
+    await fetch(`${PAYPAL_BASE}/v1/billing/subscriptions/${user.paypalSubscriptionId}/cancel`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason: 'Annulé par le client' })
     });
-    res.json({ url: session.url });
+    await db.collection('users').updateOne({ token: authToken }, { $set: { paid: false, subscriptionStatus: 'canceled' } });
+    res.json({ success: true });
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
@@ -1580,7 +1648,8 @@ app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'admin.html'))
 
 // ─── START ───
 const PORT = process.env.PORT || 3000;
-connectDB().then(() => {
+connectDB().then(async () => {
+  await ensurePayPalPlans();
   app.listen(PORT, () => console.log(`Simpl running on port ${PORT}`));
 }).catch(err => {
   console.error('❌ MongoDB connection failed:', err);
